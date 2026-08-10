@@ -27,8 +27,11 @@ scroll_thread = None
 scroll_stop_event = threading.Event()
 
 status_font_size=20
-emoji_font_size=40
+emoji_font_size=80
 battery_font_size=13
+# Header strip height. Derived from the font sizes it has to hold so that
+# resizing the face reflows the layout instead of clipping it.
+HEADER_HEIGHT = status_font_size + emoji_font_size + 38
 IDLE_RENDER_INTERVAL = 0.5
 MAX_MAIN_TEXT_CHARS = 2200
 TRUNCATION_PREFIX = "... "
