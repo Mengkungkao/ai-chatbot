@@ -11,6 +11,7 @@ import re
 from camera import CameraThread
 from utils import ColorUtils, ImageUtils, TextUtils
 from whisplay_client import create_whisplay_hardware
+import face_engine
 
 STATUS_ICON_DIR = os.path.join(os.path.dirname(__file__), "status-bar-icon")
 if STATUS_ICON_DIR not in sys.path:
@@ -38,6 +39,13 @@ TOOL_TAG_RE = re.compile(
 TOOL_TAG_BG = (8, 42, 112, 255)
 TOOL_TAG_FG = (255, 255, 255, 255)
 TOOL_TAG_COUNT_FG = (122, 205, 255, 255)
+
+# Face animation. Idle motion (blink + breathing) keeps the character alive
+# between messages; set WHISPLAY_FACE_IDLE_MOTION=0 to hold a still frame.
+FACE_ANIMATION_FPS = 15
+FACE_IDLE_MOTION = os.environ.get("WHISPLAY_FACE_IDLE_MOTION", "1") != "0"
+# Statuses that mean the assistant is speaking, which drives the mouth.
+TALKING_STATUS_PREFIXES = ("answering", "speaking", "replying")
 TOOL_TAG_MARGIN_Y = 2
 TOOL_PLACEHOLDER_RE = re.compile(r"\{tool:([A-Za-z0-9_-]+)\}")
 TERMINAL_FG = (80, 255, 120, 255)
@@ -115,6 +123,14 @@ class RenderThread(threading.Thread):
         self.main_text_cache_char_offset = 0
         self.pending_auto_scroll_after_hold = False
         self.render_event = threading.Event()
+        # Animated face. Falls back to the plain emoji glyph if the spec is
+        # missing or the current emoji has no face defined for it.
+        face_renderer = face_engine.load_renderer()
+        self.face = (face_engine.FaceAnimator(face_renderer, size=emoji_font_size,
+                                              idle_motion=FACE_IDLE_MOTION)
+                     if face_renderer else None)
+        self.face_active = False
+        self.needs_full_render = True
 
     def render_init_screen(self):
         # Display logo on startup
@@ -162,20 +178,7 @@ class RenderThread(threading.Thread):
             return False
         else:
             current_image = None
-            header_height = 88 + 10  # header + margin
-            # create a black background image for header
-            image = Image.new("RGBA", (self.whisplay.LCD_WIDTH, header_height), (0, 0, 0, 255))
-            draw = ImageDraw.Draw(image)
-            
-            clock_font_size = 24
-            # clock_font = ImageFont.truetype(self.font_path, clock_font_size)
-
-            # current_time = time.strftime("%H:%M:%S")
-            # draw.text((self.whisplay.LCD_WIDTH // 2, self.whisplay.LCD_HEIGHT // 2), current_time, font=clock_font, fill=(255, 255, 255, 255))
-            
-            # render header
-            self.render_header(image, draw, status, emoji, battery_level, battery_color)
-            self.whisplay.draw_image(0, 0, self.whisplay.LCD_WIDTH, header_height, ImageUtils.image_to_rgb565(image, self.whisplay.LCD_WIDTH, header_height))
+            header_height = self.draw_header_region(status, emoji, battery_level, battery_color)
 
             # render music progress bar if active
             progress_bar_height = 0
@@ -514,7 +517,42 @@ class RenderThread(threading.Thread):
             suffix_x = text_x + text_w + suffix_gap
             draw.text((suffix_x, text_y), suffix_text, font=tag_font, fill=TOOL_TAG_COUNT_FG)
 
+    def draw_header_region(self, status=None, emoji=None, battery_level=None, battery_color=None):
+        """Draw and push just the header strip. Also used for face-only refreshes."""
+        header_height = 88 + 10  # header + margin
+        image = Image.new("RGBA", (self.whisplay.LCD_WIDTH, header_height), (0, 0, 0, 255))
+        draw = ImageDraw.Draw(image)
+        self.render_header(
+            image, draw,
+            status if status is not None else current_status,
+            emoji if emoji is not None else current_emoji,
+            battery_level if battery_level is not None else current_battery_level,
+            battery_color if battery_color is not None else current_battery_color,
+        )
+        self.whisplay.draw_image(0, 0, self.whisplay.LCD_WIDTH, header_height,
+                                 ImageUtils.image_to_rgb565(image, self.whisplay.LCD_WIDTH, header_height))
+        return header_height
+
+    def update_face(self):
+        """Advance the face animation and return ``(frame, y_offset)``.
+
+        Returns ``(None, 0)`` when the current emoji has no animated face, so
+        the caller draws the plain glyph instead.
+        """
+        if self.face is None:
+            self.face_active = False
+            return None, 0
+        if not self.face.set_emotion(current_emoji):
+            self.face_active = False
+            return None, 0
+        status = str(current_status or "").lower()
+        self.face.set_talking(status.startswith(TALKING_STATUS_PREFIXES))
+        img, offset, active = self.face.render()
+        self.face_active = active
+        return img, offset
+
     def request_render(self):
+        self.needs_full_render = True
         self.render_event.set()
                 
 
@@ -541,13 +579,23 @@ class RenderThread(threading.Thread):
 
         # Keep the emoji centered normally. While a command is running, use the
         # XiaoZhi layout: emoji on the left and terminal output beside it.
-        emoji_bbox = emoji_font.getbbox(current_emoji)
-        emoji_w = emoji_bbox[2] - emoji_bbox[0]
+        face_img, face_offset = self.update_face()
+        if face_img is not None:
+            emoji_w = self.face.size
+        else:
+            emoji_bbox = emoji_font.getbbox(current_emoji)
+            emoji_w = emoji_bbox[2] - emoji_bbox[0]
         emoji_x = (image_width - emoji_w) // 2
         if current_terminal_text:
             emoji_x = self.whisplay.CornerHeight
         emoji_y = status_font_size + 8
-        TextUtils.draw_mixed_text(draw, image, current_emoji, emoji_font, (emoji_x, emoji_y))
+        if face_img is not None:
+            # The frame is squashed during blinks and transitions, so keep it
+            # anchored on its centre line rather than its top edge.
+            y = emoji_y + int(round(face_offset)) + (self.face.size - face_img.height) // 2
+            image.alpha_composite(face_img, (emoji_x, max(0, y)))
+        else:
+            TextUtils.draw_mixed_text(draw, image, current_emoji, emoji_font, (emoji_x, emoji_y))
         if current_terminal_text:
             terminal_x = emoji_x + emoji_w + TERMINAL_MARGIN_X
             self.draw_terminal_output(
@@ -673,10 +721,26 @@ class RenderThread(threading.Thread):
 
     def run(self):
         frame_interval = 1 / self.fps
+        face_interval = 1 / FACE_ANIMATION_FPS
         while self.running:
             animation_active = self.render_frame(current_status, current_emoji, current_text, current_scroll_top, current_battery_level, current_battery_color)
+            self.needs_full_render = False
             if animation_active:
                 time.sleep(frame_interval)
+                continue
+
+            # The text is settled. If the face is still moving (blinking,
+            # talking, mid-transition) keep it going by redrawing only the
+            # header strip, which is far cheaper than a full-screen refresh.
+            while (self.running and self.face_active
+                   and not self.render_event.is_set()
+                   and not camera_mode
+                   and current_image_path in (None, "")
+                   and not self.pending_auto_scroll_after_hold):
+                time.sleep(face_interval)
+                self.draw_header_region()
+            if self.render_event.is_set():
+                self.render_event.clear()
                 continue
 
             wait_timeout = None
