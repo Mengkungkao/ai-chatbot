@@ -522,7 +522,7 @@ class RenderThread(threading.Thread):
 
     def draw_header_region(self, status=None, emoji=None, battery_level=None, battery_color=None):
         """Draw and push just the header strip. Also used for face-only refreshes."""
-        header_height = 88 + 10  # header + margin
+        header_height = HEADER_HEIGHT
         image = Image.new("RGBA", (self.whisplay.LCD_WIDTH, header_height), (0, 0, 0, 255))
         draw = ImageDraw.Draw(image)
         self.render_header(
