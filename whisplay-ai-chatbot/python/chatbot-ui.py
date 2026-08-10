@@ -47,6 +47,9 @@ TOOL_TAG_COUNT_FG = (122, 205, 255, 255)
 # between messages; set WHISPLAY_FACE_IDLE_MOTION=0 to hold a still frame.
 FACE_ANIMATION_FPS = 15
 FACE_IDLE_MOTION = os.environ.get("WHISPLAY_FACE_IDLE_MOTION", "1") != "0"
+# Vertical slack around the face tile for the breathing bob and the squash
+# applied during blinks and emotion transitions.
+FACE_TILE_PAD = 10
 # Statuses that mean the assistant is speaking, which drives the mouth.
 TALKING_STATUS_PREFIXES = ("answering", "speaking", "replying")
 TOOL_TAG_MARGIN_Y = 2
@@ -536,6 +539,37 @@ class RenderThread(threading.Thread):
                                  ImageUtils.image_to_rgb565(image, self.whisplay.LCD_WIDTH, header_height))
         return header_height
 
+    def face_slot(self):
+        """``(x, y)`` of the face inside the header, matching render_header."""
+        size = self.face.size if self.face else emoji_font_size
+        x = (self.whisplay.LCD_WIDTH - size) // 2
+        if current_terminal_text:
+            x = self.whisplay.CornerHeight
+        return x, status_font_size + 8
+
+    def draw_face_region(self):
+        """Repaint only the face's bounding box.
+
+        Converting the whole 240x138 header to RGB565 costs ~14ms on a Pi Zero
+        2 W, which is far too much to spend on an idle blink. The face occupies
+        a small fraction of that area, so idle animation pushes just its tile
+        (plus padding for the breathing bob and transition squash), cutting the
+        frame from ~15ms to ~4ms.
+        """
+        img, offset = self.update_face()
+        if img is None:
+            return False
+        size = self.face.size
+        slot_x, slot_y = self.face_slot()
+        y = max(0, slot_y - FACE_TILE_PAD)
+        h = min(HEADER_HEIGHT - y, size + FACE_TILE_PAD * 2)
+        tile = Image.new("RGBA", (size, h), (0, 0, 0, 255))
+        paste_y = (slot_y - y) + int(round(offset)) + (size - img.height) // 2
+        tile.alpha_composite(img, (0, max(0, min(h - img.height, paste_y))))
+        self.whisplay.draw_image(slot_x, y, size, h,
+                                 ImageUtils.image_to_rgb565(tile, size, h))
+        return True
+
     def update_face(self):
         """Advance the face animation and return ``(frame, y_offset)``.
 
@@ -741,7 +775,7 @@ class RenderThread(threading.Thread):
                    and current_image_path in (None, "")
                    and not self.pending_auto_scroll_after_hold):
                 time.sleep(face_interval)
-                self.draw_header_region()
+                self.draw_face_region()
             if self.render_event.is_set():
                 self.render_event.clear()
                 continue
