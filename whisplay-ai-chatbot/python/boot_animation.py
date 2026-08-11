@@ -20,7 +20,7 @@ CYAN_FAINT = (10, 48, 64)
 WHITE = (226, 250, 255)
 BG = (0, 0, 0)
 
-DEFAULT_DURATION = float(os.environ.get("BOOT_ANIM_SECONDS", "1.4"))
+DEFAULT_DURATION = float(os.environ.get("BOOT_ANIM_SECONDS", "1.6"))
 DEFAULT_FPS = int(os.environ.get("BOOT_ANIM_FPS", "14"))
 
 # What sits in the middle of the rings. Empty means use the logo image;
@@ -156,18 +156,17 @@ def _render_frame(size, t, logo):
     if t > 0.68:
         ring_fade = max(0.0, 1.0 - _ease_in_out(min(1.0, (t - 0.68) / 0.32)))
 
-    # Outer dashed ring, clockwise.
-    r_out = 96 * grow
+    # Outer ring, simple and cheap.
+    r_out = 88 * grow
     if r_out > 6:
         box = [cx - r_out, cy - r_out, cx + r_out, cy + r_out]
-        _arc_segments(draw, box, spin * 300, 3, 46, _blend(CYAN_DIM, grow * ring_fade), 2)
-        _ticks(draw, cx, cy, r_out + 4, 36, 3, _blend(CYAN_FAINT, grow * ring_fade))
+        _arc_segments(draw, box, spin * 280, 2, 90, _blend(CYAN_DIM, grow * ring_fade), 2)
 
-    # Middle ring, counter-rotating so the two read as separate mechanisms.
-    r_mid = 74 * grow
+    # Middle ring, simpler arc with lower detail.
+    r_mid = 62 * grow
     if r_mid > 6:
         box = [cx - r_mid, cy - r_mid, cx + r_mid, cy + r_mid]
-        _arc_segments(draw, box, -spin * 420 + 20, 5, 30, _blend(CYAN, grow * 0.8 * ring_fade), 2)
+        _arc_segments(draw, box, -spin * 340 + 10, 3, 80, _blend(CYAN, grow * 0.75 * ring_fade), 2)
 
     # Inner dial with a pair of short rotating sweep arcs.
     r_in = 44 * grow
@@ -181,14 +180,14 @@ def _render_frame(size, t, logo):
     # Centre glow and piece: words if configured, otherwise the logo image.
     words = _center_words()
     if words:
-        glow_alpha = _ease_in_out(min(1.0, max(0.0, (t - 0.2) / 0.4))) * 0.28
-        glow_radius = 36 * grow
-        if glow_radius > 4:
+        glow_alpha = _ease_in_out(min(1.0, max(0.0, (t - 0.18) / 0.34))) * 0.26
+        glow_radius = 30 * grow
+        if glow_radius > 3:
             draw.ellipse(
                 [cx - glow_radius, cy - glow_radius, cx + glow_radius, cy + glow_radius],
                 fill=_blend(CYAN_FAINT, glow_alpha),
             )
-        _draw_center_text(draw, words, t, cx, cy, min(120, width * 0.55))
+        _draw_center_text(draw, words, t, cx, cy, min(110, width * 0.5))
     elif logo is not None and settle > 0.01:
         scale = 0.72 + 0.28 * settle
         target = max(1, int(round(logo.width * scale)))
@@ -235,6 +234,14 @@ def play(whisplay, image_utils, logo_path=None,
         interval = duration / frames
 
         whisplay.set_backlight(100)
+        if frames <= 1:
+            frame = _render_frame((width, height), 1.0, logo)
+            whisplay.draw_image(
+                0, 0, width, height,
+                image_utils.image_to_rgb565(frame, width, height),
+            )
+            return
+
         for index in range(frames + 1):
             started = time.time()
             t = min(1.0, index / frames)
