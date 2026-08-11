@@ -1,5 +1,5 @@
 import { spawn, ChildProcess } from "child_process";
-import { readFileSync } from "fs";
+import { readFileSync, statSync } from "fs";
 import { isEmpty, noop, set } from "lodash";
 import dotenv from "dotenv";
 import { ttsServer, asrServer } from "../cloud-api/server";
@@ -102,6 +102,10 @@ const killAllRecordingProcesses = (): void => {
   recordingProcessList.length = 0;
 };
 
+// Length of the wake blip in seconds. Short enough to be a tick rather than a
+// jingle, so listening can start almost immediately.
+const CHIME_SECONDS = process.env.WAKE_CHIME_SECONDS || "0.06";
+
 export const playWakeupChime = (): Promise<void> => {
   return new Promise((resolve) => {
     let finished = false;
@@ -119,6 +123,9 @@ export const playWakeupChime = (): Promise<void> => {
     // synth 0.14 sine 1320 vol 0.3 \
     // fade q 0.02 0.30 0.08 gain -30
 
+    // One short blip rather than the old three-tone run. The chime is dead time
+    // before she can hear you, and every millisecond of it also has to be kept
+    // out of the recording.
     const chimeProcess = spawn("sox", [
       "-q",
       "-n",
@@ -126,30 +133,16 @@ export const playWakeupChime = (): Promise<void> => {
       "alsa",
       alsaOutputDevice,
       "synth",
-      "0.10",
+      CHIME_SECONDS,
       "sine",
-      "720",
-      "vol",
-      "0.4",
-      ":",
-      "synth",
-      "0.12",
-      "sine",
-      "980",
+      "1040",
       "vol",
       "0.35",
-      ":",
-      "synth",
-      "0.14",
-      "sine",
-      "1320",
-      "vol",
-      "0.3",
       "fade",
       "q",
+      "0.005",
+      CHIME_SECONDS,
       "0.02",
-      "0.30",
-      "0.08",
       "gain",
       "-30",
     ]);
@@ -157,7 +150,9 @@ export const playWakeupChime = (): Promise<void> => {
     chimeProcess.on("error", done);
     chimeProcess.on("exit", done);
 
-    setTimeout(done, 1500);
+    // Safety net if sox never reports exit; well clear of the blip itself but
+    // short enough that a stuck chime cannot stall listening for long.
+    setTimeout(done, 600);
   });
 };
 
@@ -226,6 +221,59 @@ const recordAudio = async (
       }
     }, duration * 1000);
   });
+};
+
+// Enough bytes on disk to mean sox got past its silence gate and is actually
+// capturing. An aborted recording lands at a couple of hundred bytes.
+const SPEECH_STARTED_BYTES = 1200;
+
+/**
+ * Record, but give up if the person never starts talking.
+ *
+ * sox's silence filter waits indefinitely for audio above the threshold, so a
+ * wake that nobody follows up on sits on "Listening..." until the hard cap.
+ * The output file only grows once capture begins, which is the cheapest signal
+ * that speech has started. `maxSec` still bounds the whole utterance, so a long
+ * sentence is never cut short.
+ */
+const recordAwaitingSpeech = async (
+  outputPath: string,
+  maxSec: number,
+  voiceDetectLevel: number,
+  startWithinSec: number,
+): Promise<boolean> => {
+  let started = false;
+  const poll = setInterval(() => {
+    try {
+      if (statSync(outputPath).size > SPEECH_STARTED_BYTES) started = true;
+    } catch {
+      // File does not exist yet: nothing captured.
+    }
+  }, 150);
+  const giveUp = setTimeout(() => {
+    if (!started) {
+      console.log(
+        `[Record] No speech within ${startWithinSec}s, stopping.`,
+      );
+      stopRecording();
+    }
+  }, startWithinSec * 1000);
+
+  try {
+    await recordAudio(outputPath, maxSec, voiceDetectLevel);
+  } catch {
+    // stopRecording rejects the in-flight promise; treat as "nothing heard".
+  } finally {
+    clearInterval(poll);
+    clearTimeout(giveUp);
+  }
+
+  try {
+    started = started || statSync(outputPath).size > SPEECH_STARTED_BYTES;
+  } catch {
+    // leave as-is
+  }
+  return started;
 };
 
 const recordAudioManually = (
@@ -541,6 +589,7 @@ const restoreAudioPlayer = (): void => {
 
 export {
   recordAudio,
+  recordAwaitingSpeech,
   recordAudioManually,
   stopRecording,
   playAudioData,

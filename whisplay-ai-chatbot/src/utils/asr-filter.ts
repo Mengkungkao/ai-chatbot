@@ -28,6 +28,9 @@ const DEFAULT_PHANTOM_PHRASES = [
   "transcribed by https://otter.ai",
   "for more information visit www.fema.gov",
   "you",
+  // The device's own wake chime, picked up by the mic and transcribed.
+  "beep",
+  "beep beep",
 ];
 
 /** Lowercase, strip punctuation and collapse whitespace for comparison. */

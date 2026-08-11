@@ -8,6 +8,20 @@ dotenv.config();
 const openAiVoiceModel = process.env.OPENAI_VOICE_MODEL || "tts-1"; // Default to tts-1
 const openAiVoiceType = process.env.OPENAI_VOICE_TYPE || "nova"; // Optional: alloy, echo, fable, onyx, nova, shimmer
 
+// Delivery direction ("sound warm and unhurried") is only understood by the
+// gpt-4o TTS models; tts-1 and tts-1-hd reject the field.
+const supportsInstructions = (): boolean =>
+  /gpt-4o|mini-tts/i.test(openAiVoiceModel);
+
+const ttsInstructions = (process.env.OPENAI_TTS_INSTRUCTIONS || "").trim();
+
+// 0.25–4.0. Slightly under 1.0 reads as more relaxed and less clipped.
+const ttsSpeed = (() => {
+  const raw = parseFloat(process.env.OPENAI_TTS_SPEED || "");
+  if (!Number.isFinite(raw)) return undefined;
+  return Math.min(4, Math.max(0.25, raw));
+})();
+
 const openaiTTS = async (
   text: string
 ): Promise<TTSResult> => {
@@ -19,6 +33,10 @@ const openaiTTS = async (
     model: openAiVoiceModel,
     voice: openAiVoiceType,
     input: text,
+    ...(ttsInstructions && supportsInstructions()
+      ? { instructions: ttsInstructions }
+      : {}),
+    ...(ttsSpeed !== undefined ? { speed: ttsSpeed } : {}),
   }).catch((error) => {
     console.log("OpenAI TTS failed:", error);
     return null;

@@ -209,7 +209,11 @@ export class StreamResponser {
     this.partialContent += text;
     // replace newlines with spaces
     this.partialContent = this.partialContent.replace(/\n/g, " ");
-    const { sentences, remaining } = splitSentences(this.partialContent);
+    // Whole sentences only. Splitting mid-phrase on a comma makes each half a
+    // separate TTS clip, which is what makes her sound clipped and robotic.
+    const { sentences, remaining } = splitSentences(this.partialContent, {
+      breakOnComma: false,
+    });
     if (sentences.length > 0) {
       this.parsedSentences.push(...sentences);
       const startIndex = this.displaySentences.length;
