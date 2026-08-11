@@ -26,16 +26,84 @@ import { compactMessagesForContextWindow } from "../context-window";
 dotenv.config();
 
 const anthropicApiKey = process.env.ANTHROPIC_API_KEY || "";
-const anthropicModel =
-  process.env.ANTHROPIC_LLM_MODEL || "claude-opus-4-5";
+const anthropicModel = process.env.ANTHROPIC_LLM_MODEL || "claude-opus-5";
 const anthropicMaxTokens = parseInt(
   process.env.ANTHROPIC_MAX_TOKENS || "8096",
   10,
 );
 const anthropicEnableTools =
   (process.env.ANTHROPIC_ENABLE_TOOLS || "true").toLowerCase() === "true";
-const anthropicEnableThinking =
-  (process.env.ENABLE_THINKING || "false").toLowerCase() === "true";
+// ANTHROPIC_ENABLE_THINKING overrides the shared ENABLE_THINKING flag so the
+// setting can differ from the other providers.
+const anthropicEnableThinking = (
+  process.env.ANTHROPIC_ENABLE_THINKING ||
+  process.env.ENABLE_THINKING ||
+  "false"
+).toLowerCase() === "true";
+// Controls how much the model thinks and spends. Unset uses the API default
+// ("high"). Lower it to cut time-to-first-word on voice replies. Ignored on
+// models that predate the effort parameter.
+const anthropicEffort = (process.env.ANTHROPIC_EFFORT || "")
+  .trim()
+  .toLowerCase();
+
+// Claude 4.6 and newer take adaptive thinking and `output_config.effort`.
+// Older models (Haiku 4.5, Sonnet 4.5, Opus 4.5 and earlier) reject both —
+// "adaptive thinking is not supported on this model" / "This model does not
+// support the effort parameter" — and take a fixed thinking budget instead.
+const ADAPTIVE_THINKING_MODELS = [
+  "opus-5",
+  "opus-4-8",
+  "opus-4-7",
+  "opus-4-6",
+  "sonnet-5",
+  "sonnet-4-6",
+  "fable-5",
+  "mythos-5",
+];
+
+const supportsAdaptiveThinking = (): boolean =>
+  ADAPTIVE_THINKING_MODELS.some((name) =>
+    anthropicModel.toLowerCase().includes(name),
+  );
+
+type ThinkingRequestFields = {
+  thinking?: Anthropic.ThinkingConfigParam;
+  output_config?: { effort: string };
+};
+
+/**
+ * Build the thinking + effort request fields for the configured model.
+ *
+ * On current models `display` must be "summarized" or the API streams thinking
+ * deltas with empty text, so nothing reaches the screen.
+ */
+const buildThinkingParams = (): ThinkingRequestFields => {
+  if (!supportsAdaptiveThinking()) {
+    if (!anthropicEnableThinking) return {};
+    // budget_tokens must be at least 1024 and stay below max_tokens.
+    const budget = Math.max(
+      1024,
+      Math.min(Math.floor(anthropicMaxTokens / 2), anthropicMaxTokens - 512),
+    );
+    return { thinking: { type: "enabled", budget_tokens: budget } };
+  }
+
+  let effort = anthropicEffort;
+  if (!anthropicEnableThinking && (effort === "xhigh" || effort === "max")) {
+    // Thinking may only be disabled at effort "high" or below.
+    console.warn(
+      `[Anthropic] effort "${effort}" cannot be combined with thinking disabled, using "high".`,
+    );
+    effort = "high";
+  }
+  return {
+    thinking: anthropicEnableThinking
+      ? { type: "adaptive", display: "summarized" }
+      : { type: "disabled" },
+    ...(effort ? { output_config: { effort } } : {}),
+  };
+};
 
 const client = anthropicApiKey
   ? new Anthropic({ apiKey: anthropicApiKey, fetch: proxyFetch as any })
@@ -195,14 +263,7 @@ const chatWithLLMStream: ChatWithLLMStreamFunction = async (
       ...(anthropicTools && anthropicTools.length > 0
         ? { tools: anthropicTools }
         : {}),
-      ...(anthropicEnableThinking
-        ? {
-            thinking: {
-              type: "enabled" as const,
-              budget_tokens: Math.floor(anthropicMaxTokens * 0.8),
-            },
-          }
-        : {}),
+      ...buildThinkingParams(),
     };
 
     const stream = await client.messages.create(requestParams);
@@ -364,7 +425,14 @@ const summaryTextWithLLM: SummaryTextWithLLMFunction = async (
   try {
     const response = await client.messages.create({
       model: anthropicModel,
-      max_tokens: 512,
+      // max_tokens caps thinking and reply together, so leave headroom above
+      // the summary itself or the reply gets truncated before it starts.
+      max_tokens: 2048,
+      // Summarising is shallow work; skip thinking entirely where the model
+      // supports turning it off, and stay silent about it where it doesn't.
+      ...(supportsAdaptiveThinking()
+        ? { thinking: { type: "disabled" as const }, output_config: { effort: "low" } }
+        : {}),
       messages: [
         {
           role: "user",

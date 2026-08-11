@@ -32,8 +32,28 @@ const isContextCompactionEnabled = (): boolean => {
   return parseBoolEnv("CONTEXT_AUTO_COMPACT_ENABLED", true);
 };
 
+// Claude model ids that carry a 1M-token context window. Everything else on
+// Claude (Haiku, and the 4.5-and-older generations) is 200K. Checked before the
+// generic size suffixes below so a model name never falls through to the 8K
+// default — that would compact the history on nearly every turn.
+const CLAUDE_1M_MODELS = [
+  "opus-5",
+  "opus-4-8",
+  "opus-4-7",
+  "opus-4-6",
+  "sonnet-5",
+  "sonnet-4-6",
+  "fable-5",
+  "mythos-5",
+];
+
 const inferContextWindowFromModel = (provider: string, model: string): number => {
   const normalized = model.toLowerCase();
+  if (normalized.includes("claude")) {
+    return CLAUDE_1M_MODELS.some((name) => normalized.includes(name))
+      ? 1_000_000
+      : 200_000;
+  }
   if (normalized.includes("gpt-4.1")) return 1_047_576;
   if (normalized.includes("gpt-5")) return 400_000;
   if (normalized.includes("o3") || normalized.includes("o4")) return 200_000;

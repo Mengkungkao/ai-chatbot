@@ -19,7 +19,7 @@
   "license": "GPL-3.0-only",
   "description": "",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.55.1",
+    "@anthropic-ai/sdk": "^0.116.0",
     "@aws-sdk/client-bedrock-runtime": "^3.714.0",
     "@aws-sdk/client-polly": "^3.758.0",
     "@aws-sdk/client-rekognition": "^3.758.0",
