@@ -59,6 +59,13 @@ FACE_IDLE_MOTION = os.environ.get("WHISPLAY_FACE_IDLE_MOTION", "1") != "0"
 # Vertical slack around the face tile for the breathing bob and the squash
 # applied during blinks and emotion transitions.
 FACE_TILE_PAD = 10
+# The face is drawn inside a bezel. By default the ring picks up the current
+# status colour — the same value driving the RGB LED — so the frame reads as
+# state at a glance; set WHISPLAY_FACE_FRAME_TINT=0 to keep the neutral bezel
+# defined in faces.json. Dim status colours (idle is #000055) are lifted to
+# FACE_FRAME_MIN_LEVEL so the ring stays visible against the black panel.
+FACE_FRAME_TINT = os.environ.get("WHISPLAY_FACE_FRAME_TINT", "1") != "0"
+FACE_FRAME_MIN_LEVEL = 140
 # Statuses that mean the assistant is speaking, which drives the mouth.
 TALKING_STATUS_PREFIXES = ("answering", "speaking", "replying")
 TOOL_TAG_MARGIN_Y = 2
@@ -99,6 +106,24 @@ def status_glyph(status):
     return text
 
 
+def face_frame_tint(rgb):
+    """Turn a status colour into a bezel colour, or ``None`` for the default.
+
+    Status colours are chosen for an LED, not for a thin ring on a black panel:
+    idle ships as #000055, which all but disappears. Scaling the darkest ones up
+    to FACE_FRAME_MIN_LEVEL keeps the hue and makes the frame readable.
+    """
+    if not FACE_FRAME_TINT or not rgb:
+        return None
+    peak = max(rgb)
+    if peak == 0:
+        return None
+    if peak < FACE_FRAME_MIN_LEVEL:
+        scale = FACE_FRAME_MIN_LEVEL / peak
+        return tuple(min(255, int(round(c * scale))) for c in rgb[:3])
+    return tuple(rgb[:3])
+
+
 def apply_tool_placeholders(text):
     def replace(match):
         value = current_tool_placeholders.get(match.group(1), "")
@@ -113,6 +138,8 @@ current_terminal_text = ""
 current_tool_placeholders = {}
 current_battery_level = 100
 current_battery_color = ColorUtils.get_rgb255_from_any("#55FF00")
+# Last status colour pushed by the client, reused to tint the face frame.
+current_status_color = None
 current_scroll_top = 0
 DEFAULT_SCROLL_SPEED = 0.25
 MAX_SCROLL_SPEED = 0.5
@@ -633,7 +660,9 @@ class RenderThread(threading.Thread):
         # same cached frame whenever blink and mouth are unchanged. Those frames
         # are byte-identical, so composing and pushing them over SPI again is
         # pure waste — skip straight out and leave the panel as it is.
-        signature = (id(img), paste_y, slot_x, y, size, h)
+        # The frame colour rides along because a colour change drops the frame
+        # cache, and a freshly allocated image can land on a recycled id().
+        signature = (id(img), self.face.frame_color, paste_y, slot_x, y, size, h)
         if signature == self._last_face_signature:
             return True
         self._last_face_signature = signature
@@ -656,6 +685,7 @@ class RenderThread(threading.Thread):
         if not self.face.set_emotion(current_emoji):
             self.face_active = False
             return None, 0
+        self.face.set_frame_color(face_frame_tint(current_status_color))
         status = str(current_status or "").lower()
         self.face.set_talking(status.startswith(TALKING_STATUS_PREFIXES))
         img, offset, active = self.face.render()
@@ -1057,6 +1087,7 @@ def on_app_exit_requested():
 
 def handle_client(client_socket, addr, whisplay):
     global camera_capture_image_path, camera_mode, camera_thread, render_thread
+    global current_status_color
     print(f"[Socket] Client {addr} connected")
     clients[addr] = client_socket
     try:
@@ -1107,6 +1138,15 @@ def handle_client(client_socket, addr, whisplay):
                     if rgbled:
                         rgb255_tuple = ColorUtils.get_rgb255_from_any(rgbled)
                         whisplay.set_rgb_fade(*rgb255_tuple, duration_ms=500)
+                        # The face frame follows the LED, so the bezel and the
+                        # light always agree about what the device is doing. A
+                        # colour-only message updates nothing else on the panel,
+                        # so ask for the repaint here rather than relying on a
+                        # status change arriving with it.
+                        if current_status_color != rgb255_tuple:
+                            current_status_color = rgb255_tuple
+                            if FACE_FRAME_TINT and render_thread is not None:
+                                render_thread.request_render()
                     
                     if battery_color:
                         battery_tuple = ColorUtils.get_rgb255_from_any(battery_color)
