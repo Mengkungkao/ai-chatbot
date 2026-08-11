@@ -11,6 +11,10 @@ dotEnv.config();
 
 const DOUBLE_CLICK_WINDOW_MS = 800;
 const DOUBLE_CLICK_MAX_PRESS_MS = 350;
+const TRIPLE_CLICK_WINDOW_MS = 1200;
+// Held back long enough to tell a triple-click apart from the daemon's
+// four-click exit gesture.
+const TRIPLE_CLICK_SETTLE_MS = 450;
 
 export interface Status {
   status: string;
@@ -71,6 +75,8 @@ export class WhisplayDisplay {
   private buttonPressedCallback: () => void = () => {};
   private buttonReleasedCallback: () => void = () => {};
   private buttonDoubleClickCallback: (() => void) | null = null;
+  private buttonTripleClickCallback: (() => void) | null = null;
+  private tripleClickTimer?: ReturnType<typeof setTimeout>;
   private buttonDown = false;
   private onCameraCaptureCallback: () => void = () => {};
   private textInputCallback: (text: string) => void = () => {};
@@ -123,6 +129,46 @@ export class WhisplayDisplay {
     } else {
       this.isReady = Promise.resolve();
     }
+  }
+
+  /**
+   * Three quick clicks. The daemon exits this app on four clicks within three
+   * seconds, so the callback is held back briefly: if a fourth release lands in
+   * that settle window the user was quitting, and nothing is toggled.
+   */
+  private maybeEmitTripleClick(): void {
+    if (!this.buttonTripleClickCallback) return;
+
+    const now = Date.now();
+    const presses = this.buttonPressTimeArray.filter(
+      (time) => now - time <= TRIPLE_CLICK_WINDOW_MS,
+    );
+    const releases = this.buttonReleaseTimeArray.filter(
+      (time) => now - time <= TRIPLE_CLICK_WINDOW_MS,
+    );
+    if (presses.length < 3 || releases.length < 3) return;
+
+    const lastPresses = presses.slice(-3);
+    const lastReleases = releases.slice(-3);
+    const allShort = lastPresses.every(
+      (press, index) =>
+        lastReleases[index] >= press &&
+        lastReleases[index] - press <= DOUBLE_CLICK_MAX_PRESS_MS,
+    );
+    const withinWindow =
+      lastReleases[2] - lastPresses[0] <= TRIPLE_CLICK_WINDOW_MS;
+    if (!allShort || !withinWindow) return;
+
+    const releasesAtArming = this.buttonReleaseTimeArray.length;
+    if (this.tripleClickTimer) clearTimeout(this.tripleClickTimer);
+    this.tripleClickTimer = setTimeout(() => {
+      this.tripleClickTimer = undefined;
+      // A fourth click arrived — that is the daemon's exit gesture, not a toggle.
+      if (this.buttonReleaseTimeArray.length !== releasesAtArming) return;
+      this.buttonPressTimeArray = [];
+      this.buttonReleaseTimeArray = [];
+      this.buttonTripleClickCallback?.();
+    }, TRIPLE_CLICK_SETTLE_MS);
   }
 
   private maybeEmitDoubleClick(): void {
@@ -315,6 +361,14 @@ export class WhisplayDisplay {
     this.buttonDoubleClickCallback = callback || null;
   }
 
+  onButtonTripleClick(callback: (() => void) | null): void {
+    this.buttonTripleClickCallback = callback || null;
+    if (!callback && this.tripleClickTimer) {
+      clearTimeout(this.tripleClickTimer);
+      this.tripleClickTimer = undefined;
+    }
+  }
+
   onCameraCapture(callback: () => void): void {
     this.onCameraCaptureCallback = callback;
   }
@@ -501,6 +555,7 @@ export class WhisplayDisplay {
     console.log("emit released");
     this.buttonReleasedCallback();
     this.maybeEmitDoubleClick();
+    this.maybeEmitTripleClick();
   }
 
   isButtonDown(): boolean {
@@ -571,6 +626,8 @@ export const onButtonReleased =
   displayInstance.onButtonReleased.bind(displayInstance);
 export const onButtonDoubleClick =
   displayInstance.onButtonDoubleClick.bind(displayInstance);
+export const onButtonTripleClick =
+  displayInstance.onButtonTripleClick.bind(displayInstance);
 export const onCameraCapture =
   displayInstance.onCameraCapture.bind(displayInstance);
 export const onTextInput =

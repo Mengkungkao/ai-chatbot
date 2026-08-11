@@ -34,6 +34,7 @@ export class ProactiveChat {
   private timer?: ReturnType<typeof setTimeout>;
   private generating = false;
   private lastSpokeAt = Date.now();
+  private enabled = isEnabled();
   private minIdleSec = readSeconds("PROACTIVE_CHAT_MIN_IDLE_SEC", 120);
   private maxIdleSec = readSeconds("PROACTIVE_CHAT_MAX_IDLE_SEC", 300);
 
@@ -44,8 +45,27 @@ export class ProactiveChat {
     }
   }
 
+  isOn(): boolean {
+    return this.enabled;
+  }
+
+  /** Flip auto-talk at runtime (triple-click). Returns the new state. */
+  toggle(): boolean {
+    this.enabled = !this.enabled;
+    console.log(
+      `[${getCurrentTimeTag()}] Proactive chat toggled ${this.enabled ? "ON" : "OFF"}.`,
+    );
+    if (this.enabled) {
+      this.lastSpokeAt = Date.now();
+      this.scheduleNext();
+    } else {
+      this.stop();
+    }
+    return this.enabled;
+  }
+
   start(): void {
-    if (!isEnabled()) {
+    if (!this.enabled) {
       console.log(`[${getCurrentTimeTag()}] Proactive chat disabled.`);
       return;
     }
@@ -77,6 +97,7 @@ export class ProactiveChat {
 
   private async tick(): Promise<void> {
     // Only ever speak up from an idle device — never over a live exchange.
+    if (!this.enabled) return;
     if (this.generating || this.host.currentFlowName !== "sleep") {
       this.scheduleNext();
       return;

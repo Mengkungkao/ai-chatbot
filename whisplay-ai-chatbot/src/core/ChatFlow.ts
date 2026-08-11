@@ -20,6 +20,7 @@ import { flowStates } from "./chat-flow/states";
 import { ChatFlowContext, FlowName } from "./chat-flow/types";
 import { playWakeupChime } from "../device/audio";
 import { ProactiveChat } from "./proactive-chat";
+import { isPhantomTranscript } from "../utils/asr-filter";
 import { stopMusicPlayback, isMusicPlaying } from "../device/music-player";
 import type { Status } from "../device/display";
 
@@ -217,6 +218,12 @@ class ChatFlow implements ChatFlowContext {
     console.time(`[ASR time]`);
     const result = await recognizeAudio(path);
     console.timeEnd(`[ASR time]`);
+    if (isPhantomTranscript(result)) {
+      // Whisper invents stock phrases from silence; letting one through would
+      // put words in the person's mouth and leave them in her memory.
+      console.log(`[ASR] Discarded phantom transcript: ${JSON.stringify(result)}`);
+      return "";
+    }
     return result;
   }
 
