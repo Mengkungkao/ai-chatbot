@@ -19,6 +19,7 @@ import { FlowStateMachine } from "./chat-flow/stateMachine";
 import { flowStates } from "./chat-flow/states";
 import { ChatFlowContext, FlowName } from "./chat-flow/types";
 import { playWakeupChime } from "../device/audio";
+import { ProactiveChat } from "./proactive-chat";
 import { stopMusicPlayback, isMusicPlaying } from "../device/music-player";
 import type { Status } from "../device/display";
 
@@ -56,6 +57,7 @@ class ChatFlow implements ChatFlowContext {
   pendingApprovalRequest: WhisplayIMApprovalRequest | null = null;
   currentExternalEmoji: string = "";
   stateMachine: FlowStateMachine;
+  proactiveChat: ProactiveChat | null = null;
   isFromWakeListening: boolean = false;
   enterMusicAfterAnswer: boolean = false;
   musicDisplayText: string = "";
@@ -202,6 +204,9 @@ class ChatFlow implements ChatFlowContext {
       );
       this.whisplayIMBridge.start();
     }
+
+    this.proactiveChat = new ProactiveChat(this);
+    this.proactiveChat.start();
   }
 
   async recognizeAudio(path: string, isFromAutoListening?: boolean): Promise<string> {
@@ -235,6 +240,11 @@ class ChatFlow implements ChatFlowContext {
   transitionTo = (flowName: FlowName): void => {
     if (flowName !== "music" && isMusicPlaying()) {
       stopMusicPlayback();
+    }
+    // Any real exchange restarts her quiet timer, so she does not speak up
+    // again straight after the person has just been talking to her.
+    if (flowName !== "sleep" && flowName !== "external_answer") {
+      this.proactiveChat?.noteActivity();
     }
     console.log(`[${getCurrentTimeTag()}] switch to:`, flowName);
     this.stateMachine.transitionTo(flowName);
