@@ -4,12 +4,17 @@ import {
   onButtonPressed,
   onButtonReleased,
   onButtonDoubleClick,
+  onButtonTripleClick,
   display,
   getCurrentStatus,
   onCameraCapture,
   onTextInput,
   isButtonDown,
 } from "../../device/display";
+
+// Idle face. Defaults to a neutral face so the renderer animates blinking eyes
+// rather than showing the static sleeping glyph.
+const IDLE_EMOJI = (process.env.IDLE_EMOJI || "😐").trim() || "😐";
 import {
   recordAudio,
   recordAudioManually,
@@ -67,9 +72,23 @@ export const flowStates: Record<FlowName, FlowStateHandler> = {
         ctx.transitionTo("camera");
       });
     }
+    // Triple-click toggles auto-talk. The daemon quits this app on a fourth
+    // click, so display.ts holds the callback back until it is sure no fourth
+    // click is coming.
+    onButtonTripleClick(() => {
+      // Only act while idle, so a stray triple-click cannot clobber the screen
+      // mid-answer.
+      if (ctx.currentFlowName !== "sleep") return;
+      const on = ctx.proactiveChat?.toggle() ?? false;
+      display({
+        status: "idle",
+        emoji: on ? "😉" : IDLE_EMOJI,
+        text: on ? "Auto-talk on." : "Auto-talk off.",
+      });
+    });
     display({
       status: "idle",
-      emoji: "😴",
+      emoji: IDLE_EMOJI,
       RGB: "#000055",
       rag_icon_visible: false,
       ...(getCurrentStatus().text.endsWith("Listening...") || !getCurrentStatus().text

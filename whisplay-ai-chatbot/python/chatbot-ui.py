@@ -26,9 +26,13 @@ from wireguard_icon import WireguardStatusIcon
 scroll_thread = None
 scroll_stop_event = threading.Event()
 
-status_font_size=20
+# Text sizes are ~25% smaller than the original 20/20/17 so more of the reply
+# fits on the 240x280 panel. The face is not text and keeps its original size.
+status_font_size=15
 emoji_font_size=80
 battery_font_size=13
+main_text_font_size=15
+tool_tag_font_size=13
 # Header strip height. Derived from the font sizes it has to hold so that
 # resizing the face reflows the layout instead of clipping it.
 HEADER_HEIGHT = status_font_size + emoji_font_size + 38
@@ -57,6 +61,38 @@ TOOL_PLACEHOLDER_RE = re.compile(r"\{tool:([A-Za-z0-9_-]+)\}")
 TERMINAL_FG = (80, 255, 120, 255)
 TERMINAL_MARGIN_X = 8
 TERMINAL_MAX_LINES = 5
+
+# The status word ("idle", "listening", ...) used to eat a whole line of the
+# header. Show a single glyph instead and give the space back to the reply.
+STATUS_GLYPHS = (
+    ("idle", "💤"),
+    ("listening", "🎙"),
+    ("recording", "🎙"),
+    ("recognizing", "👂"),
+    ("thinking", "💭"),
+    ("tool calling", "🔧"),
+    ("tool", "🔧"),
+    ("answering", "💬"),
+    ("speaking", "💬"),
+    ("replying", "💬"),
+    ("music", "🎵"),
+    ("camera", "📷"),
+    ("approval", "❓"),
+    ("error", "⚠"),
+)
+
+
+def status_glyph(status):
+    """Map a status label to one glyph. Unknown labels keep their text."""
+    text = (status or "").strip()
+    if not text:
+        return ""
+    lowered = text.lower()
+    for key, glyph in STATUS_GLYPHS:
+        if lowered.startswith(key):
+            return glyph
+    return text
+
 
 def apply_tool_placeholders(text):
     def replace(match):
@@ -117,8 +153,8 @@ class RenderThread(threading.Thread):
         self.status_font = ImageFont.truetype(self.font_path, status_font_size)
         self.emoji_font = ImageFont.truetype(self.font_path, emoji_font_size)
         self.battery_font = ImageFont.truetype(self.font_path, battery_font_size)
-        self.main_text_font = ImageFont.truetype(self.font_path, 20)
-        self.tool_tag_font = ImageFont.truetype(self.font_path, 17)
+        self.main_text_font = ImageFont.truetype(self.font_path, main_text_font_size)
+        self.tool_tag_font = ImageFont.truetype(self.font_path, tool_tag_font_size)
         self.terminal_text_font = ImageFont.truetype(self.font_path, 8)
         self.music_time_font = ImageFont.truetype(self.font_path, 10)
         self.main_text_line_height = self.main_text_font.getmetrics()[0] + self.main_text_font.getmetrics()[1]
@@ -609,10 +645,11 @@ class RenderThread(threading.Thread):
 
         top_height = status_font_size + emoji_font_size + 20
 
-        # Draw status centered
-        status_bbox = status_font.getbbox(current_status)
+        # Draw status as a compact glyph rather than a word.
+        status_label = status_glyph(current_status)
+        status_bbox = status_font.getbbox(status_label)
         status_w = status_bbox[2] - status_bbox[0]
-        TextUtils.draw_mixed_text(draw, image, current_status, status_font, (whisplay.CornerHeight, 0))
+        TextUtils.draw_mixed_text(draw, image, status_label, status_font, (whisplay.CornerHeight, 0))
 
         # Keep the emoji centered normally. While a command is running, use the
         # XiaoZhi layout: emoji on the left and terminal output beside it.

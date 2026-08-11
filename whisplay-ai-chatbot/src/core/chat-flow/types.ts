@@ -44,6 +44,9 @@ export interface ChatFlowContext {
   toolDisplayText: string;
   answerDisplayText: string;
 
+  // Structural so this file does not have to import ChatFlow's module graph.
+  proactiveChat: { toggle: () => boolean; isOn: () => boolean } | null;
+
   transitionTo: (flowName: FlowName) => void;
   composeAnswerDisplayText: (text?: string) => string;
   updateAnswerDisplayText: (text: string) => void;

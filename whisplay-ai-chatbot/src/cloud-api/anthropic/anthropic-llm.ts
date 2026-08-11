@@ -40,12 +40,31 @@ const anthropicEnableThinking = (
   process.env.ENABLE_THINKING ||
   "false"
 ).toLowerCase() === "true";
+type Effort = "low" | "medium" | "high" | "xhigh" | "max";
+const VALID_EFFORTS: readonly string[] = [
+  "low",
+  "medium",
+  "high",
+  "xhigh",
+  "max",
+];
+
 // Controls how much the model thinks and spends. Unset uses the API default
 // ("high"). Lower it to cut time-to-first-word on voice replies. Ignored on
 // models that predate the effort parameter.
-const anthropicEffort = (process.env.ANTHROPIC_EFFORT || "")
-  .trim()
-  .toLowerCase();
+const readEffort = (): Effort | "" => {
+  const raw = (process.env.ANTHROPIC_EFFORT || "").trim().toLowerCase();
+  if (!raw) return "";
+  if (!VALID_EFFORTS.includes(raw)) {
+    console.warn(
+      `[Anthropic] ignoring unknown ANTHROPIC_EFFORT "${raw}", expected one of ${VALID_EFFORTS.join(", ")}.`,
+    );
+    return "";
+  }
+  return raw as Effort;
+};
+
+const anthropicEffort = readEffort();
 
 // Claude 4.6 and newer take adaptive thinking and `output_config.effort`.
 // Older models (Haiku 4.5, Sonnet 4.5, Opus 4.5 and earlier) reject both —
@@ -69,7 +88,7 @@ const supportsAdaptiveThinking = (): boolean =>
 
 type ThinkingRequestFields = {
   thinking?: Anthropic.ThinkingConfigParam;
-  output_config?: { effort: string };
+  output_config?: { effort: Effort };
 };
 
 /**
@@ -89,7 +108,7 @@ const buildThinkingParams = (): ThinkingRequestFields => {
     return { thinking: { type: "enabled", budget_tokens: budget } };
   }
 
-  let effort = anthropicEffort;
+  let effort: Effort | "" = anthropicEffort;
   if (!anthropicEnableThinking && (effort === "xhigh" || effort === "max")) {
     // Thinking may only be disabled at effort "high" or below.
     console.warn(
