@@ -42,10 +42,21 @@ Q_BLINK = 0.125
 Q_MOUTH = 0.125
 Q_SQUASH = 0.04
 
+# The frame is a thin ring, and PIL does not antialias, so it is drawn on an
+# oversampled mask and shrunk down. Everything else is chunky enough not to care.
+FRAME_SUPERSAMPLE = 3
+
 
 def _rgb(hexcolor):
     hexcolor = hexcolor.lstrip("#")
     return tuple(int(hexcolor[i:i + 2], 16) for i in (0, 2, 4))
+
+
+def _as_rgb(color):
+    """Accept either ``#RRGGBB`` or an ``(r, g, b)`` tuple."""
+    if isinstance(color, str):
+        return _rgb(color)
+    return tuple(int(c) for c in color[:3])
 
 
 def _quantise(value, step):
@@ -67,6 +78,8 @@ class FaceRenderer:
         self.panel_margin = panel.get("margin", 6)
         self.panel_rx = panel.get("rx", 26)
         self.panel_fill = panel.get("fill", "#0A0A0A")
+        frame = self.meta.get("frame") or {}
+        self.frame = frame if frame.get("width", 0) > 0 else None
 
     def has(self, char):
         return char in self.faces
@@ -232,7 +245,27 @@ class FaceRenderer:
 
     # -- frame composition -------------------------------------------------
 
-    def draw(self, char, size, blink=0.0, mouth_open=0.0):
+    def _draw_frame(self, img, size, k, color=None):
+        """Stroke the bezel ring around the panel."""
+        if not self.frame:
+            return
+        s = FRAME_SUPERSAMPLE
+        width = max(self.frame["width"] * k * s, 1.0)
+        centre = self.frame.get("inset", 1.5) * k * s + width / 2
+        big = size * s
+        mask = Image.new("L", (big, big), 0)
+        ImageDraw.Draw(mask).rounded_rectangle(
+            [centre, centre, big - centre - 1, big - centre - 1],
+            radius=max(self.frame.get("rx", self.panel_rx) * k * s, 0),
+            outline=255, width=max(int(round(width)), 1))
+        # Painting a solid colour through the shrunken mask keeps the ring free
+        # of the dark fringe a downscaled RGBA layer would leave behind.
+        ring = Image.new("RGBA", (size, size),
+                         _as_rgb(color or self.frame.get("color", "#3A4657")) + (255,))
+        ring.putalpha(mask.resize((size, size), Image.LANCZOS))
+        img.alpha_composite(ring)
+
+    def draw(self, char, size, blink=0.0, mouth_open=0.0, frame_color=None):
         """Render one face frame at ``size`` pixels square."""
         face = self.faces.get(char)
         if face is None:
@@ -280,6 +313,9 @@ class FaceRenderer:
         else:
             for e in mouth:
                 self._draw_elem(img, e, k)
+
+        # Last, so a tear or a Zzz that strays into the margin sits behind it.
+        self._draw_frame(img, size, k, frame_color)
         return img
 
     def _paste_squashed(self, img, layer, pivot_y, factor):
@@ -317,6 +353,7 @@ class FaceAnimator:
         self.previous = None
         self.transition_start = None
         self.talking = False
+        self.frame_color = None  # None keeps the neutral bezel from faces.json
         self._mouth = 0.0
         self._blink_start = None
         self._next_blink = time.time() + random.uniform(BLINK_MIN_GAP, BLINK_MAX_GAP)
@@ -342,6 +379,16 @@ class FaceAnimator:
 
     def set_talking(self, talking):
         self.talking = bool(talking)
+
+    def set_frame_color(self, color):
+        """Tint the bezel, e.g. with the status colour. ``None`` restores default."""
+        color = _as_rgb(color) if color else None
+        if color != self.frame_color:
+            # Every cached frame carries the old ring, so none of them are worth
+            # keeping. Dropping them also stops a long session from filling the
+            # cache with one dead colour per status change.
+            self._cache.clear()
+            self.frame_color = color
 
     def active(self):
         """True while the face still has motion to render."""
@@ -394,10 +441,11 @@ class FaceAnimator:
     # -- rendering ---------------------------------------------------------
 
     def _cached(self, char, blink, mouth):
-        key = (char, self.size, round(blink, 3), round(mouth, 3))
+        key = (char, self.size, round(blink, 3), round(mouth, 3), self.frame_color)
         img = self._cache.get(key)
         if img is None:
-            img = self.renderer.draw(char, self.size, blink=blink, mouth_open=mouth)
+            img = self.renderer.draw(char, self.size, blink=blink, mouth_open=mouth,
+                                     frame_color=self.frame_color)
             if img is not None and len(self._cache) < 512:
                 self._cache[key] = img
         return img
