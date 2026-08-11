@@ -12,6 +12,7 @@ from camera import CameraThread
 from utils import ColorUtils, ImageUtils, TextUtils
 from whisplay_client import create_whisplay_hardware
 import face_engine
+import boot_animation
 
 STATUS_ICON_DIR = os.path.join(os.path.dirname(__file__), "status-bar-icon")
 if STATUS_ICON_DIR not in sys.path:
@@ -153,8 +154,6 @@ class RenderThread(threading.Thread):
         self.font_path = font_path
         self.fps = fps
         self.render_init_screen()
-        # Clear logo after 1 second and start running loop
-        time.sleep(1)
         self.running = True
         self.status_font = ImageFont.truetype(self.font_path, status_font_size)
         self.emoji_font = ImageFont.truetype(self.font_path, emoji_font_size)
@@ -184,14 +183,18 @@ class RenderThread(threading.Thread):
         self._last_face_signature = None
 
     def render_init_screen(self):
-        # Display logo on startup
+        """HUD boot sequence. Set BOOT_ANIM_SECONDS=0 for the old still logo."""
         logo_path = os.path.join("img", "logo.png")
+        if boot_animation.DEFAULT_DURATION > 0:
+            boot_animation.play(whisplay, ImageUtils, logo_path)
+            return
         if os.path.exists(logo_path):
             logo_image = Image.open(logo_path).convert("RGBA")
             logo_image = logo_image.resize((whisplay.LCD_WIDTH, whisplay.LCD_HEIGHT), Image.LANCZOS)
             rgb565_data = ImageUtils.image_to_rgb565(logo_image, whisplay.LCD_WIDTH, whisplay.LCD_HEIGHT)
             whisplay.set_backlight(100)
             whisplay.draw_image(0, 0, whisplay.LCD_WIDTH, whisplay.LCD_HEIGHT, rgb565_data)
+            time.sleep(1)
 
     def render_frame(self, status, emoji, text, scroll_top, battery_level, battery_color):
         global current_scroll_speed, current_image_path, current_image, camera_mode
