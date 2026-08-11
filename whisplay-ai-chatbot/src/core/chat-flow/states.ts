@@ -22,17 +22,6 @@ const WAKE_SPEECH_START_SEC = parseFloat(
   process.env.WAKE_SPEECH_START_SEC || "3",
 );
 
-// Spoken when the wake word fires but nobody follows up.
-// Pause after her nudge before reopening the mic, so she does not record
-// her own last syllable.
-const NUDGE_SETTLE_MS = parseInt(process.env.NUDGE_SETTLE_MS || "150", 10);
-
-const WAKE_NUDGES = [
-  "Hmm? Did you say something?",
-  "I'm listening, what's up?",
-  "Yeah? I'm here.",
-  "You called?",
-];
 import {
   recordAudio,
   recordAwaitingSpeech,
@@ -267,14 +256,8 @@ export const flowStates: Record<FlowName, FlowStateHandler> = {
     // Wait a short while for speech to start rather than sitting on
     // "Listening..." until the hard cap. If nothing comes, ask once, listen
     // again, then give up and go back to waiting for the wake word.
-    // Sampling the noise floor costs a few hundred ms, and it has not changed
-    // between the first listen and the retry a second later — measure once.
-    let cachedLevel: number | null = null;
     const listen = async (prompt: string): Promise<boolean> => {
-      if (cachedLevel === null) {
-        cachedLevel = await getDynamicVoiceDetectLevel();
-      }
-      const level = cachedLevel;
+      const level = await getDynamicVoiceDetectLevel();
       if (!stillHere()) return false;
       display({
         status: "listening",
@@ -297,19 +280,8 @@ export const flowStates: Record<FlowName, FlowStateHandler> = {
         return;
       }
       if (!stillHere()) return;
-
-      const nudge =
-        WAKE_NUDGES[Math.floor(Math.random() * WAKE_NUDGES.length)];
-      await ctx.streamExternalReply(nudge);
-      // Just enough for her own audio to clear the capture path.
-      await new Promise((resolve) => setTimeout(resolve, NUDGE_SETTLE_MS));
-      if (!stillHere()) return;
-
-      if (await listen("Still listening...")) {
-        if (stillHere()) ctx.transitionTo("asr");
-        return;
-      }
-      if (!stillHere()) return;
+      // Nobody spoke. Go quietly back to waiting for the wake word rather than
+      // asking after them; auto-talk keeps to its own schedule regardless.
       ctx.endWakeSession();
       ctx.transitionTo("sleep");
     })().catch((err) => {
