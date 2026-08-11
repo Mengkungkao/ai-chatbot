@@ -134,11 +134,21 @@ export const getCurrentTimeTag = (): string => {
   ].join(":");
 };
 
-export function splitSentences(text: string): {
+export function splitSentences(
+  text: string,
+  options: { breakOnComma?: boolean } = {},
+): {
   sentences: string[];
   remaining: string;
 } {
-  const regex = /.*?([。！？!?，,]|(?<!\d)\.)(?=\s|$)/gs;
+  // Breaking on commas is fine for laying out text, but ruinous for speech:
+  // while streaming, "Aww," completes and is spoken before "that's sweet!"
+  // has arrived, so each half is synthesised separately and the phrase lands
+  // with a seam in the middle. Callers feeding TTS pass breakOnComma: false.
+  const breakOnComma = options.breakOnComma !== false;
+  const regex = breakOnComma
+    ? /.*?([。！？!?，,]|(?<!\d)\.)(?=\s|$)/gs
+    : /.*?([。！？!?]|(?<!\d)\.)(?=\s|$)/gs;
 
   const sentences: string[] = [];
   let lastIndex = 0;
@@ -211,6 +221,47 @@ export function getWavFileDurationMs(buffer: Buffer<ArrayBuffer>): number {
     sampleWidth,
   });
 }
+
+/**
+ * Peak amplitude of a 16-bit PCM WAV, as a fraction of full scale (0..1).
+ * Returns -1 when the buffer is not readable 16-bit PCM.
+ */
+export function getWavPeakLevel(buffer: Buffer): number {
+  if (buffer.length < 46) return -1;
+  const sampleWidth = buffer.readUInt16LE(34) / 8;
+  if (sampleWidth !== 2) return -1; // only 16-bit PCM is handled
+  const body = buffer.subarray(44);
+  const sampleCount = Math.floor(body.length / 2);
+  if (sampleCount === 0) return -1;
+
+  // Step through long recordings rather than reading every sample; a real
+  // utterance is nowhere near quiet enough for the stride to hide it.
+  const stride = Math.max(1, Math.floor(sampleCount / 40000));
+  let peak = 0;
+  for (let i = 0; i < sampleCount; i += stride) {
+    const sample = Math.abs(body.readInt16LE(i * 2));
+    if (sample > peak) peak = sample;
+  }
+  return peak / 32768;
+}
+
+/**
+ * True when a recording holds no speech. Whisper invents stock phrases
+ * ("Thank you for watching!") when handed silence, so it is both cheaper and
+ * more reliable to never send it than to filter its output afterwards.
+ */
+export const isSilentRecording = (filePath: string): boolean => {
+  const threshold = parseFloat(process.env.ASR_SILENCE_PEAK_THRESHOLD || "0.02");
+  if (!Number.isFinite(threshold) || threshold <= 0) return false;
+  if (!existsSync(filePath) || !filePath.endsWith(".wav")) return false;
+  try {
+    const peak = getWavPeakLevel(readFileSync(filePath));
+    if (peak < 0) return false; // unknown format — let ASR decide
+    return peak < threshold;
+  } catch {
+    return false;
+  }
+};
 
 export const killAllProcesses = (pid: number) => {
   exec(`ps --ppid ${pid} -o pid=`, (err, stdout, stderr) => {

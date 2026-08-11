@@ -39,6 +39,8 @@ export interface Status {
   wifi_signal_level: number;
   vpn_connected: boolean;
   rag_icon_visible: boolean;
+  /** Whether she may start conversations on her own (triple-press toggle). */
+  auto_talk_enabled: boolean;
   image_icon_visible: boolean;
   music_progress: number | undefined;
   music_duration_ms: number | undefined;
@@ -65,6 +67,7 @@ export class WhisplayDisplay {
     wifi_signal_level: 0,
     vpn_connected: false,
     rag_icon_visible: false,
+    auto_talk_enabled: false,
     image_icon_visible: false,
     music_progress: undefined,
     music_duration_ms: undefined,
@@ -465,6 +468,7 @@ export class WhisplayDisplay {
       wifi_signal_level,
       vpn_connected,
       rag_icon_visible,
+      auto_talk_enabled,
       image_icon_visible,
       music_progress,
       music_duration_ms,
@@ -497,6 +501,7 @@ export class WhisplayDisplay {
     this.currentStatus.wifi_signal_level = wifi_signal_level;
     this.currentStatus.vpn_connected = vpn_connected;
     this.currentStatus.rag_icon_visible = rag_icon_visible;
+    this.currentStatus.auto_talk_enabled = auto_talk_enabled;
     this.currentStatus.image_icon_visible = image_icon_visible;
     this.currentStatus.music_progress = music_progress;
     this.currentStatus.music_duration_ms = music_duration_ms;

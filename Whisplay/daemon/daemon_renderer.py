@@ -210,7 +210,7 @@ class DesktopRenderer:
 
         top_margin = 6
         left = 14
-        draw.text((left, top_margin), "whisplay", fill=(255, 255, 255), font=self.title_font)
+        draw.text((left, top_margin), "Home", fill=(255, 255, 255), font=self.title_font)
         self._draw_desktop_legend(draw, left, top_margin + 25)
 
         if not apps:

@@ -20,6 +20,7 @@ if STATUS_ICON_DIR not in sys.path:
 from battery_icon import BatteryStatusIcon
 from wifi_icon import WifiStatusIcon
 from rag_icon import RagStatusIcon
+from autotalk_icon import AutoTalkStatusIcon
 from image_icon import ImageStatusIcon
 from wireguard_icon import WireguardStatusIcon
 
@@ -33,6 +34,9 @@ emoji_font_size=80
 battery_font_size=13
 main_text_font_size=15
 tool_tag_font_size=13
+# Body text alignment on the panel. Set TEXT_ALIGN=left to restore the old
+# left-aligned layout.
+TEXT_ALIGN = (os.environ.get("TEXT_ALIGN") or "center").strip().lower()
 # Header strip height. Derived from the font sizes it has to hold so that
 # resizing the face reflows the layout instead of clipping it.
 HEADER_HEIGHT = status_font_size + emoji_font_size + 38
@@ -124,6 +128,8 @@ current_network_connected = None
 current_wifi_signal_level = 0
 current_vpn_connected = False
 current_rag_icon_visible = False
+# None until the app reports it, so the LED is hidden rather than wrong.
+current_auto_talk_enabled = None
 current_image_icon_visible = False
 current_music_progress = None
 current_music_duration_ms = None
@@ -173,6 +179,9 @@ class RenderThread(threading.Thread):
                      if face_renderer else None)
         self.face_active = False
         self.needs_full_render = True
+        # Identifies the last face tile pushed to the panel, so an unchanged
+        # frame can be skipped. Cleared whenever a full render paints over it.
+        self._last_face_signature = None
 
     def render_init_screen(self):
         # Display logo on startup
@@ -187,6 +196,9 @@ class RenderThread(threading.Thread):
     def render_frame(self, status, emoji, text, scroll_top, battery_level, battery_color):
         global current_scroll_speed, current_image_path, current_image, camera_mode
         self.pending_auto_scroll_after_hold = False
+        # A full render repaints the face area, so the skip cache no longer
+        # describes what is on the panel.
+        self._last_face_signature = None
         if camera_mode:
             return False  # Skip rendering if in camera mode
         if current_image_path not in [None, ""]:
@@ -363,7 +375,7 @@ class RenderThread(threading.Thread):
                 if self.is_tool_tag_line(line):
                     self.draw_tool_tag(show_text_draw, line.get("label", ""), int(line.get("count", 1)), line.get("elapsed", ""), 10, render_y, self.whisplay.LCD_WIDTH - 20, item_height)
                 else:
-                    TextUtils.draw_mixed_text(show_text_draw, show_text_image, str(line), font, (10, render_y))
+                    TextUtils.draw_mixed_text(show_text_draw, show_text_image, str(line), font, (self.text_line_x(str(line), font), render_y))
                 render_y += item_height
             # Update cache image
             self.text_cache_image = show_text_image
@@ -583,6 +595,18 @@ class RenderThread(threading.Thread):
             x = self.whisplay.CornerHeight
         return x, status_font_size + 8
 
+    def text_line_x(self, line, font):
+        """Left edge for a body-text line. Centred unless TEXT_ALIGN=left.
+
+        get_line_img is cached and is the same object draw_mixed_text will
+        paste, so measuring here costs nothing and matches the drawn width
+        exactly, including emoji.
+        """
+        if TEXT_ALIGN == "left":
+            return 10
+        width = TextUtils.get_line_img(line, font).width
+        return max(0, (self.whisplay.LCD_WIDTH - width) // 2)
+
     def draw_face_region(self):
         """Repaint only the face's bounding box.
 
@@ -599,8 +623,19 @@ class RenderThread(threading.Thread):
         slot_x, slot_y = self.face_slot()
         y = max(0, slot_y - FACE_TILE_PAD)
         h = min(HEADER_HEIGHT - y, size + FACE_TILE_PAD * 2)
-        tile = Image.new("RGBA", (size, h), (0, 0, 0, 255))
         paste_y = (slot_y - y) + int(round(offset)) + (size - img.height) // 2
+
+        # The breathing bob is under two pixels and lands on the same rounded
+        # offset for most of its cycle, and the animator hands back the very
+        # same cached frame whenever blink and mouth are unchanged. Those frames
+        # are byte-identical, so composing and pushing them over SPI again is
+        # pure waste — skip straight out and leave the panel as it is.
+        signature = (id(img), paste_y, slot_x, y, size, h)
+        if signature == self._last_face_signature:
+            return True
+        self._last_face_signature = signature
+
+        tile = Image.new("RGBA", (size, h), (0, 0, 0, 255))
         tile.alpha_composite(img, (0, max(0, min(h - img.height, paste_y))))
         self.whisplay.draw_image(slot_x, y, size, h,
                                  ImageUtils.image_to_rgb565(tile, size, h))
@@ -690,6 +725,7 @@ class RenderThread(threading.Thread):
             "wifi_signal_level": current_wifi_signal_level,
             "vpn_connected": current_vpn_connected,
             "rag_icon_visible": current_rag_icon_visible,
+            "auto_talk_enabled": current_auto_talk_enabled,
             "image_icon_visible": current_image_icon_visible,
         }
         status_icons = self.build_status_icons(status_icon_context)
@@ -746,6 +782,8 @@ class RenderThread(threading.Thread):
             icons.append(ImageStatusIcon(status_font_size))
         if context.get("rag_icon_visible"):
             icons.append(RagStatusIcon(status_font_size))
+        if context.get("auto_talk_enabled") is not None:
+            icons.append(AutoTalkStatusIcon(status_font_size, context.get("auto_talk_enabled")))
 
         for item in sorted(status_icon_factories, key=lambda entry: entry["priority"]):
             icon_list = item["factory"](context)
@@ -831,6 +869,7 @@ def update_display_data(status=None, emoji=None, text=None,
                   text_delta=None,
                   scroll_speed=None, scroll_sync=None, battery_level=None, battery_color=None, image_path=None,
                   network_connected=None, vpn_connected=None, rag_icon_visible=None, image_icon_visible=None, transaction_id=None,
+                  auto_talk_enabled=None,
                   wifi_signal_level=None, tool_placeholders=None,
                   music_progress=None, music_duration_ms=None, approval_mode=None, terminal_text=None):
     global current_status, current_emoji, current_text, current_battery_level
@@ -841,6 +880,7 @@ def update_display_data(status=None, emoji=None, text=None,
     global current_scroll_sync_target_top, current_scroll_sync_speed
     global current_scroll_sync_hold_until
     global current_network_connected, current_vpn_connected, current_rag_icon_visible, current_image_icon_visible, current_transaction_id
+    global current_auto_talk_enabled
     global current_wifi_signal_level
     global current_music_progress, current_music_duration_ms
     global current_approval_mode
@@ -914,6 +954,8 @@ def update_display_data(status=None, emoji=None, text=None,
         current_vpn_connected = vpn_connected
     if rag_icon_visible is not None:
         current_rag_icon_visible = rag_icon_visible
+    if auto_talk_enabled is not None:
+        current_auto_talk_enabled = auto_talk_enabled
     if image_icon_visible is not None:
         current_image_icon_visible = image_icon_visible
     if transaction_id is not None:
@@ -1049,6 +1091,7 @@ def handle_client(client_socket, addr, whisplay):
                     wifi_signal_level = content.get("wifi_signal_level", None)
                     vpn_connected = content.get("vpn_connected", None)
                     rag_icon_visible = content.get("rag_icon_visible", None)
+                    auto_talk_enabled = content.get("auto_talk_enabled", None)
                     image_icon_visible = content.get("image_icon_visible", None)
                     music_progress = content.get("music_progress", None)
                     music_duration_ms = content.get("music_duration_ms", None)
@@ -1100,7 +1143,7 @@ def handle_client(client_socket, addr, whisplay):
                               (image_path is not None) or (network_connected is not None) or \
                             (wifi_signal_level is not None) or \
                             (vpn_connected is not None) or \
-                            (rag_icon_visible is not None) or (image_icon_visible is not None) or (scroll_sync is not None) or \
+                            (rag_icon_visible is not None) or (auto_talk_enabled is not None) or (image_icon_visible is not None) or (scroll_sync is not None) or \
                             (tool_placeholders is not None) or \
                             (music_progress is not None) or (music_duration_ms is not None) or (approval_mode is not None) or \
                             (terminal_text is not None):
@@ -1112,6 +1155,7 @@ def handle_client(client_socket, addr, whisplay):
                                      tool_placeholders=tool_placeholders,
                                      vpn_connected=vpn_connected,
                                                  rag_icon_visible=rag_icon_visible,
+                                                 auto_talk_enabled=auto_talk_enabled,
                                          image_icon_visible=image_icon_visible,
                                                  transaction_id=transaction_id,
                                                  music_progress=music_progress,

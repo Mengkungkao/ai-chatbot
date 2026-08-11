@@ -1,6 +1,7 @@
 import {
   getCurrentTimeTag,
   getRecordFileDurationMs,
+  isSilentRecording,
   splitSentences,
 } from "./../utils/index";
 import { display } from "../device/display";
@@ -21,6 +22,19 @@ import { ChatFlowContext, FlowName } from "./chat-flow/types";
 import { playWakeupChime } from "../device/audio";
 import { ProactiveChat } from "./proactive-chat";
 import { isPhantomTranscript } from "../utils/asr-filter";
+
+// Pause between the wake chime ending and the mic opening, so the tail of the
+// chime is not captured as speech.
+const WAKE_CHIME_SETTLE_MS = parseInt(
+  process.env.WAKE_CHIME_SETTLE_MS || "120",
+  10,
+);
+// How long after she stops speaking the wake word is ignored, so her own voice
+// coming back through the mic cannot wake her.
+const SELF_SPEECH_GUARD_MS = parseInt(
+  process.env.SELF_SPEECH_GUARD_MS || "1200",
+  10,
+);
 import { stopMusicPlayback, isMusicPlaying } from "../device/music-player";
 import type { Status } from "../device/display";
 
@@ -59,6 +73,9 @@ class ChatFlow implements ChatFlowContext {
   currentExternalEmoji: string = "";
   stateMachine: FlowStateMachine;
   proactiveChat: ProactiveChat | null = null;
+  // When she last stopped speaking, used to ignore wake triggers caused by her
+  // own voice still reaching the mic.
+  lastSpeechEndedAt: number = 0;
   isFromWakeListening: boolean = false;
   enterMusicAfterAnswer: boolean = false;
   musicDisplayText: string = "";
@@ -126,9 +143,18 @@ class ChatFlow implements ChatFlowContext {
     if (wakeEnabled === "true") {
       this.wakeWordListener = new WakeWordListener();
       this.wakeWordListener.on("wake", () => {
-        if (this.currentFlowName === "sleep") {
-          this.startWakeSession();
+        if (this.currentFlowName !== "sleep") return;
+        // Her own reply comes back through the mic a moment after playback
+        // ends, and the wake model happily fires on it. Ignore anything that
+        // arrives too soon after she stopped talking.
+        const sinceSpeech = Date.now() - this.lastSpeechEndedAt;
+        if (sinceSpeech < SELF_SPEECH_GUARD_MS) {
+          console.log(
+            `[WakeWord] Ignored, ${sinceSpeech}ms after she finished speaking.`,
+          );
+          return;
         }
+        this.startWakeSession();
       });
       this.wakeWordListener.start();
     }
@@ -215,12 +241,18 @@ class ChatFlow implements ChatFlowContext {
       console.log("Record audio too short, skipping recognition.");
       return Promise.resolve("");
     }
+    // Cheaper and more reliable than filtering Whisper's output: silence is
+    // what makes it hallucinate in the first place, so never send it.
+    if (isSilentRecording(path)) {
+      console.log("[ASR] Recording is silent, skipping recognition.");
+      return "";
+    }
     console.time(`[ASR time]`);
     const result = await recognizeAudio(path);
     console.timeEnd(`[ASR time]`);
     if (isPhantomTranscript(result)) {
-      // Whisper invents stock phrases from silence; letting one through would
-      // put words in the person's mouth and leave them in her memory.
+      // Backstop for quiet-but-not-silent audio: letting one through would put
+      // words in the person's mouth and leave them in her memory.
       console.log(`[ASR] Discarded phantom transcript: ${JSON.stringify(result)}`);
       return "";
     }
@@ -252,6 +284,15 @@ class ChatFlow implements ChatFlowContext {
     // again straight after the person has just been talking to her.
     if (flowName !== "sleep" && flowName !== "external_answer") {
       this.proactiveChat?.noteActivity();
+    }
+    // Leaving an answer means playback has finished; note the moment so the
+    // wake word can ignore her own trailing audio.
+    if (
+      this.isAnswerFlow() &&
+      flowName !== "answer" &&
+      flowName !== "external_answer"
+    ) {
+      this.lastSpeechEndedAt = Date.now();
     }
     console.log(`[${getCurrentTimeTag()}] switch to:`, flowName);
     this.stateMachine.transitionTo(flowName);
@@ -478,8 +519,23 @@ class ChatFlow implements ChatFlowContext {
     this.wakeSessionStartAt = Date.now();
     this.wakeSessionLastSpeechAt = this.wakeSessionStartAt;
     this.endAfterAnswer = false;
-    playWakeupChime();
-    this.transitionTo("wake_listening");
+    // Listening has to wait for the chime to finish and the capture buffer to
+    // drain. Recording straight away picks the chime up through the mic, and
+    // Whisper faithfully transcribes it as the person saying "BEEP".
+    void playWakeupChime()
+      .catch(() => undefined)
+      .then(
+        () =>
+          new Promise<void>((resolve) =>
+            setTimeout(resolve, WAKE_CHIME_SETTLE_MS),
+          ),
+      )
+      .then(() => {
+        if (!this.wakeSessionActive) return;
+        this.wakeSessionStartAt = Date.now();
+        this.wakeSessionLastSpeechAt = this.wakeSessionStartAt;
+        this.transitionTo("wake_listening");
+      });
   };
 
   endWakeSession = (): void => {

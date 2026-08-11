@@ -209,21 +209,81 @@ class TextUtils:
     return width, height
 
   @staticmethod
+  def is_cjk(char):
+    """True for scripts that wrap per character rather than per word."""
+    code = ord(char)
+    return (0x2E80 <= code <= 0x9FFF      # CJK radicals through unified ideographs
+            or 0x3000 <= code <= 0x303F   # CJK punctuation
+            or 0xAC00 <= code <= 0xD7AF   # Hangul syllables
+            or 0xF900 <= code <= 0xFAFF   # CJK compatibility ideographs
+            or 0xFF00 <= code <= 0xFFEF)  # halfwidth and fullwidth forms
+
+  @staticmethod
+  def break_units(text):
+    """Split text into pieces that must not be broken across a line end.
+
+    Latin words are kept whole; CJK characters, spaces, punctuation and emoji
+    each stand alone so they remain valid break points.
+    """
+    units = []
+    word = ""
+    for char in text:
+      if (char.isalnum() or char in "'’-_@/") and not TextUtils.is_cjk(char):
+        word += char
+      else:
+        if word:
+          units.append(word)
+          word = ""
+        units.append(char)
+    if word:
+      units.append(word)
+    return units
+
+  @staticmethod
   def wrap_text(draw, text, font, max_width):
+    """Wrap to max_width without splitting words.
+
+    The previous version measured one character at a time and broke the line
+    the moment it overflowed, so "the" could come out as "t" / "he".
+    """
     lines = []
     current_line = ""
     current_width = 0
-    for char in text:
-      test_line = current_line + char
-      char_width = TextUtils.get_char_size(font, char)[0]
-      current_width += char_width
-      w = current_width
-      if w <= max_width:
-        current_line = test_line
-      else:
+
+    def unit_width(unit):
+      return sum(TextUtils.get_char_size(font, c)[0] for c in unit)
+
+    for unit in TextUtils.break_units(text):
+      width = unit_width(unit)
+      if current_width + width <= max_width:
+        current_line += unit
+        current_width += width
+        continue
+
+      # Does not fit. Start a new line, dropping a space that would otherwise
+      # be stranded at the beginning of it.
+      if current_line:
         lines.append(current_line)
-        current_line = char
-        current_width = char_width
+        current_line = ""
+        current_width = 0
+      if unit == " ":
+        continue
+      if width <= max_width:
+        current_line = unit
+        current_width = width
+        continue
+
+      # A single unit wider than the panel (a long URL, say) still has to be
+      # broken somewhere, so fall back to per-character for that unit only.
+      for char in unit:
+        char_width = TextUtils.get_char_size(font, char)[0]
+        if current_line and current_width + char_width > max_width:
+          lines.append(current_line)
+          current_line = ""
+          current_width = 0
+        current_line += char
+        current_width += char_width
+
     if current_line:
       lines.append(current_line)
     return lines

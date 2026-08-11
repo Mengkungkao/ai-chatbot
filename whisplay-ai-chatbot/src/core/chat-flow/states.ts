@@ -15,8 +15,27 @@ import {
 // Idle face. Defaults to a neutral face so the renderer animates blinking eyes
 // rather than showing the static sleeping glyph.
 const IDLE_EMOJI = (process.env.IDLE_EMOJI || "😐").trim() || "😐";
+
+// How long after waking she waits for speech to begin before asking whether
+// anyone is actually there.
+const WAKE_SPEECH_START_SEC = parseFloat(
+  process.env.WAKE_SPEECH_START_SEC || "3",
+);
+
+// Spoken when the wake word fires but nobody follows up.
+// Pause after her nudge before reopening the mic, so she does not record
+// her own last syllable.
+const NUDGE_SETTLE_MS = parseInt(process.env.NUDGE_SETTLE_MS || "150", 10);
+
+const WAKE_NUDGES = [
+  "Hmm? Did you say something?",
+  "I'm listening, what's up?",
+  "Yeah? I'm here.",
+  "You called?",
+];
 import {
   recordAudio,
+  recordAwaitingSpeech,
   recordAudioManually,
   recordFileFormat,
   getDynamicVoiceDetectLevel,
@@ -84,6 +103,7 @@ export const flowStates: Record<FlowName, FlowStateHandler> = {
         status: "idle",
         emoji: on ? "😉" : IDLE_EMOJI,
         text: on ? "Auto-talk on." : "Auto-talk off.",
+        auto_talk_enabled: on,
       });
     });
     display({
@@ -91,6 +111,7 @@ export const flowStates: Record<FlowName, FlowStateHandler> = {
       emoji: IDLE_EMOJI,
       RGB: "#000055",
       rag_icon_visible: false,
+      auto_talk_enabled: ctx.proactiveChat?.isOn() ?? false,
       ...(getCurrentStatus().text.endsWith("Listening...") || !getCurrentStatus().text
         ? {
           text: `Long Press the button to say something${ctx.enableCamera ? ",\ndouble click to launch camera" : ""
@@ -241,23 +262,60 @@ export const flowStates: Record<FlowName, FlowStateHandler> = {
       text: "Detecting voice level...",
       rag_icon_visible: false,
     });
-    getDynamicVoiceDetectLevel().then((level) => {
+    const stillHere = () => ctx.currentFlowName === "wake_listening";
+
+    // Wait a short while for speech to start rather than sitting on
+    // "Listening..." until the hard cap. If nothing comes, ask once, listen
+    // again, then give up and go back to waiting for the wake word.
+    // Sampling the noise floor costs a few hundred ms, and it has not changed
+    // between the first listen and the retry a second later — measure once.
+    let cachedLevel: number | null = null;
+    const listen = async (prompt: string): Promise<boolean> => {
+      if (cachedLevel === null) {
+        cachedLevel = await getDynamicVoiceDetectLevel();
+      }
+      const level = cachedLevel;
+      if (!stillHere()) return false;
       display({
         status: "listening",
         emoji: DEFAULT_EMOJI,
         RGB: "#00ff00",
-        text: `(Detect level: ${level}%) Listening...`,
+        text: prompt,
         rag_icon_visible: false,
       });
-      recordAudio(ctx.currentRecordFilePath, ctx.wakeRecordMaxSec, level)
-        .then(() => {
-          ctx.transitionTo("asr");
-        })
-        .catch((err) => {
-          console.error("Error during auto recording:", err);
-          ctx.endWakeSession();
-          ctx.transitionTo("sleep");
-        });
+      return recordAwaitingSpeech(
+        ctx.currentRecordFilePath,
+        ctx.wakeRecordMaxSec,
+        level,
+        WAKE_SPEECH_START_SEC,
+      );
+    };
+
+    (async () => {
+      if (await listen("Listening...")) {
+        if (stillHere()) ctx.transitionTo("asr");
+        return;
+      }
+      if (!stillHere()) return;
+
+      const nudge =
+        WAKE_NUDGES[Math.floor(Math.random() * WAKE_NUDGES.length)];
+      await ctx.streamExternalReply(nudge);
+      // Just enough for her own audio to clear the capture path.
+      await new Promise((resolve) => setTimeout(resolve, NUDGE_SETTLE_MS));
+      if (!stillHere()) return;
+
+      if (await listen("Still listening...")) {
+        if (stillHere()) ctx.transitionTo("asr");
+        return;
+      }
+      if (!stillHere()) return;
+      ctx.endWakeSession();
+      ctx.transitionTo("sleep");
+    })().catch((err) => {
+      console.error("Error during auto recording:", err);
+      ctx.endWakeSession();
+      ctx.transitionTo("sleep");
     });
   },
   asr: (ctx: ChatFlowContext) => {
@@ -299,6 +357,13 @@ export const flowStates: Record<FlowName, FlowStateHandler> = {
         }
         return;
       }
+      // Nothing was heard — silence, or a discarded phantom transcript. Say so
+      // rather than dropping back to idle as if the press never happened.
+      display({
+        status: "idle",
+        emoji: IDLE_EMOJI,
+        text: "I didn't catch that. Hold the button while you speak.",
+      });
       ctx.transitionTo("sleep");
     });
   },
