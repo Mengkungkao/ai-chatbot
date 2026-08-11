@@ -27,6 +27,14 @@ W = H = 100
 PANEL_MARGIN = 6
 PANEL_RX = 26
 
+# Bezel drawn around the panel: a rounded outline living in the canvas margin,
+# clear of the panel edge so the face reads as something mounted in a frame.
+# ``FRAME_INSET`` is the gap from the canvas edge to the outer edge of the ring;
+# the radius is grown to keep the ring concentric with the panel corners.
+FRAME_WIDTH = 3.0
+FRAME_INSET = 1.5
+FRAME_RX = PANEL_RX + (PANEL_MARGIN - (FRAME_INSET + FRAME_WIDTH / 2))
+
 BLACK = "#0A0A0A"
 WHITE = "#F5F5F0"
 BLUE = "#4FB8FF"
@@ -36,6 +44,7 @@ ORANGE = "#FF8C1A"
 BLUSH = "#FF7A9C"
 MOUTH_IN = "#B32B3E"
 TONGUE = "#FF6B81"
+FRAME = "#3A4657"  # neutral bezel; the runtime may tint it with the status colour
 
 
 class Face:
@@ -394,6 +403,14 @@ SVG_RENDER = {"pill": svg_pill, "circle": svg_circle, "arc": svg_arc, "flat": sv
               "caret": svg_caret, "x": svg_x}
 
 
+def svg_frame():
+    """The bezel ring, stroked on its centre line like the PIL renderer draws it."""
+    c = FRAME_INSET + FRAME_WIDTH / 2
+    return (f'<rect x="{c:.2f}" y="{c:.2f}" width="{W - 2*c:.2f}" height="{H - 2*c:.2f}" '
+            f'rx="{FRAME_RX:.2f}" fill="none" stroke="{FRAME}" '
+            f'stroke-width="{FRAME_WIDTH}"/>')
+
+
 def render_svg(elems):
     parts = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" '
              f'width="{W}" height="{H}">',
@@ -401,6 +418,8 @@ def render_svg(elems):
              f'height="{H - 2*PANEL_MARGIN}" rx="{PANEL_RX}" fill="{BLACK}"/>']
     for e in elems:
         parts.append(SVG_RENDER[e["t"]](e))
+    # Last, so a tear or a Zzz that strays into the margin sits behind the ring.
+    parts.append(svg_frame())
     parts.append("</svg>")
     return "\n".join(parts)
 
@@ -417,6 +436,8 @@ def main():
         "meta": {
             "canvas": W,
             "panel": {"margin": PANEL_MARGIN, "rx": PANEL_RX, "fill": BLACK},
+            "frame": {"width": FRAME_WIDTH, "inset": FRAME_INSET, "rx": FRAME_RX,
+                      "color": FRAME},
         },
         "faces": {},
     }

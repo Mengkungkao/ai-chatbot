@@ -5,6 +5,12 @@
    "margin": 6,
    "rx": 26,
    "fill": "#0A0A0A"
+  },
+  "frame": {
+   "width": 3.0,
+   "inset": 1.5,
+   "rx": 29.0,
+   "color": "#3A4657"
   }
  },
  "faces": {
