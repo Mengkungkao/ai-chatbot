@@ -18,7 +18,15 @@ refresh:
 
 button:
   debounce_ms: 75              # ignore contact bounce
-  click_window_ms: 400         # window to collect additional clicks
+  # Window to collect additional clicks. This is also the latency of a
+  # single click, since a lone click can only be confirmed once the window
+  # has passed with no further press.
+  #   too low  -> multi-click gestures (home / refresh / exit) never form
+  #   too high -> single clicks feel sluggish
+  # 400 ms proved too tight on real hardware -- four deliberate clicks all
+  # registered as separate singles. Measured gaps are logged with every
+  # gesture, so tune this from the log rather than by feel.
+  click_window_ms: 700
   long_press_ms: 700           # presses at/over this are not counted as clicks
 
 display:

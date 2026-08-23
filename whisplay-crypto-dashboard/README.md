@@ -7,17 +7,17 @@ It runs as a Whisplay **daemon app**: the `whisplay-daemon` service owns the LCD
 RGB LED and button, and this app draws into the shared framebuffer it hands out.
 
 ```
-        BOOT                    1 CLICK              2 CLICKS
+        BOOT                    1 CLICK                HOLD
           |                        |                     |
           v                        v                     v
-   +-------------+          next dashboard        next chart timeframe
-   |  BTC/USD    |          page in the ring      1H > 4H > 1D > 1W > 1Y
+   +-------------+          next chart timeframe   next dashboard
+   |  BTC/USD    |          1H > 4H > 1D > 1W > 1Y page in the ring
    |             |
    | $112,540.32 |          3 CLICKS              4 CLICKS
    |  +2.41%     |             |                     |
    |    /\/\     |             v                     v
-   |  1H 4H 1D   |       force refresh          return HOME
-   +-------------+                              (from any page)
+   |  1H 4H 1D   |       force refresh         leave the app
+   +-------------+       (2 clicks = HOME)
 ```
 
 ---
@@ -86,6 +86,8 @@ Run it directly:
 ```
 
 Or launch from the Whisplay desktop: single-click to select **BTC Dashboard**, then long press.
+(Those are the *desktop's* gestures, set by the daemon. Once the app is running it uses its own
+mapping — see Controls below.)
 
 ---
 
@@ -93,22 +95,30 @@ Or launch from the Whisplay desktop: single-click to select **BTC Dashboard**, t
 
 | Gesture | Action |
 |---|---|
-| **1 click** | Next page (Bitcoin > Market > Top > Statistics > System > Bitcoin) |
-| **2 clicks** | Next chart timeframe (1H > 4H > 1D > 1W > 1Y), jumps to the chart |
+| **1 click** | Next chart timeframe (1H > 4H > 1D > 1W > 1Y) |
+| **hold** | Next page (Bitcoin > Market > Top > Statistics > System > Bitcoin) |
+| **2 clicks** | Return **HOME**, from any page |
 | **3 clicks** | Force an immediate refresh of every data source |
-| **4 clicks** | Return **HOME**, from any page |
-| **long press** | Exit to the Whisplay desktop (handled by the daemon) |
+| **4 clicks** | Leave the app, back to the Whisplay desktop |
 
-### Why long press is the exit gesture
+### Why the app owns every gesture
 
-The daemon reserves **4 rapid clicks** to exit a foreground app by default — which collides
-with this project's requirement that four clicks return HOME. The app therefore registers with
-`exit_gesture: "long_press"`, freeing quad-click for HOME. No core function depends on a long
-press; it only leaves the app.
+The app registers with `exit_gesture: "none"`, so the daemon reserves nothing and all five
+gestures above are handled in-app.
 
-To change this, edit `exit_gesture` in `packaging/whisplay-crypto-dashboard.json` and re-run
-`install.sh`. Setting it to `"none"` gives the app every gesture, but then only killing the
-process returns you to the desktop.
+This is required, not a preference. The daemon's own quad-click exit uses a **3-second**
+window, and stepping through `1H > 4H > 1D > 1W > 1Y` is exactly **four single clicks** — a
+user cycling briskly would be thrown out of the app mid-cycle. Handling exit in-app instead
+uses the much tighter `click_window_ms` (400 ms default), which draws a clean line:
+
+- clicks spaced **wider** than 400 ms are independent timeframe changes
+- clicks landing **inside** 400 ms of each other accumulate toward the exit gesture
+
+So: click at a normal pace to browse timeframes; click four times rapidly to leave.
+
+The daemon's `app_exit_requested` is still honoured, so setting `exit_gesture` back to
+`"quad_click"` or `"long_press"` in `packaging/whisplay-crypto-dashboard.json` still works if
+you prefer a daemon-level exit. An external keyboard's `Esc` also still returns to the desktop.
 
 Gesture timing is configurable in `config.yaml`:
 
@@ -120,8 +130,30 @@ button:
 ```
 
 Four clicks fire **immediately** on the fourth release rather than waiting out the click
-window, so HOME feels instant. Debounce is applied to the press edge only — gating the
-release edge as well would swallow genuine short clicks, which are often only 30–60 ms long.
+window, so leaving the app feels instant. Debounce is applied to the press edge only — gating
+the release edge as well would swallow genuine short clicks, which are often only 30–60 ms long.
+
+Raise `click_window_ms` if you find yourself exiting by accident while cycling timeframes;
+lower it if single clicks feel sluggish (each one waits out the window before acting).
+
+**Tuning it from real data.** Every gesture is logged with the measured gap between clicks:
+
+```
+gesture: quad   (gaps 37360/215/189/158 ms, window 700 ms)
+gesture: single (gaps 1214 ms, window 700 ms)
+```
+
+Measured on the HAT's button, two clearly separated clusters emerged:
+
+| Intent | Measured inter-click gap |
+|---|---|
+| Deliberate multi-click (double / quad) | **158–522 ms** |
+| Ordinary browsing clicks | **≥ 1214 ms** |
+
+`click_window_ms: 700` sits in the empty band between them, which is why it is the default.
+The original 400 ms was below the top of the deliberate cluster, so four intentional clicks
+kept registering as four separate timeframe changes. If multi-click gestures are not forming
+for you, read your own gaps out of the log and set the window between your two clusters.
 
 ---
 
@@ -241,7 +273,7 @@ whisplay-crypto-dashboard/
 │   ├── chart/renderer.py    hand-rolled chart
 │   ├── config/settings.py   defaults < config.yaml < environment
 │   └── utils/               logger, format, network, system
-├── tests/                   68 tests
+├── tests/                   77 tests
 ├── tools/preview.py         render screens to PNG without hardware
 └── packaging/               systemd unit + daemon app manifest
 ```
@@ -307,11 +339,11 @@ RestartSec=5
 StartLimitIntervalSec=0
 ```
 
-**Why `on-failure` and not `always`:** the app exits cleanly when you long-press to return to
-the Whisplay desktop. With `Restart=always`, systemd would relaunch it five seconds later and
-take the screen back, making the exit gesture useless on a Pi that also runs other Whisplay
-apps. `on-failure` still restarts after a crash, which is the actual requirement. If your Pi is
-a dedicated single-purpose BTC display, change it to `always`.
+**Why `on-failure` and not `always`:** the app exits cleanly when you click four times to
+return to the Whisplay desktop. With `Restart=always`, systemd would relaunch it five seconds
+later and take the screen back, making the exit gesture useless on a Pi that also runs other
+Whisplay apps. `on-failure` still restarts after a crash, which is the actual requirement. If
+your Pi is a dedicated single-purpose BTC display, change it to `always`.
 
 **Starting while another app owns the screen:** if the dashboard starts while the Wi-Fi app (or
 any other app) is in the foreground, the daemon refuses to hand over the framebuffer. The app
@@ -337,10 +369,11 @@ Boot sequence: `Pi > Wi-Fi > whisplay-daemon > run.sh waits for socket > dashboa
 |---|---|
 | Blank screen, app appears to run | Check the mode on the System page. `WAITING` means another app owns the foreground — exit that app and this one appears within 5s. `HEADLESS` means the Whisplay runtime was not found — set `WHISPLAY_RUNTIME=/path/to/Whisplay/runtime`. |
 | Log says `foreground unavailable ... retrying` | Expected. Another Whisplay app holds the screen; the dashboard takes over when that app exits. |
-| Long press exits, then the app comes straight back | The unit is set to `Restart=always`. Change it to `Restart=on-failure` (the shipped default). |
+| Four clicks exit, then the app comes straight back | The unit is set to `Restart=always`. Change it to `Restart=on-failure` (the shipped default). |
 | `whisplay runtime is unusable: No module named 'spidev'` | Whisplay drivers not installed. Run `Whisplay/install_driver.sh` and reboot. |
 | App not on the Whisplay desktop | `ls ~/.whisplay-daemon/app/` should list `whisplay-crypto-dashboard.json`. Re-run `./install.sh`, then restart the daemon. |
-| Four clicks exit to desktop instead of going HOME | The app registered with the default `quad_click` exit gesture. Confirm `exit_gesture` is `long_press` in `~/.whisplay-daemon/app/whisplay-crypto-dashboard.json` and restart the daemon. |
+| App exits while cycling timeframes | Four clicks inside the click window is the exit gesture. Click at a slower pace, or raise `click_window_ms` in `config.yaml`. |
+| Holding the button exits instead of changing page | `exit_gesture` is not `none`. Confirm it in `~/.whisplay-daemon/app/whisplay-crypto-dashboard.json`, re-run `./install.sh`, and restart the daemon. |
 | Clicks register as the wrong count | Tune `click_window_ms` (raise to 500 for slower clicking) and `debounce_ms` in `config.yaml`. |
 | `OFFLINE` but the Pi has Internet | Check the System page's last error. A CoinGecko `429` is rate limiting — it backs off automatically; increase `market_seconds`/`top_seconds` if persistent. |
 | Chart shows `CHART UNAVAILABLE` | Candles have not loaded yet, or Binance is unreachable in your region. Set `BINANCE_API_BASE` in `.env`, or put `coingecko` first in `providers.chart`. |
@@ -362,7 +395,7 @@ python3 -c "import socket,json;s=socket.socket(socket.AF_UNIX);s.connect('/tmp/w
 ## 12. Development
 
 ```bash
-python3 -m pytest tests/ -q          # 68 tests, no hardware needed
+python3 -m pytest tests/ -q          # 77 tests, no hardware needed
 python3 tools/preview.py --mock      # render all five screens to PNG
 python3 tools/preview.py             # ...with live market data
 ```

@@ -3,18 +3,21 @@
 
 State machine
 -------------
-Five pages in a ring; a single click advances, four clicks jump home
-from anywhere:
+Five pages in a ring, advanced by holding the button:
 
     HOME (Bitcoin) -> MARKET -> TOP CRYPTO -> STATISTICS -> SYSTEM -+
       ^                                                             |
       +-------------------------------------------------------------+
 
-    single  next page
-    double  next chart timeframe (1H -> 4H -> 1D -> 1W -> 1Y)
+    single  next chart timeframe (1H -> 4H -> 1D -> 1W -> 1Y)
+    hold    next page
+    double  return HOME
     triple  force an immediate data refresh
-    quad    return HOME
-    hold    exit to the Whisplay desktop (handled by the daemon)
+    quad    leave the app (back to the Whisplay desktop)
+
+The app registers with exit_gesture "none", so it owns every gesture and
+performs its own exit on four clicks. See app/board.py for why the
+daemon's own quad-click exit cannot be used with this mapping.
 
 Threading
 ---------
@@ -163,18 +166,15 @@ class DashboardApp:
     # --- gestures -------------------------------------------------------
     def handle_gesture(self, gesture: str):
         if gesture == SINGLE:
+            self.cycle_timeframe()
+        elif gesture == LONG_PRESS:
             self.next_page()
         elif gesture == DOUBLE:
-            self.cycle_timeframe()
+            self.go_home()
         elif gesture == TRIPLE:
             self.force_refresh()
         elif gesture == QUAD:
-            self.go_home()
-        elif gesture == LONG_PRESS:
-            # Under the daemon this is the exit gesture and we are about
-            # to receive app_exit_requested. Standalone, it is a no-op:
-            # no core function may depend on a long press.
-            log.info("long press (daemon exit gesture)")
+            self.request_exit()
 
     def next_page(self):
         self.page_index = (self.page_index + 1) % len(self.screens)
@@ -188,11 +188,25 @@ class DashboardApp:
         self.show_toast("HOME", "info", 1.2)
 
     def cycle_timeframe(self):
+        """Single click. Deliberately does NOT change page.
+
+        Single click is now the most frequent gesture, so jumping to the
+        chart would make every other page impossible to sit on.
+        """
         timeframe = self.service.next_timeframe()
         self.state.set("timeframe", timeframe)
-        # Show the change where the chart actually lives.
-        self.page_index = HOME_INDEX
         self.show_toast(f"TIMEFRAME  {timeframe}", "info", 1.5)
+
+    def request_exit(self):
+        """Four clicks. Leave the app and hand the screen back."""
+        log.info("exit requested by quad click")
+        self.show_toast("EXITING", "info", 1.0)
+        try:
+            self.render_frame()      # let the toast actually appear
+        except Exception:
+            log.debug("final frame failed", exc_info=True)
+        self._running = False
+        self.mark_dirty()
 
     def force_refresh(self):
         self.service.request_refresh()
@@ -305,6 +319,10 @@ class DashboardApp:
         log.info(
             "dashboard ready (mode=%s, timeframe=%s, pages=%d)",
             self.board_mode, self.service.timeframe, len(self.screens),
+        )
+        log.info(
+            "controls: 1 click=timeframe, hold=next page, "
+            "2 clicks=home, 3 clicks=refresh, 4 clicks=exit"
         )
 
         frame_interval = 1.0 / self.settings.fps

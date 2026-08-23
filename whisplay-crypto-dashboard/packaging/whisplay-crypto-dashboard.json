@@ -8,7 +8,7 @@
     "WHISPLAY_APP_ID": "whisplay-crypto-dashboard",
     "PYTHONUNBUFFERED": "1"
   },
-  "exit_gesture": "long_press",
+  "exit_gesture": "none",
   "priority": 40,
   "use_daemon_default_log": true,
   "persist": true

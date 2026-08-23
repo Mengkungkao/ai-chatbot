@@ -24,9 +24,20 @@ APP_ID = "whisplay-crypto-dashboard"
 DISPLAY_NAME = "BTC Dashboard"
 ICON = "BTC"
 
-# Four rapid clicks are the app's HOME gesture, so the daemon's default
-# quad-click exit would collide with it. Long press becomes exit instead.
-EXIT_GESTURE = "long_press"
+# The app owns every button gesture.
+#
+# Long press is page navigation and four clicks is exit, so neither can be
+# left to the daemon. Critically, the daemon detects quad-click over a
+# 3-second window -- and cycling 1H>4H>1D>1W>1Y is exactly four single
+# clicks, so a user stepping briskly through timeframes would be killed
+# mid-cycle. With "none" the app decides, using the much tighter
+# click_window_ms (400ms default): clicks spaced wider than that are
+# timeframe changes, clicks inside it count toward exit.
+#
+# The daemon's app_exit_requested is still honoured, so setting this back
+# to "quad_click" or "long_press" keeps working. An external keyboard's
+# ESC also still returns to the desktop (disable_esc_exit_key is false).
+EXIT_GESTURE = "none"
 PRIORITY = 40
 
 # How often to re-attempt foreground acquisition when another app owns the

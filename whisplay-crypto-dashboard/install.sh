@@ -165,11 +165,11 @@ cat <<SUMMARY
       single click to select 'BTC Dashboard', then long press
 
   Controls:
-      1 click    next page      (Bitcoin > Market > Top > Stats > System)
-      2 clicks   next timeframe (1H > 4H > 1D > 1W > 1Y)
+      1 click    next timeframe (1H > 4H > 1D > 1W > 1Y)
+      hold       next page      (Bitcoin > Market > Top > Stats > System)
+      2 clicks   return HOME
       3 clicks   force refresh
-      4 clicks   return HOME
-      long press exit to the Whisplay desktop
+      4 clicks   leave the app
 
   Autostart at boot:
       ./install.sh --autostart

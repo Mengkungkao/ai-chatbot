@@ -65,6 +65,11 @@ class GestureDetector:
         self._deadline = 0.0
         self._press_time = 0.0
         self._last_release = -1e9
+        # Inter-click gaps for the run in progress, milliseconds. Logged
+        # with the gesture so click_window_ms can be tuned from real data
+        # instead of guesswork.
+        self._gaps = []
+        self._last_click = 0.0
         self._pressed = False
         self._running = False
         self._thread = None
@@ -117,13 +122,23 @@ class GestureDetector:
                 # A hold is its own gesture and clears any pending clicks.
                 self._clicks = 0
                 self._deadline = 0.0
+                self._gaps = []
                 emit = LONG_PRESS
             else:
+                # Record the gap from the previous click even when it
+                # belonged to an earlier run: a run of lone singles is
+                # exactly the symptom of a click_window that is too tight,
+                # and the gap is the number needed to fix it.
+                if self._last_click:
+                    self._gaps.append(int((now - self._last_click) * 1000))
+                self._last_click = now
                 self._clicks += 1
                 if self._clicks >= MAX_CLICKS:
                     emit = _GESTURE_BY_COUNT[MAX_CLICKS]
                     self._clicks = 0
                     self._deadline = 0.0
+                    gaps, self._gaps = self._gaps, []
+                    self._last_gaps = gaps
                 else:
                     self._deadline = now + self.click_window
             self._cond.notify_all()
@@ -150,13 +165,22 @@ class GestureDetector:
                 clicks = self._clicks
                 self._clicks = 0
                 self._deadline = 0.0
+                self._last_gaps, self._gaps = self._gaps, []
 
             gesture = _GESTURE_BY_COUNT.get(clicks)
             if gesture:
                 self._dispatch(gesture)
 
     def _dispatch(self, gesture: str):
-        log.info("gesture: %s", gesture)
+        gaps = getattr(self, "_last_gaps", None)
+        if gaps:
+            log.info(
+                "gesture: %s (gaps %s ms, window %d ms)",
+                gesture, "/".join(str(g) for g in gaps),
+                int(self.click_window * 1000),
+            )
+        else:
+            log.info("gesture: %s", gesture)
         try:
             self.on_gesture(gesture)
         except Exception:
