@@ -8,6 +8,11 @@ set -euo pipefail
 APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$APP_DIR"
 
+# Set here rather than in the app manifest: the daemon's app.register call
+# does not carry env, so manifest env is dropped when the app self-registers.
+# Doing it here covers every launch path (daemon, systemd, manual).
+export PYTHONUNBUFFERED=1
+
 DAEMON_SOCKET="${WHISPLAY_DAEMON_SOCKET:-/tmp/whisplay-daemon.sock}"
 DAEMON_WAIT_SECONDS="${WHISPLAY_DAEMON_WAIT:-30}"
 

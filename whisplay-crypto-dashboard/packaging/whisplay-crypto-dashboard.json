@@ -4,12 +4,10 @@
   "icon": "BTC",
   "launch_command": "__APP_DIR__/run.sh",
   "cwd": "__APP_DIR__",
-  "env": {
-    "WHISPLAY_APP_ID": "whisplay-crypto-dashboard",
-    "PYTHONUNBUFFERED": "1"
-  },
+  "env": {},
   "exit_gesture": "none",
   "priority": 40,
   "use_daemon_default_log": true,
-  "persist": true
+  "persist": true,
+  "disable_esc_exit_key": false
 }
