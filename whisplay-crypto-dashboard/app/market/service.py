@@ -68,6 +68,21 @@ class MarketSnapshot:
         return self.best_price is not None
 
 
+# Cold-start offsets, in seconds. Firing every lane at once makes three
+# CoinGecko calls land in the same second and reliably trips its free-tier
+# rate limit (observed as 429s on a real Pi boot). Spreading them costs the
+# user nothing -- the price lane, which is what they actually look at,
+# still fires immediately.
+_STARTUP_STAGGER = {
+    "price": 0.0,
+    "chart": 0.5,
+    "market": 1.5,
+    "global": 3.0,
+    "top": 4.5,
+    "fear_greed": 6.0,
+}
+
+
 class _Task:
     """One refresh lane: an interval, a backoff ladder, a due time."""
 
@@ -313,6 +328,9 @@ class MarketService:
     def start(self):
         if self._thread and self._thread.is_alive():
             return
+        now = time.monotonic()
+        for task in self._tasks:
+            task.next_due = now + _STARTUP_STAGGER.get(task.name, 0.0)
         self._running = True
         self._thread = threading.Thread(
             target=self._loop, name="market-service", daemon=True

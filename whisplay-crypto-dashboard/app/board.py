@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import os
 import sys
+import threading
+import time
 from pathlib import Path
 
 from app.utils.logger import get_logger
@@ -26,6 +28,10 @@ ICON = "BTC"
 # quad-click exit would collide with it. Long press becomes exit instead.
 EXIT_GESTURE = "long_press"
 PRIORITY = 40
+
+# How often to re-attempt foreground acquisition when another app owns the
+# screen. Cheap: one Unix-socket round trip.
+FOREGROUND_RETRY_SECONDS = 5.0
 
 
 def _runtime_candidates() -> list:
@@ -75,6 +81,7 @@ class NullBoard:
     def __init__(self):
         self.width = 240
         self.height = 280
+        self.foreground_ready = True
 
     def fill_screen(self, color):
         pass
@@ -104,8 +111,50 @@ class NullBoard:
         pass
 
 
-def acquire_board(launch_command: str | None = None, launch_cwd: str | None = None):
-    """Return (board, mode) where mode is 'daemon', 'direct' or 'headless'."""
+def _start_foreground_retry(proxy, on_acquired=None,
+                            interval: float = FOREGROUND_RETRY_SECONDS):
+    """Keep asking for the screen until the current app gives it up.
+
+    Without this the app would sit in headless mode forever -- polling
+    market APIs while drawing to nothing -- which is exactly what happens
+    when it autostarts at boot while the Wi-Fi or another app still owns
+    the foreground.
+    """
+
+    def loop():
+        attempts = 0
+        while not getattr(proxy, "foreground_ready", False):
+            time.sleep(interval)
+            attempts += 1
+            try:
+                proxy.acquire_foreground(timeout_sec=1.0)
+            except Exception:
+                continue
+            proxy.foreground_ready = True
+            log.info("foreground acquired after %d attempt(s)", attempts)
+            if on_acquired is not None:
+                try:
+                    on_acquired()
+                except Exception:
+                    log.exception("foreground callback failed")
+            return
+
+    threading.Thread(target=loop, name="foreground-retry", daemon=True).start()
+
+
+def acquire_board(
+    launch_command: str | None = None,
+    launch_cwd: str | None = None,
+    on_foreground_acquired=None,
+):
+    """Return (board, mode).
+
+    mode is one of:
+      daemon    foreground held, drawing to the shared framebuffer
+      waiting   daemon present but another app owns the screen; retrying
+      direct    no daemon, driving the HAT over SPI directly
+      headless  no hardware at all (development machine)
+    """
     client = _import_client()
     if client is None:
         log.warning("whisplay runtime not found; running headless")
@@ -113,12 +162,13 @@ def acquire_board(launch_command: str | None = None, launch_cwd: str | None = No
 
     project_root = Path(__file__).resolve().parents[1]
     if launch_command is None:
-        launch_command = f"python3 {project_root / 'app' / 'main.py'}"
+        launch_command = str(project_root / "run.sh")
     if launch_cwd is None:
         launch_cwd = str(project_root)
 
     try:
-        board = client.create_whisplay_hardware(
+        proxy = client.WhisplayDaemonProxy(
+            socket_path=client.DEFAULT_DAEMON_SOCKET_PATH,
             app_id=APP_ID,
             display_name=DISPLAY_NAME,
             icon=ICON,
@@ -129,10 +179,40 @@ def acquire_board(launch_command: str | None = None, launch_cwd: str | None = No
             priority=PRIORITY,
             use_daemon_default_log=True,
         )
+        daemon_alive = proxy.ping()
     except Exception:
-        log.exception("failed to acquire whisplay hardware; running headless")
+        log.exception("could not talk to the whisplay daemon")
+        daemon_alive = False
+        proxy = None
+
+    # No daemon: fall back to driving the HAT ourselves.
+    if not daemon_alive:
+        try:
+            board = client.WhisplayBoard()
+            log.info("whisplay board acquired in direct mode (no daemon)")
+            return board, "direct"
+        except Exception:
+            log.exception("direct hardware access failed; running headless")
+            return NullBoard(), "headless"
+
+    proxy.foreground_ready = False
+    try:
+        proxy.register()
+        proxy.start_event_listener()
+    except Exception:
+        log.exception("daemon registration failed; running headless")
         return NullBoard(), "headless"
 
-    mode = "daemon" if type(board).__name__ == "WhisplayDaemonProxy" else "direct"
-    log.info("whisplay board acquired in %s mode", mode)
-    return board, mode
+    try:
+        proxy.acquire_foreground()
+    except Exception as exc:
+        # Another app holds the screen. Keep the daemon connection and
+        # retry in the background rather than going permanently blind.
+        log.warning("foreground unavailable (%s); retrying every %.0fs",
+                    exc, FOREGROUND_RETRY_SECONDS)
+        _start_foreground_retry(proxy, on_foreground_acquired)
+        return proxy, "waiting"
+
+    proxy.foreground_ready = True
+    log.info("whisplay board acquired in daemon mode")
+    return proxy, "daemon"

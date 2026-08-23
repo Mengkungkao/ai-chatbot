@@ -81,8 +81,20 @@ class DashboardApp:
         if self.settings.config_path:
             log.info("config: %s", self.settings.config_path)
 
+        # --- render loop state (declared first: acquire_board may call
+        # back from a background thread as soon as it is invoked) -------
+        self._dirty = threading.Event()
+        self._dirty.set()
+
         # --- hardware --------------------------------------------------
-        self.board, self.board_mode = acquire_board()
+        self.board, self.board_mode = acquire_board(
+            on_foreground_acquired=self._on_foreground_acquired
+        )
+        if self.board_mode == "waiting":
+            log.warning(
+                "another app owns the display; waiting for it to exit "
+                "(the dashboard will appear automatically)"
+            )
         self.display = Display(self.board, self.settings)
 
         # --- persisted state -------------------------------------------
@@ -124,8 +136,6 @@ class DashboardApp:
         self.page_index = HOME_INDEX
 
         # --- render loop state -----------------------------------------
-        self._dirty = threading.Event()
-        self._dirty.set()
         self._running = True
         self._toast = None
         self._toast_kind = "info"
@@ -134,6 +144,12 @@ class DashboardApp:
         self._last_online = None
 
     # --- redraw scheduling --------------------------------------------
+    def _on_foreground_acquired(self):
+        """Called from the retry thread once the daemon grants the screen."""
+        self.board_mode = "daemon"
+        log.info("display acquired; resuming rendering")
+        self.mark_dirty()
+
     def mark_dirty(self):
         """Ask the render loop for a frame. Safe from any thread."""
         self._dirty.set()

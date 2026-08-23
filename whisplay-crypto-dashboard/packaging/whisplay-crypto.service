@@ -20,8 +20,15 @@ Environment=HOME=__USER_HOME__
 Environment=PYTHONUNBUFFERED=1
 Environment=XDG_RUNTIME_DIR=/run/user/__UID__
 
-# Requirement 18: survive crashes without human intervention.
-Restart=always
+# Survive crashes without human intervention -- but NOT a deliberate exit.
+#
+# Restart=always would fight the daemon: long-pressing to leave the app
+# would simply bring it back 5s later and steal the screen from the
+# desktop, making the exit gesture useless on a multi-app device.
+# on-failure keeps the crash-recovery requirement while letting the user
+# actually return to the Whisplay desktop.
+# Set this to "always" if the Pi is a dedicated, single-purpose BTC display.
+Restart=on-failure
 RestartSec=5
 # Do not give up after repeated restarts -- a 24/7 appliance must keep trying.
 StartLimitIntervalSec=0

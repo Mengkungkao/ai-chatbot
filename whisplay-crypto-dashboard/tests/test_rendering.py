@@ -141,3 +141,70 @@ def test_sparkline():
     points = [(float(i), 100.0 + i) for i in range(30)]
     assert render_sparkline(ImageDraw.Draw(image), ChartSeries("1D", points), (0, 0, 60, 20))
     assert render_sparkline(ImageDraw.Draw(image), ChartSeries("1D", []), (0, 0, 60, 20)) is False
+
+
+# --- foreground handover -------------------------------------------------
+class _FakeProxy:
+    """Stands in for WhisplayDaemonProxy without a daemon."""
+
+    def __init__(self):
+        self.foreground_ready = False
+        self.writes = 0
+        self.led_writes = 0
+
+    def draw_image(self, x, y, w, h, data):
+        self.writes += 1
+
+    def set_backlight(self, brightness):
+        pass
+
+    def set_rgb(self, r, g, b):
+        self.led_writes += 1
+
+    def set_rgb_fade(self, r, g, b, duration_ms=100):
+        self.led_writes += 1
+
+
+def test_no_framebuffer_writes_while_another_app_owns_the_screen(settings):
+    """Regression: the app used to draw into a framebuffer it did not own.
+
+    Found on real hardware -- launching while the Wi-Fi app held the
+    foreground left the dashboard writing frames into nothing.
+    """
+    from app.ui.display import Display
+
+    proxy = _FakeProxy()
+    display = Display(proxy, settings)
+    image = Image.new("RGB", (240, 280), theme.BG)
+
+    assert display.present(image) is False
+    assert proxy.writes == 0
+    display.set_led(0, 70, 26)
+    assert proxy.led_writes == 0
+
+    # Once the daemon grants focus, drawing resumes.
+    proxy.foreground_ready = True
+    assert display.present(image) is True
+    assert proxy.writes == 1
+    display.set_led(0, 70, 26)
+    assert proxy.led_writes == 1
+
+
+def test_boards_without_the_flag_draw_normally(settings):
+    """Direct-hardware WhisplayBoard has no foreground concept."""
+    from app.ui.display import Display
+
+    class _Direct:
+        def __init__(self):
+            self.writes = 0
+
+        def draw_image(self, *_a):
+            self.writes += 1
+
+        def set_backlight(self, _b):
+            pass
+
+    board = _Direct()
+    display = Display(board, settings)
+    assert display.present(Image.new("RGB", (240, 280), theme.BG)) is True
+    assert board.writes == 1

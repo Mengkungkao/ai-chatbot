@@ -241,7 +241,7 @@ whisplay-crypto-dashboard/
 │   ├── chart/renderer.py    hand-rolled chart
 │   ├── config/settings.py   defaults < config.yaml < environment
 │   └── utils/               logger, format, network, system
-├── tests/                   63 tests
+├── tests/                   68 tests
 ├── tools/preview.py         render screens to PNG without hardware
 └── packaging/               systemd unit + daemon app manifest
 ```
@@ -253,6 +253,7 @@ whisplay-crypto-dashboard/
 | `main` | Renders only. Never touches the network. |
 | `market-service` | All HTTP. Publishes immutable snapshots. |
 | `gesture-detector` | Button timing. |
+| `foreground-retry` | Only when another app holds the screen; exits once granted. |
 
 The render loop is **event-driven**: it sleeps on a condition variable until data changes, a
 button is pressed, or the status tick expires. It redraws only when:
@@ -301,10 +302,21 @@ Recommendations:
 ```ini
 After=network-online.target whisplay-daemon.service
 BindsTo=whisplay-daemon.service
-Restart=always
+Restart=on-failure
 RestartSec=5
 StartLimitIntervalSec=0
 ```
+
+**Why `on-failure` and not `always`:** the app exits cleanly when you long-press to return to
+the Whisplay desktop. With `Restart=always`, systemd would relaunch it five seconds later and
+take the screen back, making the exit gesture useless on a Pi that also runs other Whisplay
+apps. `on-failure` still restarts after a crash, which is the actual requirement. If your Pi is
+a dedicated single-purpose BTC display, change it to `always`.
+
+**Starting while another app owns the screen:** if the dashboard starts while the Wi-Fi app (or
+any other app) is in the foreground, the daemon refuses to hand over the framebuffer. The app
+does not go blind — it reports mode `waiting`, keeps its data fresh, draws nothing, and retries
+every 5 seconds. The moment the other app exits, the dashboard appears by itself.
 
 `run.sh` waits up to 30 s for `/tmp/whisplay-daemon.sock` before starting, so boot does not
 race the daemon. If the daemon never appears, the app falls back to direct hardware access.
@@ -323,7 +335,9 @@ Boot sequence: `Pi > Wi-Fi > whisplay-daemon > run.sh waits for socket > dashboa
 
 | Symptom | Cause and fix |
 |---|---|
-| Blank screen, app appears to run | Check the mode on the System page. `HEADLESS` means the Whisplay runtime was not found — set `WHISPLAY_RUNTIME=/path/to/Whisplay/runtime`. |
+| Blank screen, app appears to run | Check the mode on the System page. `WAITING` means another app owns the foreground — exit that app and this one appears within 5s. `HEADLESS` means the Whisplay runtime was not found — set `WHISPLAY_RUNTIME=/path/to/Whisplay/runtime`. |
+| Log says `foreground unavailable ... retrying` | Expected. Another Whisplay app holds the screen; the dashboard takes over when that app exits. |
+| Long press exits, then the app comes straight back | The unit is set to `Restart=always`. Change it to `Restart=on-failure` (the shipped default). |
 | `whisplay runtime is unusable: No module named 'spidev'` | Whisplay drivers not installed. Run `Whisplay/install_driver.sh` and reboot. |
 | App not on the Whisplay desktop | `ls ~/.whisplay-daemon/app/` should list `whisplay-crypto-dashboard.json`. Re-run `./install.sh`, then restart the daemon. |
 | Four clicks exit to desktop instead of going HOME | The app registered with the default `quad_click` exit gesture. Confirm `exit_gesture` is `long_press` in `~/.whisplay-daemon/app/whisplay-crypto-dashboard.json` and restart the daemon. |
@@ -348,7 +362,7 @@ python3 -c "import socket,json;s=socket.socket(socket.AF_UNIX);s.connect('/tmp/w
 ## 12. Development
 
 ```bash
-python3 -m pytest tests/ -q          # 63 tests, no hardware needed
+python3 -m pytest tests/ -q          # 68 tests, no hardware needed
 python3 tools/preview.py --mock      # render all five screens to PNG
 python3 tools/preview.py             # ...with live market data
 ```

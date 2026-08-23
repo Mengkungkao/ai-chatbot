@@ -222,3 +222,26 @@ def test_bad_persisted_timeframe_falls_back_to_default(settings, tmp_path):
     cache = MarketCache(tmp_path / "c.json", enabled=False)
     service = MarketService(settings, cache, timeframe="NONSENSE")
     assert service.timeframe == settings.default_timeframe
+
+
+def test_startup_staggers_lanes_to_avoid_rate_limits(settings):
+    """Regression: a cold boot fired 3 CoinGecko calls in one second.
+
+    Observed on a real Pi as three simultaneous 429s. The price lane must
+    still be immediate -- it is the number the user is looking at.
+    """
+    import time as _time
+
+    from app.market.service import _STARTUP_STAGGER
+
+    service = MarketService(settings, MarketCache("/dev/null", enabled=False))
+    service._running = False          # do not actually spin the thread
+    now = _time.monotonic()
+    for task in service._tasks:
+        task.next_due = now + _STARTUP_STAGGER.get(task.name, 0.0)
+
+    due = {t.name: t.next_due - now for t in service._tasks}
+    assert due["price"] == 0.0                       # immediate
+    coingecko_lanes = sorted(due[n] for n in ("market", "global", "top"))
+    gaps = [b - a for a, b in zip(coingecko_lanes, coingecko_lanes[1:])]
+    assert all(gap >= 1.0 for gap in gaps)           # never bunched up

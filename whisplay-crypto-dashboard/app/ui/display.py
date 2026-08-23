@@ -74,7 +74,14 @@ class Display:
         return image, ImageDraw.Draw(image)
 
     def present(self, image: Image.Image):
-        """Push one finished frame to the framebuffer."""
+        """Push one finished frame to the framebuffer.
+
+        Skipped entirely while another app owns the screen -- writing to
+        a framebuffer we have not been granted is both useless and a way
+        to spam the log once per frame.
+        """
+        if not getattr(self.board, "foreground_ready", True):
+            return False
         try:
             frame = image_to_rgb565(image)
         except Exception:
@@ -95,6 +102,8 @@ class Display:
     def set_led(self, r: int, g: int, b: int, fade_ms: int = 0):
         """Set the RGB LED, skipping redundant writes."""
         if not self.settings.led_enabled:
+            return
+        if not getattr(self.board, "foreground_ready", True):
             return
         color = (int(r), int(g), int(b))
         if color == self._last_led:
