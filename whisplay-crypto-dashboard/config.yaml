@@ -1,0 +1,58 @@
+# Whisplay Bitcoin Market Dashboard configuration.
+# Every value here can be changed without touching application code.
+# Restart the app (or the systemd service) after editing.
+
+bitcoin:
+  symbol: BTC
+  currency: USD
+  default_timeframe: 1D        # 1H | 4H | 1D | 1W | 1Y
+
+refresh:
+  price_seconds: 10            # fast lane: spot price + 24h change
+  market_seconds: 60           # BTC market data: high/low/volume/supply/ATH
+  chart_seconds: 60            # historical candles for the chart
+  global_seconds: 90           # total market cap, dominance
+  top_seconds: 120             # top coins by market cap
+  fear_greed_seconds: 900      # Fear & Greed index moves slowly
+  system_seconds: 5            # local CPU/RAM/temp sampling
+
+button:
+  debounce_ms: 75              # ignore contact bounce
+  click_window_ms: 400         # window to collect additional clicks
+  long_press_ms: 700           # presses at/over this are not counted as clicks
+
+display:
+  brightness: 80               # 0-100 LCD backlight
+  fps: 20                      # render loop ceiling; matches daemon refresh
+  status_tick_seconds: 20      # repaint cadence for clock / relative age
+  led_enabled: true            # use the RGB LED as a market status indicator
+
+providers:
+  # Order matters: the first provider that can serve a call wins,
+  # the rest are fallbacks. Adding a provider does not require code changes
+  # in the screens -- only a new module implementing MarketDataProvider.
+  price: [binance, coingecko]
+  chart: [binance, coingecko]
+  market: [coingecko]
+  global: [coingecko]
+  top: [coingecko]
+  fear_greed: [alternative_me]
+  top_count: 5
+
+network:
+  timeout_seconds: 8
+  backoff_seconds: [5, 10, 30, 60, 120]
+  offline_after_failures: 2    # consecutive failures before showing OFFLINE
+  user_agent: whisplay-crypto-dashboard/1.0
+
+system:
+  cache_enabled: true
+  cache_path: ~/.whisplay-crypto/cache.json
+  state_path: ~/.whisplay-crypto/state.json
+
+logging:
+  # Falls back to ~/.whisplay-crypto/app.log when this path is not writable.
+  path: /var/log/whisplay-crypto/app.log
+  level: INFO
+  max_bytes: 524288
+  backup_count: 3

@@ -1,0 +1,34 @@
+# Autostart unit for the Whisplay Bitcoin Market Dashboard.
+# Installed by install.sh --autostart, which substitutes the placeholders.
+[Unit]
+Description=Whisplay Bitcoin Market Dashboard
+Documentation=file://__APP_DIR__/README.md
+# The daemon owns the LCD and button, so it must be up first.
+After=network-online.target whisplay-daemon.service
+Wants=network-online.target
+# Follow the daemon: if it stops, this app has no display to draw on.
+BindsTo=whisplay-daemon.service
+
+[Service]
+Type=simple
+User=__USER__
+Group=__USER__
+SupplementaryGroups=audio video gpio input spi
+WorkingDirectory=__APP_DIR__
+ExecStart=__APP_DIR__/run.sh
+Environment=HOME=__USER_HOME__
+Environment=PYTHONUNBUFFERED=1
+Environment=XDG_RUNTIME_DIR=/run/user/__UID__
+
+# Requirement 18: survive crashes without human intervention.
+Restart=always
+RestartSec=5
+# Do not give up after repeated restarts -- a 24/7 appliance must keep trying.
+StartLimitIntervalSec=0
+
+# Keep the footprint bounded on a 512 MB Pi Zero 2 W.
+MemoryMax=180M
+Nice=5
+
+[Install]
+WantedBy=multi-user.target

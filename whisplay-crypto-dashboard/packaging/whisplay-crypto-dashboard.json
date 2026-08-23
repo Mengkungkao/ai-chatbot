@@ -1,0 +1,15 @@
+{
+  "app_id": "whisplay-crypto-dashboard",
+  "display_name": "BTC Dashboard",
+  "icon": "BTC",
+  "launch_command": "__APP_DIR__/run.sh",
+  "cwd": "__APP_DIR__",
+  "env": {
+    "WHISPLAY_APP_ID": "whisplay-crypto-dashboard",
+    "PYTHONUNBUFFERED": "1"
+  },
+  "exit_gesture": "long_press",
+  "priority": 40,
+  "use_daemon_default_log": true,
+  "persist": true
+}
