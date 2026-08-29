@@ -50,9 +50,10 @@ EARS = []
 # rather than a chopped corner.
 SHAPE_NAME = "cat-wide-round"
 HEAD_RX, HEAD_RY, HEAD_CY, HEAD_POWER = 49.5, 37.0, 59.0, 0.9
-EAR_SPAN = (60.0, 92.0)
-EAR_TIP = (77.0, 2.5)
-EAR_FILLET = 5.0
+EAR_SPAN = (56.0, 96.0)      # wider base
+EAR_TIP = (76.0, 1.0)        # taller
+EAR_FILLET = 6.0             # the tip
+EAR_BASE_FILLET = 3.2        # where each ear edge meets the head
 SHAPE_STEPS = 280
 
 
@@ -93,31 +94,87 @@ def fillet(a, tip, b, radius, steps=14):
             for i in range(steps + 1)]
 
 
-def shape_points(n=SHAPE_STEPS, fillet_r=EAR_FILLET):
-    x0, x1 = EAR_SPAN
-    a = [x0, round(head_top(x0), 3)]
-    b = [x1, round(head_top(x1), 3)]
-    right = [a] + fillet(a, EAR_TIP, b, fillet_r) + [b]
-    left = [[100.0 - p[0], p[1]] for p in reversed(right)]
-    zones = [(100.0 - x1, 100.0 - x0, left), (x0, x1, right)]
+def _ear(prev, a, tip, b, nxt, tip_r, base_r):
+    """One ear, rounded at all three corners.
 
-    out, done = [], set()
+    The tip gets the large fillet; the two junctions where the ear meets the
+    head get a smaller one, so the ear flows out of the skull instead of being
+    stuck on. Each arc is tangent to its own edges, so the joins are smooth.
+    """
+    return (fillet(prev, a, tip, base_r)
+            + fillet(a, tip, b, tip_r)
+            + fillet(tip, b, nxt, base_r))
+
+
+def _dist(p, q):
+    return math.hypot(p[0] - q[0], p[1] - q[1])
+
+
+def shape_points(n=SHAPE_STEPS, fillet_r=EAR_FILLET, base_r=EAR_BASE_FILLET):
+    """Head outline with both ears spliced in, rounded at all three corners.
+
+    Two things the base fillets need. A reference edge longer than their own
+    radius, so the head direction is taken several samples from the junction
+    rather than from the neighbouring point. And room to exist: a fillet at the
+    junction eats back into the head curve, so the samples it covers are dropped
+    -- leaving them in made the outline double back on itself.
+    """
+    REF = 12
+    x0, x1 = EAR_SPAN
+    raw = []
     for i in range(n):
         t = 2 * math.pi * i / n
         ct, st = math.cos(t), math.sin(t)
-        x = 50 + HEAD_RX * math.copysign(abs(ct) ** HEAD_POWER, ct)
-        y = HEAD_CY + HEAD_RY * math.copysign(abs(st) ** HEAD_POWER, st)
-        z = next((j for j, (lo, hi, _) in enumerate(zones)
-                  if lo <= x <= hi and y < HEAD_CY), None)
-        if z is None:
-            out.append([round(x, 3), round(y, 3)])
+        raw.append([round(50 + HEAD_RX * math.copysign(abs(ct) ** HEAD_POWER, ct), 3),
+                    round(HEAD_CY + HEAD_RY * math.copysign(abs(st) ** HEAD_POWER, st), 3)])
+
+    a_r = [x0, round(head_top(x0), 3)]
+    b_r = [x1, round(head_top(x1), 3)]
+    zones = [
+        (100.0 - x1, 100.0 - x0,
+         [100.0 - b_r[0], b_r[1]], [100.0 - EAR_TIP[0], EAR_TIP[1]], [100.0 - a_r[0], a_r[1]]),
+        (x0, x1, a_r, list(EAR_TIP), b_r),
+    ]
+
+    def zone_of(p):
+        return next((j for j, z in enumerate(zones)
+                     if z[0] <= p[0] <= z[1] and p[1] < HEAD_CY), None)
+
+    member = [zone_of(p) for p in raw]
+    out, done, skip_until = [], set(), None
+    i = 0
+    while i < n:
+        p = raw[i]
+        z = member[i]
+        if skip_until is not None:
+            # still inside the arc the previous ear's base fillet swallowed
+            if _dist(p, skip_until[0]) < skip_until[1]:
+                i += 1
+                continue
+            skip_until = None
+        if z is None or z in done:
+            out.append(p)
+            i += 1
             continue
-        if z not in done:
-            done.add(z)
-            pts = zones[z][2]
-            if out and x < out[-1][0]:          # walking right-to-left
-                pts = list(reversed(pts))
-            out.extend([[float(p[0]), float(p[1])] for p in pts])
+        done.add(z)
+        j = i
+        while member[(j + 1) % n] == z:
+            j += 1
+        prev = raw[(i - REF) % n]
+        nxt = raw[(j + 1 + REF) % n]
+        _, _, ea, tip, eb = zones[z]
+        pts = _ear(prev, ea, tip, eb, nxt, fillet_r, base_r)
+        if p[0] < prev[0]:
+            pts = list(reversed(pts))
+        first, last = pts[0], pts[-1]
+        entry = ea if p[0] >= prev[0] else eb
+        exit_ = eb if p[0] >= prev[0] else ea
+        # drop head samples the entry fillet has already covered
+        while out and _dist(out[-1], entry) < _dist(first, entry):
+            out.pop()
+        out.extend([[round(float(q[0]), 3), round(float(q[1]), 3)] for q in pts])
+        skip_until = (exit_, _dist(last, exit_))
+        i = j + 1
     return out
 
 
