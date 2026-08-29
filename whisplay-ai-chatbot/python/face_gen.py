@@ -49,11 +49,11 @@ EARS = []
 # so the outline stays simple. Ear tips are rounded with a true tangent fillet
 # rather than a chopped corner.
 SHAPE_NAME = "cat-wide-round"
-HEAD_RX, HEAD_RY, HEAD_CY, HEAD_POWER = 49.5, 28.5, 62.0, 0.9
+HEAD_RX, HEAD_RY, HEAD_CY, HEAD_POWER = 49.5, 33.0, 63.5, 0.9
 EAR_SPAN = (56.0, 97.0)      # inner base pulled in, outer base kept:
                              # the gap between the ears narrows while
                              # their outer reach is unchanged
-EAR_TIP = (84.0, 11.0)       # tips out over the corners
+EAR_TIP = (84.0, 5.5)        # tips out over the corners, taller
 PARABOLIC_EARS = True        # curved sides rather than a triangle
 EAR_FILLET = 6.0             # the tip
 EAR_BASE_FILLET = 3.2        # where each ear edge meets the head
@@ -712,7 +712,7 @@ CLOSED_MOUTHS = {"flat", "arc", "zigzag"}
 # The card layout spans roughly y=20 (lashes) to y=84 (huffing's steam). The cat
 # head is shorter, so the face is compressed about its own centre and recentred;
 # translating alone pushed the low decorations out through the chin.
-SRC_CENTRE, FIT_CENTRE, FIT_YSCALE = 52.0, 62.6, 0.36
+SRC_CENTRE, FIT_CENTRE, FIT_YSCALE = 52.0, 64.0, 0.42
 FIT_SPREAD, FIT_EYE_GAIN = 1.00, 0.40
 
 # Eyes are not one size. A person's eyes widen when startled and narrow when
