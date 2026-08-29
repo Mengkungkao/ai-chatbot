@@ -50,8 +50,9 @@ EARS = []
 # rather than a chopped corner.
 SHAPE_NAME = "cat-wide-round"
 HEAD_RX, HEAD_RY, HEAD_CY, HEAD_POWER = 49.5, 28.5, 62.0, 0.9
-EAR_SPAN = (56.0, 88.0)      # wider base
-EAR_TIP = (70.8, 14.0)       # matched to the reference sheet
+EAR_SPAN = (58.0, 92.0)      # base, set wider apart
+EAR_TIP = (77.0, 12.0)       # tips further from centre
+PARABOLIC_EARS = True        # curved sides rather than a triangle
 EAR_FILLET = 6.0             # the tip
 EAR_BASE_FILLET = 3.2        # where each ear edge meets the head
 TWITCH_DEG = 13.0            # how far one ear swings on a flick
@@ -94,6 +95,35 @@ def fillet(a, tip, b, radius, steps=14):
     return [[round(c[0] + radius * math.cos(a1 + d_ang * i / steps), 3),
              round(c[1] + radius * math.sin(a1 + d_ang * i / steps), 3)]
             for i in range(steps + 1)]
+
+
+def _quad(p0, p1, p2, t):
+    m = 1.0 - t
+    return [m * m * p0[0] + 2 * m * t * p1[0] + t * t * p2[0],
+            m * m * p0[1] + 2 * m * t * p1[1] + t * t * p2[1]]
+
+
+def _parabolic_ear(prev, a, tip, b, nxt, base_r, n=30):
+    """An ear whose sides are a parabola rather than two straight edges.
+
+    A quadratic Bezier is exactly a parabola segment, so the ear is one arch
+    from base to base. The control point is placed so the arch peaks on the
+    tip, which also rounds the tip for free -- no separate fillet there. Only
+    the two junctions with the head still need rounding.
+    """
+    ctrl = [(4.0 * tip[0] - a[0] - b[0]) / 2.0,
+            (4.0 * tip[1] - a[1] - b[1]) / 2.0]
+    curve = [_quad(a, ctrl, b, i / n) for i in range(n + 1)]
+    # step far enough along the arch that the junction fillet has a real edge
+    def far(seq, origin):
+        return next((q for q in seq if _dist(q, origin) > base_r * 2.2), seq[-1])
+    head_a = fillet(prev, a, far(curve, a), base_r)
+    head_b = fillet(far(list(reversed(curve)), b), b, nxt, base_r)
+    # Start the arch exactly where each junction arc ends, or the seam kinks.
+    cut_a = _dist(head_a[-1], a)
+    cut_b = _dist(head_b[0], b)
+    inner = [q for q in curve if _dist(q, a) > cut_a and _dist(q, b) > cut_b]
+    return head_a + inner + head_b
 
 
 def _ear(prev, a, tip, b, nxt, tip_r, base_r):
@@ -174,7 +204,8 @@ def shape_points(n=SHAPE_STEPS, fillet_r=EAR_FILLET, base_r=EAR_BASE_FILLET,
         prev = raw[(i - REF) % n]
         nxt = raw[(j + 1 + REF) % n]
         _, _, ea, tip, eb = zones[z]
-        pts = _ear(prev, ea, tip, eb, nxt, fillet_r, base_r)
+        pts = (_parabolic_ear(prev, ea, tip, eb, nxt, base_r) if PARABOLIC_EARS
+               else _ear(prev, ea, tip, eb, nxt, fillet_r, base_r))
         # A flick pivots the whole ear about the midpoint of its base, so the
         # junctions stay put and only the ear swings.
         ang = twitch[z]
@@ -191,7 +222,15 @@ def shape_points(n=SHAPE_STEPS, fillet_r=EAR_FILLET, base_r=EAR_BASE_FILLET,
         out.extend([[round(float(q[0]), 3), round(float(q[1]), 3)] for q in pts])
         skip_until = (exit_, _dist(last, exit_))
         i = j + 1
-    return out
+    # Points closer than this are invisible at any size the display uses, and
+    # they make corner measurements meaningless by turning one bend into several.
+    dedup = [out[0]]
+    for q in out[1:]:
+        if _dist(q, dedup[-1]) >= 0.35:
+            dedup.append(q)
+    if _dist(dedup[0], dedup[-1]) < 0.35:
+        dedup.pop()
+    return dedup
 
 
 SHAPE = shape_points()
@@ -655,8 +694,8 @@ EYE_COLOUR = "#555555"
 MOUTH_COLOUR = "#666666"
 NOSE = "#777777"
 WHISKER = "#777777"
-WHISK_ORIGIN_DX, WHISK_LEN = 17.0, 15.0
-WHISK_ANGLES = (-17.0, 0.0, 17.0)
+WHISK_ORIGIN_DX, WHISK_LEN = 24.0, 26.0
+WHISK_ANGLES = (-20.0, 0.0, 20.0)
 INNER_EAR = "#FF9DB4"
 CLOSED_MOUTHS = {"flat", "arc", "zigzag"}
 
@@ -713,7 +752,10 @@ def _nose_and_whiskers(elems):
             out.append({"t": "pill", "cx": round(ox + dx / 2, 3),
                         "cy": round(oy + dy / 2, 3), "w": WHISK_LEN, "h": 1.9,
                         "rot": round(ang * side, 3), "color": WHISKER,
-                        "role": "deco"})
+                        # "overlay" survives the silhouette clip and is painted
+                        # over the outline, so whiskers cross the head edge the
+                        # way a cat's do instead of stopping at the cheek.
+                        "role": "overlay"})
     return elems + out
 
 

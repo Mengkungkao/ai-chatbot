@@ -478,7 +478,8 @@ class FaceRenderer:
         elems = face["elems"]
         eyes = [e for e in elems if e.get("role") == "eye"]
         mouth = [e for e in elems if e.get("role") == "mouth"]
-        rest = [e for e in elems if e.get("role") not in ("eye", "mouth")]
+        overlay = [e for e in elems if e.get("role") == "overlay"]
+        rest = [e for e in elems if e.get("role") not in ("eye", "mouth", "overlay")]
 
         for e in rest:
             self._draw_elem(img, e, k)
@@ -519,6 +520,11 @@ class FaceRenderer:
 
         # Last, so a tear or a Zzz that strays into the margin sits behind it.
         self._draw_frame(img, size, k, frame_color, shape_variant)
+
+        # Overlay elements are drawn after the clip and after the outline, so
+        # whiskers extend past the head edge and lie across the frame.
+        for e in overlay:
+            self._draw_elem(img, e, k)
         return img
 
     def _paste_squashed(self, img, layer, pivot_y, factor):
