@@ -32,7 +32,7 @@ PANEL_RX = 26
 
 # Bezel drawn around the panel: a rounded outline living in the canvas margin,
 # clear of the panel edge so the face reads as something mounted in a frame.
-FRAME_WIDTH = 2.2   # thin bezel; the ring is an outline, not a housing
+FRAME_WIDTH = 3.0   # ~7px at the reference scale
 FRAME_INSET = 1.2
 FRAME_RX = PANEL_RX + (PANEL_MARGIN - (FRAME_INSET + FRAME_WIDTH / 2))
 
@@ -49,9 +49,9 @@ EARS = []
 # so the outline stays simple. Ear tips are rounded with a true tangent fillet
 # rather than a chopped corner.
 SHAPE_NAME = "cat-wide-round"
-HEAD_RX, HEAD_RY, HEAD_CY, HEAD_POWER = 49.5, 37.0, 59.0, 0.9
-EAR_SPAN = (56.0, 96.0)      # wider base
-EAR_TIP = (76.0, 1.0)        # taller
+HEAD_RX, HEAD_RY, HEAD_CY, HEAD_POWER = 49.5, 28.5, 62.0, 0.9
+EAR_SPAN = (56.0, 88.0)      # wider base
+EAR_TIP = (70.8, 14.0)       # matched to the reference sheet
 EAR_FILLET = 6.0             # the tip
 EAR_BASE_FILLET = 3.2        # where each ear edge meets the head
 TWITCH_DEG = 13.0            # how far one ear swings on a flick
@@ -203,7 +203,7 @@ def scaled(pts, inset):
     return [[round(50 + (x - 50) * f, 3), round(50 + (y - 50) * f, 3)] for x, y in pts]
 
 
-PANEL = "#FFFDF8"      # warm white face card
+PANEL = "#F2F2F2"      # flat off-white head fill, no gradient
 INK = "#22222A"        # eyes, lashes, line work
 BLUSH = "#FF9DB4"
 MOUTH = "#E8455F"
@@ -216,14 +216,14 @@ GOLD = "#FFC93D"
 # The bezel is a vertical coral-to-rose wash. FRAME is the flat mid tone used
 # as a fallback wherever a gradient cannot be drawn (and when the runtime tints
 # the ring with a status colour).
-FRAME = "#FF9A9A"
-FRAME_FROM = "#FFA58C"   # coral at the top
-FRAME_TO = "#FF8FA8"     # rose at the bottom
+FRAME = "#777777"        # head outline, medium grey
+FRAME_FROM = "#777777"   # flat: the spec calls for one outline colour
+FRAME_TO = "#777777"
 FRAME_INNER = "#FFE3EA"
 
 # Shared geometry so every face sits on the same grid.
 EYE_X, EYE_Y = 26, 45   # further from centre; lashes and brows follow
-EYE_RX, EYE_RY = 13, 15.5
+EYE_RX, EYE_RY = 13, 13
 LASH_Y = 26
 BLUSH_X, BLUSH_Y = 14, 64
 MOUTH_Y = 72
@@ -647,8 +647,14 @@ f.pill(50, 16, 4, 10, 0, color=INK, role="deco")
 # head. Set CAT_STYLE = False to ship the plain kawaii faces again.
 
 CAT_STYLE = True
-NOSE = "#FF7D93"
-WHISKER = "#3A3A44"
+# The written spec asks for a minimal kawaii cat: flat fill, one grey outline,
+# solid eyes with no highlight, and nothing else. These strip the decoration the
+# earlier kawaii set carried. Set False to get the blush and glossy eyes back.
+MINIMAL_STYLE = True
+EYE_COLOUR = "#555555"
+MOUTH_COLOUR = "#666666"
+NOSE = "#777777"
+WHISKER = "#777777"
 WHISK_ORIGIN_DX, WHISK_LEN = 17.0, 15.0
 WHISK_ANGLES = (-17.0, 0.0, 17.0)
 INNER_EAR = "#FF9DB4"
@@ -657,8 +663,8 @@ CLOSED_MOUTHS = {"flat", "arc", "zigzag"}
 # The card layout spans roughly y=20 (lashes) to y=84 (huffing's steam). The cat
 # head is shorter, so the face is compressed about its own centre and recentred;
 # translating alone pushed the low decorations out through the chin.
-SRC_CENTRE, FIT_CENTRE, FIT_YSCALE = 52.0, 59.0, 0.92
-FIT_SPREAD, FIT_EYE_GAIN = 1.05, 0.60
+SRC_CENTRE, FIT_CENTRE, FIT_YSCALE = 52.0, 62.6, 0.36
+FIT_SPREAD, FIT_EYE_GAIN = 1.00, 0.40
 
 # Eyes are not one size. A person's eyes widen when startled and narrow when
 # cross, and the face reads flat if they never change, so each expression scales
@@ -684,7 +690,7 @@ def _muzzle(elems):
         if not swapped and e.get("role") == "mouth" and e["t"] in CLOSED_MOUTHS:
             swapped = True
             out.append({"t": "cat", "cx": e.get("cx", 50), "cy": e.get("cy", 70) - 1,
-                        "w": max(e.get("w", 16) * 1.15, 17), "h": 6.0,
+                        "w": max(e.get("w", 16) * 0.85, 12.5), "h": 4.8,
                         "stroke": 3.8, "color": INK, "role": "mouth"})
             continue
         out.append(e)
@@ -748,11 +754,31 @@ def _inner_ears():
     return out
 
 
+def _minimal(elems):
+    """Flatten to the spec: solid dark-grey eyes, no highlights, no blush."""
+    out = []
+    for e in elems:
+        if e.get("role") == "blush":
+            continue                                   # no cheek colour
+        e = dict(e)
+        if e.get("role") == "eye":
+            e["glint"] = False                         # no highlight
+            if e.get("color") not in (None,):
+                e["color"] = EYE_COLOUR
+        elif e.get("role") == "mouth" and e.get("color"):
+            e["color"] = MOUTH_COLOUR
+        out.append(e)
+    return out
+
+
 def catify(elems, face_name=""):
     if not CAT_STYLE:
         return elems
     gain = FIT_EYE_GAIN * EYE_GAIN_BY_FACE.get(face_name, 1.0)
-    return _refit(_nose_and_whiskers(_muzzle(elems)), gain) + _inner_ears()
+    built = _refit(_nose_and_whiskers(_muzzle(elems)), gain)
+    if not MINIMAL_STYLE:
+        return built + _inner_ears()
+    return _minimal(built)
 
 
 # --- mouth anchor --------------------------------------------------------
