@@ -73,6 +73,56 @@ def _quantise(value, step):
     return round(value / step) * step
 
 
+def _polygon_area(pts):
+    a = 0.0
+    for i in range(len(pts)):
+        x1, y1 = pts[i]
+        x2, y2 = pts[(i + 1) % len(pts)]
+        a += x1 * y2 - x2 * y1
+    return a / 2.0
+
+
+def _offset_polygon(pts, dist):
+    """Move every vertex inward along its own normal by ``dist``.
+
+    Insetting by scaling about the centre is wrong for a shape with features
+    far from that centre: an ear gets displaced toward the middle rather than
+    having its outline thinned, which collapses the ring across it. Offsetting
+    along the local normal keeps the band a constant width everywhere.
+    """
+    n = len(pts)
+    if n < 3:
+        return list(pts)
+
+    def edge_normal(a, b):
+        dx, dy = b[0] - a[0], b[1] - a[1]
+        L = math.hypot(dx, dy) or 1.0
+        return (dy / L, -dx / L)
+
+    def build(sign):
+        out = []
+        for i in range(n):
+            p0, p1, p2 = pts[i - 1], pts[i], pts[(i + 1) % n]
+            n1 = edge_normal(p0, p1)
+            n2 = edge_normal(p1, p2)
+            nx, ny = n1[0] + n2[0], n1[1] + n2[1]
+            L = math.hypot(nx, ny)
+            if L < 1e-9:
+                nx, ny, L = n1[0], n1[1], 1.0
+            nx, ny = nx / L, ny / L
+            # miter: a sharp corner needs to travel further to keep the width
+            cosang = max(-0.999, min(1.0, n1[0] * n2[0] + n1[1] * n2[1]))
+            miter = math.sqrt(max(0.15, (1.0 + cosang) / 2.0))
+            step = sign * dist / miter
+            out.append([p1[0] + nx * step, p1[1] + ny * step])
+        return out
+
+    a = build(1.0)
+    b = build(-1.0)
+    # the inward one is whichever encloses less area
+    return a if abs(_polygon_area(a)) < abs(_polygon_area(b)) else b
+
+
 def _ease_in_out(t):
     t = max(0.0, min(1.0, t))
     return t * t * (3.0 - 2.0 * t)
@@ -387,11 +437,9 @@ class FaceRenderer:
         width = self.frame.get("width", 0.0) if self.frame else 0.0
 
         def poly(shrink):
-            f = (50.0 - shrink) / 50.0
+            pts = _offset_polygon(points, shrink) if shrink > 0 else points
             m = Image.new("L", (big, big), 0)
-            ImageDraw.Draw(m).polygon(
-                [((50 + (x - 50) * f) * k, (50 + (y - 50) * f) * k) for x, y in points],
-                fill=255)
+            ImageDraw.Draw(m).polygon([(x * k, y * k) for x, y in pts], fill=255)
             return m
 
         outer = poly(inset)

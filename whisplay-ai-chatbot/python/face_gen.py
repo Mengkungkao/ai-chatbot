@@ -50,7 +50,9 @@ EARS = []
 # rather than a chopped corner.
 SHAPE_NAME = "cat-wide-round"
 HEAD_RX, HEAD_RY, HEAD_CY, HEAD_POWER = 49.5, 28.5, 62.0, 0.9
-EAR_SPAN = (64.0, 97.0)      # base, pushed out to the sides
+EAR_SPAN = (56.0, 97.0)      # inner base pulled in, outer base kept:
+                             # the gap between the ears narrows while
+                             # their outer reach is unchanged
 EAR_TIP = (84.0, 11.0)       # tips out over the corners
 PARABOLIC_EARS = True        # curved sides rather than a triangle
 EAR_FILLET = 6.0             # the tip
