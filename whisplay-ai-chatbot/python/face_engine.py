@@ -43,6 +43,9 @@ FLICK_MAX_GAP = 9.0
 FLICK_HOLD = 0.16
 FLICK_VARIANTS = ("flick_left", "flick_right", "perk")
 
+# How long one talking mouth shape is held before another is chosen.
+TALK_SHAPE_HOLD = 0.13
+
 # Quantisation steps for the frame cache. Animation is continuous but the eye is
 # not, and re-rasterising every micro-step would be wasted work on a Pi.
 Q_BLINK = 0.125
@@ -95,6 +98,9 @@ class FaceRenderer:
         # Alternate silhouettes (an ear flicked, both pricked up) the animator
         # swaps to for a moment. Masks are cached per (size, variant).
         self.shape_variants = self.meta.get("shape_variants") or {}
+        # Mouth shapes cycled through while talking, measured off the reference
+        # sheet. Empty falls back to scaling the single resting mouth.
+        self.talk_shapes = self.meta.get("talk_shapes") or []
         self._shape_cache = {}
 
     def has(self, char):
@@ -456,7 +462,7 @@ class FaceRenderer:
             img.alpha_composite(fill)
 
     def draw(self, char, size, blink=0.0, mouth_open=0.0, frame_color=None,
-             shape_variant=None):
+             shape_variant=None, talk_shape=0):
         """Render one face frame at ``size`` pixels square."""
         face = self.faces.get(char)
         if face is None:
@@ -502,10 +508,18 @@ class FaceRenderer:
         # Mouth: when talking, morph the resting mouth into an open grin.
         anchor = face.get("mouth_anchor")
         if mouth_open > 0.12 and anchor:
-            h = 2.5 + 15.0 * mouth_open
+            if self.talk_shapes:
+                sh = self.talk_shapes[talk_shape % len(self.talk_shapes)]
+                # The chosen shape still opens and closes, so speech reads as
+                # movement rather than a slideshow of fixed mouths.
+                h = sh["h"] * (0.35 + 0.65 * mouth_open)
+                w = sh["w"] * (0.85 + 0.15 * mouth_open)
+            else:
+                h = 2.5 + 15.0 * mouth_open
+                w = anchor["w"] * (0.78 + 0.22 * mouth_open)
             self._grin(img, {
                 "cx": anchor["cx"], "cy": anchor["cy"] - h * 0.18,
-                "w": anchor["w"] * (0.78 + 0.22 * mouth_open), "h": h,
+                "w": w, "h": h,
                 "color": anchor.get("color", "#F5F5F0"),
                 "inner": anchor.get("inner", "#B32B3E"),
             }, k)
@@ -571,6 +585,8 @@ class FaceAnimator:
         self._next_blink = time.time() + random.uniform(BLINK_MIN_GAP, BLINK_MAX_GAP)
         self._flick_start = None
         self._flick_variant = None
+        self._talk_shape = 0
+        self._talk_shape_at = 0.0
         self._next_flick = time.time() + random.uniform(FLICK_MIN_GAP, FLICK_MAX_GAP)
         self._cache = {}
         self._t0 = time.time()
@@ -665,6 +681,17 @@ class FaceAnimator:
             return None
         return self._flick_variant
 
+    def _talk_shape_index(self, now):
+        """Swap the mouth shape a few times a second while she is speaking."""
+        n = len(self.renderer.talk_shapes)
+        if not self.talking or n <= 1:
+            return self._talk_shape
+        if now - self._talk_shape_at >= TALK_SHAPE_HOLD:
+            self._talk_shape_at = now
+            choices = [i for i in range(n) if i != self._talk_shape]
+            self._talk_shape = random.choice(choices)
+        return self._talk_shape
+
     def _breathe_offset(self, now):
         if not self.idle_motion:
             return 0.0
@@ -672,14 +699,14 @@ class FaceAnimator:
 
     # -- rendering ---------------------------------------------------------
 
-    def _cached(self, char, blink, mouth, variant=None):
+    def _cached(self, char, blink, mouth, variant=None, talk_shape=0):
         key = (char, self.size, round(blink, 3), round(mouth, 3), self.frame_color,
-               variant)
+               variant, talk_shape)
         img = self._cache.get(key)
         if img is None:
             img = self.renderer.draw(char, self.size, blink=blink, mouth_open=mouth,
                                      frame_color=self.frame_color,
-                                     shape_variant=variant)
+                                     shape_variant=variant, talk_shape=talk_shape)
             if img is not None and len(self._cache) < 512:
                 self._cache[key] = img
         return img
@@ -694,6 +721,7 @@ class FaceAnimator:
         blink = self._blink_amount(now)
         mouth = self._talk_amount(now)
         variant = self._ear_variant(now)
+        shape_i = self._talk_shape_index(now)
         squash = 1.0
         char = self.current
         dip = 0.0
@@ -715,7 +743,7 @@ class FaceAnimator:
                 dip = 2.4 * (1.0 - abs(2 * t - 1))
 
         img = self._cached(char, _quantise(blink, Q_BLINK), _quantise(mouth, Q_MOUTH),
-                           variant)
+                           variant, shape_i)
         if img is None:
             return None, 0.0, False
 

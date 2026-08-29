@@ -50,8 +50,8 @@ EARS = []
 # rather than a chopped corner.
 SHAPE_NAME = "cat-wide-round"
 HEAD_RX, HEAD_RY, HEAD_CY, HEAD_POWER = 49.5, 28.5, 62.0, 0.9
-EAR_SPAN = (58.0, 92.0)      # base, set wider apart
-EAR_TIP = (77.0, 12.0)       # tips further from centre
+EAR_SPAN = (64.0, 97.0)      # base, pushed out to the sides
+EAR_TIP = (84.0, 11.0)       # tips out over the corners
 PARABOLIC_EARS = True        # curved sides rather than a triangle
 EAR_FILLET = 6.0             # the tip
 EAR_BASE_FILLET = 3.2        # where each ear edge meets the head
@@ -701,6 +701,8 @@ MOUTH_COLOUR = "#666666"
 NOSE = "#777777"
 WHISKER = "#777777"
 WHISK_ORIGIN_DX, WHISK_LEN = 30.0, 20.0
+WHISK_GAP = 6.0   # vertical gap at the inner ends, so the pair is
+                  # two separate strokes rather than a < chevron
 WHISK_ANGLES = (-14.0, 14.0)   # two per cheek, one up one down
 INNER_EAR = "#FF9DB4"
 CLOSED_MOUTHS = {"flat", "arc", "zigzag"}
@@ -755,8 +757,12 @@ def _nose_and_whiskers(elems):
             a = math.radians(ang)
             dx = math.cos(a) * WHISK_LEN * side
             dy = math.sin(a) * WHISK_LEN
+            # Each whisker starts from its own point, offset above or below the
+            # cheek line. Sharing one origin made the pair meet in a point and
+            # read as a < rather than as two whiskers.
+            oy_i = oy + (WHISK_GAP / 2.0) * (1 if ang > 0 else -1)
             out.append({"t": "pill", "cx": round(ox + dx / 2, 3),
-                        "cy": round(oy + dy / 2, 3), "w": WHISK_LEN, "h": 1.9,
+                        "cy": round(oy_i + dy / 2, 3), "w": WHISK_LEN, "h": 1.9,
                         "rot": round(ang * side, 3), "color": WHISKER,
                         # "overlay" survives the silhouette clip and is painted
                         # over the outline, so whiskers cross the head edge the
@@ -831,6 +837,20 @@ def catify(elems, face_name=""):
     if not MINIMAL_STYLE:
         return built + _inner_ears()
     return _minimal(built)
+
+
+# Talking mouth shapes, taken from the sixteen faces on the reference sheet.
+# Widths are canvas units (the face spans about 100) and heights are scaled from
+# the sheet's percentages against a face roughly 73 units tall. The runtime
+# picks among these while she speaks instead of scaling one shape, so the mouth
+# changes shape the way it does in real speech.
+TALK_SHAPES = [
+    {"w": 11.0, "h": 7.0,  "name": "small"},
+    {"w": 6.5,  "h": 12.0, "name": "narrow"},
+    {"w": 18.0, "h": 11.2, "name": "medium"},
+    {"w": 24.0, "h": 13.9, "name": "wide"},
+    {"w": 18.0, "h": 16.5, "name": "tall"},
+]
 
 
 # --- mouth anchor --------------------------------------------------------
@@ -1105,6 +1125,7 @@ def main():
                       "gradient": {"from": FRAME_FROM, "to": FRAME_TO}},
             "ink": INK,
             "shape": {"name": SHAPE_NAME, "points": SHAPE},
+            "talk_shapes": TALK_SHAPES,
             # Alternate silhouettes the runtime swaps to for an ear flick.
             "shape_variants": {
                 "flick_left": shape_points(twitch=(TWITCH_DEG, 0.0)),
