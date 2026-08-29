@@ -32,9 +32,17 @@ PANEL_RX = 26
 
 # Bezel drawn around the panel: a rounded outline living in the canvas margin,
 # clear of the panel edge so the face reads as something mounted in a frame.
-FRAME_WIDTH = 3.0
-FRAME_INSET = 1.5
+FRAME_WIDTH = 3.4
+FRAME_INSET = 1.4
 FRAME_RX = PANEL_RX + (PANEL_MARGIN - (FRAME_INSET + FRAME_WIDTH / 2))
+
+# Rounded ears perched on the top corners of the bezel. They sit above and
+# outboard of the lashes so they never crowd the face, and they carry a lighter
+# inner shape the way a real ear does.
+EARS = [
+    {"cx": 16.5, "cy": 11.5, "r": 8.6, "ir": 4.5},
+    {"cx": 83.5, "cy": 11.5, "r": 8.6, "ir": 4.5},
+]
 
 PANEL = "#FFFDF8"      # warm white face card
 INK = "#22222A"        # eyes, lashes, line work
@@ -46,7 +54,8 @@ TEAR = "#6FC3F5"
 GREEN = "#9BD94E"
 ANGER = "#FF3B5C"
 GOLD = "#FFC93D"
-FRAME = "#3A4657"      # neutral bezel
+FRAME = "#FF8FA8"        # warm rose bezel
+FRAME_INNER = "#FFE3EA"  # softer shade for the inner ear
 
 # Shared geometry so every face sits on the same grid.
 EYE_X, EYE_Y = 31, 45
@@ -687,9 +696,17 @@ def svg_frame():
     half = FRAME_WIDTH / 2
     x = FRAME_INSET + half
     size = W - 2 * x
-    return (f'<rect x="{x:.2f}" y="{x:.2f}" width="{size:.2f}" height="{size:.2f}" '
-            f'rx="{FRAME_RX:.2f}" fill="none" stroke="{FRAME}" '
-            f'stroke-width="{FRAME_WIDTH}"/>')
+    parts = [f'<rect x="{x:.2f}" y="{x:.2f}" width="{size:.2f}" height="{size:.2f}" '
+             f'rx="{FRAME_RX:.2f}" fill="none" stroke="{FRAME}" '
+             f'stroke-width="{FRAME_WIDTH}"/>']
+    # Ears last, so they read as sitting on top of the bezel rather than
+    # being sliced by it.
+    for ear in EARS:
+        parts.append(f'<circle cx="{ear["cx"]}" cy="{ear["cy"]}" r="{ear["r"]}" '
+                     f'fill="{FRAME}"/>')
+        parts.append(f'<circle cx="{ear["cx"]}" cy="{ear["cy"]}" r="{ear["ir"]}" '
+                     f'fill="{FRAME_INNER}"/>')
+    return "".join(parts)
 
 
 def render_svg(elems):
@@ -718,7 +735,7 @@ def main():
             "canvas": W,
             "panel": {"margin": PANEL_MARGIN, "rx": PANEL_RX, "fill": PANEL},
             "frame": {"width": FRAME_WIDTH, "inset": FRAME_INSET, "rx": FRAME_RX,
-                      "color": FRAME},
+                      "color": FRAME, "inner_color": FRAME_INNER, "ears": EARS},
             "ink": INK,
         },
         "faces": {},

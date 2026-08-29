@@ -7,10 +7,25 @@
    "fill": "#FFFDF8"
   },
   "frame": {
-   "width": 3.0,
-   "inset": 1.5,
-   "rx": 29.0,
-   "color": "#3A4657"
+   "width": 3.4,
+   "inset": 1.4,
+   "rx": 28.9,
+   "color": "#FF8FA8",
+   "inner_color": "#FFE3EA",
+   "ears": [
+    {
+     "cx": 16.5,
+     "cy": 11.5,
+     "r": 8.6,
+     "ir": 4.5
+    },
+    {
+     "cx": 83.5,
+     "cy": 11.5,
+     "r": 8.6,
+     "ir": 4.5
+    }
+   ]
   },
   "ink": "#22222A"
  },
