@@ -32,17 +32,13 @@ PANEL_RX = 26
 
 # Bezel drawn around the panel: a rounded outline living in the canvas margin,
 # clear of the panel edge so the face reads as something mounted in a frame.
-FRAME_WIDTH = 3.4
-FRAME_INSET = 1.4
+FRAME_WIDTH = 3.8
+FRAME_INSET = 1.5
 FRAME_RX = PANEL_RX + (PANEL_MARGIN - (FRAME_INSET + FRAME_WIDTH / 2))
 
-# Rounded ears perched on the top corners of the bezel. They sit above and
-# outboard of the lashes so they never crowd the face, and they carry a lighter
-# inner shape the way a real ear does.
-EARS = [
-    {"cx": 16.5, "cy": 11.5, "r": 8.6, "ir": 4.5},
-    {"cx": 83.5, "cy": 11.5, "r": 8.6, "ir": 4.5},
-]
+# No ornaments on the bezel: at this size a delicate outline flatters the face,
+# where anything perched on the corners just crowds it.
+EARS = []
 
 PANEL = "#FFFDF8"      # warm white face card
 INK = "#22222A"        # eyes, lashes, line work
@@ -54,8 +50,13 @@ TEAR = "#6FC3F5"
 GREEN = "#9BD94E"
 ANGER = "#FF3B5C"
 GOLD = "#FFC93D"
-FRAME = "#FF8FA8"        # warm rose bezel
-FRAME_INNER = "#FFE3EA"  # softer shade for the inner ear
+# The bezel is a vertical coral-to-rose wash. FRAME is the flat mid tone used
+# as a fallback wherever a gradient cannot be drawn (and when the runtime tints
+# the ring with a status colour).
+FRAME = "#FF9A9A"
+FRAME_FROM = "#FFA58C"   # coral at the top
+FRAME_TO = "#FF8FA8"     # rose at the bottom
+FRAME_INNER = "#FFE3EA"
 
 # Shared geometry so every face sits on the same grid.
 EYE_X, EYE_Y = 31, 45
@@ -696,17 +697,14 @@ def svg_frame():
     half = FRAME_WIDTH / 2
     x = FRAME_INSET + half
     size = W - 2 * x
-    parts = [f'<rect x="{x:.2f}" y="{x:.2f}" width="{size:.2f}" height="{size:.2f}" '
-             f'rx="{FRAME_RX:.2f}" fill="none" stroke="{FRAME}" '
-             f'stroke-width="{FRAME_WIDTH}"/>']
-    # Ears last, so they read as sitting on top of the bezel rather than
-    # being sliced by it.
-    for ear in EARS:
-        parts.append(f'<circle cx="{ear["cx"]}" cy="{ear["cy"]}" r="{ear["r"]}" '
-                     f'fill="{FRAME}"/>')
-        parts.append(f'<circle cx="{ear["cx"]}" cy="{ear["cy"]}" r="{ear["ir"]}" '
-                     f'fill="{FRAME_INNER}"/>')
-    return "".join(parts)
+    return (
+        f'<defs><linearGradient id="bezel" x1="0" y1="0" x2="0" y2="1">'
+        f'<stop offset="0" stop-color="{FRAME_FROM}"/>'
+        f'<stop offset="1" stop-color="{FRAME_TO}"/></linearGradient></defs>'
+        f'<rect x="{x:.2f}" y="{x:.2f}" width="{size:.2f}" height="{size:.2f}" '
+        f'rx="{FRAME_RX:.2f}" fill="none" stroke="url(#bezel)" '
+        f'stroke-width="{FRAME_WIDTH}"/>'
+    )
 
 
 def render_svg(elems):
@@ -735,7 +733,8 @@ def main():
             "canvas": W,
             "panel": {"margin": PANEL_MARGIN, "rx": PANEL_RX, "fill": PANEL},
             "frame": {"width": FRAME_WIDTH, "inset": FRAME_INSET, "rx": FRAME_RX,
-                      "color": FRAME, "inner_color": FRAME_INNER, "ears": EARS},
+                      "color": FRAME, "inner_color": FRAME_INNER, "ears": EARS,
+                      "gradient": {"from": FRAME_FROM, "to": FRAME_TO}},
             "ink": INK,
         },
         "faces": {},

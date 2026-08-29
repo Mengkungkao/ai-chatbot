@@ -348,8 +348,21 @@ class FaceRenderer:
             r = ear["r"] * k * s
             ex, ey = ear["cx"] * k * s, ear["cy"] * k * s
             md.ellipse([ex - r, ey - r, ex + r, ey + r], fill=255)
-        ring = Image.new("RGBA", (size, size),
-                         _as_rgb(color or self.frame.get("color", "#3A4657")) + (255,))
+        grad = self.frame.get("gradient")
+        if grad and not color:
+            # Vertical wash down the bezel. Painted as a full tile and then cut
+            # by the ring mask, which keeps the edge as clean as the flat fill.
+            top, bottom = _as_rgb(grad["from"]), _as_rgb(grad["to"])
+            ring = Image.new("RGBA", (size, size))
+            rd = ImageDraw.Draw(ring)
+            span = max(size - 1, 1)
+            for y in range(size):
+                t = y / span
+                rd.line([(0, y), (size, y)],
+                        fill=tuple(int(a + (b - a) * t) for a, b in zip(top, bottom)) + (255,))
+        else:
+            ring = Image.new("RGBA", (size, size),
+                             _as_rgb(color or self.frame.get("color", "#3A4657")) + (255,))
         ring.putalpha(mask.resize((size, size), Image.LANCZOS))
         img.alpha_composite(ring)
 
