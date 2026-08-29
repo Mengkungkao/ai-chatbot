@@ -31,8 +31,16 @@ The ear tips are authored as sharp corners and rounded afterwards by `_fillet()`
 which trims both curves back by `EAR_FILLET` and bridges the gap with a cubic
 approximating a circular arc. Rounding a tip also shortens it, so `EAR_LIFT`
 raises the tips by half the radius to pay for what the fillet removes — without
-it the whole drawing loses six pixels of height. Both are single constants; set
-`EAR_FILLET = 0` for sharp tips.
+it the whole drawing loses six pixels of height.
+
+`EAR_BOW` offsets the control points of all four ear edges perpendicular to the
+edge, away from that ear's own centreline, so both sides of each ear swell
+instead of running straight. The offset has to be perpendicular rather than
+horizontal: the inner edges are steeply diagonal, and a sideways push slides
+along them instead of bowing them.
+
+All three are single constants; set `EAR_FILLET = 0` for sharp tips and
+`EAR_BOW = 0` for straight-sided ears.
 
 `createEyes()`, `createMouth()` and `createWhiskers()` emit the features.
 Whiskers are drawn before the head so they tuck under its outline.
@@ -58,6 +66,7 @@ Taken from the reference image itself, not from description:
 | bottom | 239 | 239 | 0 |
 | valley between ears | 94 | 94 | 0 |
 | ear tips | 96.0, 209.5 | 96.0, 208.5 | <1 |
+| ear edge bow, outer / inner | −3.3 / +2.6 | −2.8 / +3.4 | <1 |
 | width at y=140 | 222 | 224 | +2 |
 | width at y=150 | 226 | 228 | +2 |
 | width at y=215 | 187 | 184 | −3 |
@@ -68,5 +77,5 @@ Taken from the reference image itself, not from description:
 | mouth centre | 152.5, 186.5 | 153.5, 187.0 | ≤1 |
 | mouth size | 48 × 12 | 50 × 13 | ≤2 |
 
-Silhouette overlap with the reference is **93.5%** by intersection over union.
+Silhouette overlap with the reference is **94.7%** by intersection over union.
 Every figure is within 3px on a 313px canvas.

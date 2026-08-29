@@ -37,8 +37,10 @@ EYE_R_POS = (218.0, 163.0)
 # contour rather than shapes stuck on top, and every corner is a curve, so the
 # silhouette reads as drawn by hand rather than assembled from polygons.
 EAR_FILLET = 8.0   # radius of the rounded ear tips; 0 leaves them sharp
-EAR_LIFT = 4.0     # raises the tips to give the fillet something to cut away,
+EAR_LIFT = 2.5     # raises the tips to give the fillet something to cut away,
                    # so rounding them does not shorten the whole drawing
+EAR_BOW = 5.0      # pushes both edges of each ear outward from its own
+                   # centreline, so the ears swell rather than run straight
 
 HEAD_START = (96.0, 48.5)
 HEAD_CURVES = [
@@ -165,6 +167,25 @@ def _lifted():
         curves[2][2][1] -= EAR_LIFT           # right tip
         for seg, idx in ((10, 1), (0, 0), (2, 1), (3, 0)):
             curves[seg][idx][1] -= EAR_LIFT * 0.5
+    if EAR_BOW:
+        # Each ear has two edges running tip to base. Offsetting their control
+        # points perpendicular to the edge, away from the ear's own centreline,
+        # makes both edges convex; the reference bows about five pixels at
+        # mid-span on each side. The offset has to be perpendicular rather than
+        # horizontal: the inner edges are steeply diagonal, so a sideways push
+        # slides along them instead of bowing them.
+        ends = {10: (curves[9][2], curves[10][2]), 0: (start, curves[0][2]),
+                2: (curves[1][2], curves[2][2]), 3: (curves[2][2], curves[3][2])}
+        for seg, outward in ((10, -1), (0, +1), (2, -1), (3, +1)):
+            (x0, y0), (x1, y1) = ends[seg]
+            dx, dy = x1 - x0, y1 - y0
+            m = math.hypot(dx, dy) or 1.0
+            nx, ny = -dy / m, dx / m               # perpendicular to the edge
+            if (nx > 0) != (outward > 0):          # point it away from the ear
+                nx, ny = -nx, -ny
+            for idx in (0, 1):
+                curves[seg][idx][0] += EAR_BOW * nx
+                curves[seg][idx][1] += EAR_BOW * ny
     return tuple(start), [tuple(tuple(p) for p in c) for c in curves]
 
 
