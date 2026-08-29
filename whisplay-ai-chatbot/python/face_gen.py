@@ -496,10 +496,16 @@ f.grin(50, 63, 30, 18)
 
 f = emo("cool", "1f60e", "😎")
 cheeks(f, cy=66)
-f.pill(50, 43, 62, 19, 0, color=INK, role="eye")
-f.pill(50, 43, 6, 21, 0, color=PANEL, role="eye")
-f.oval(38, 43, 12, 7, color="#4A5568", role="eye")
-f.oval(62, 43, 12, 7, color="#4A5568", role="eye")
+# Proper sunglasses rather than one visor bar: two lenses on the eye centres,
+# a bridge between them and a stubby arm on each side. Lenses are role="eye" so
+# they squash on a blink like everything else; the frame parts stay put.
+f.pill(EYE_X, 45, 32, 22, 0, color=INK, role="eye")
+f.pill(100 - EYE_X, 45, 32, 22, 0, color=INK, role="eye")
+f.pill(50, 43, 16, 4.0, 0, color=INK, role="deco")           # bridge
+f.pill(7, 41, 12, 3.6, -14, color=INK, role="deco")          # left arm
+f.pill(93, 41, 12, 3.6, 14, color=INK, role="deco")          # right arm
+f.pill(EYE_X - 6, 40, 12, 3.4, -20, color="#B9C0C8", role="deco")   # lens shine
+f.pill(94 - EYE_X, 40, 12, 3.4, -20, color="#B9C0C8", role="deco")
 f.curve(54, MOUTH_Y - 2, 19, 8, role="mouth", stroke=4.2)
 
 f = emo("smirk", "1f60f", "😏")
@@ -694,7 +700,7 @@ EYE_COLOUR = "#555555"
 MOUTH_COLOUR = "#666666"
 NOSE = "#777777"
 WHISKER = "#777777"
-WHISK_ORIGIN_DX, WHISK_LEN = 24.0, 26.0
+WHISK_ORIGIN_DX, WHISK_LEN = 30.0, 20.0
 WHISK_ANGLES = (-14.0, 14.0)   # two per cheek, one up one down
 INNER_EAR = "#FF9DB4"
 CLOSED_MOUTHS = {"flat", "arc", "zigzag"}
