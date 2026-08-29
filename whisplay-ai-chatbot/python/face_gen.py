@@ -695,7 +695,7 @@ MOUTH_COLOUR = "#666666"
 NOSE = "#777777"
 WHISKER = "#777777"
 WHISK_ORIGIN_DX, WHISK_LEN = 24.0, 26.0
-WHISK_ANGLES = (-20.0, 0.0, 20.0)
+WHISK_ANGLES = (-14.0, 14.0)   # two per cheek, one up one down
 INNER_EAR = "#FF9DB4"
 CLOSED_MOUTHS = {"flat", "arc", "zigzag"}
 
