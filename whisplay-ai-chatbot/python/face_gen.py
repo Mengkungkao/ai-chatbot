@@ -583,7 +583,7 @@ CLOSED_MOUTHS = {"flat", "arc", "zigzag"}
 # head is shorter, so the face is compressed about its own centre and recentred;
 # translating alone pushed the low decorations out through the chin.
 SRC_CENTRE, FIT_CENTRE, FIT_YSCALE = 52.0, 59.0, 0.92
-FIT_SPREAD, FIT_EYE_GAIN = 1.05, 1.12
+FIT_SPREAD, FIT_EYE_GAIN = 1.05, 0.88
 FIT_MAX_DX = HEAD_RX * 0.76
 
 
