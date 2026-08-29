@@ -583,7 +583,22 @@ CLOSED_MOUTHS = {"flat", "arc", "zigzag"}
 # head is shorter, so the face is compressed about its own centre and recentred;
 # translating alone pushed the low decorations out through the chin.
 SRC_CENTRE, FIT_CENTRE, FIT_YSCALE = 52.0, 59.0, 0.92
-FIT_SPREAD, FIT_EYE_GAIN = 1.05, 0.88
+FIT_SPREAD, FIT_EYE_GAIN = 1.05, 0.68
+
+# Eyes are not one size. A person's eyes widen when startled and narrow when
+# cross, and the face reads flat if they never change, so each expression scales
+# the base gain. Anything not listed uses the base.
+EYE_GAIN_BY_FACE = {
+    # thrown wide
+    "astonished": 1.34, "scared": 1.32, "pleading": 1.30, "surprised": 1.24,
+    "fearful": 1.22, "flushed": 1.16, "anxious": 1.10,
+    # soft and open
+    "love": 1.16, "adoring": 1.14, "excited": 1.12, "kiss": 1.08, "wink": 1.06,
+    # narrowed
+    "smirk": 0.80, "huffing": 0.80, "dejected": 0.82, "drowsy": 0.84,
+    "angry": 0.88, "rage": 0.88, "cool": 0.90, "expressionless": 0.92,
+    "sick": 0.88, "nauseated": 0.90, "content": 0.94, "sleepy": 0.94,
+}
 FIT_MAX_DX = HEAD_RX * 0.76
 
 
@@ -615,7 +630,7 @@ def _nose_and_whiskers(elems):
     return elems + out
 
 
-def _refit(elems):
+def _refit(elems, eye_gain):
     """Fit the card layout into the wider, shorter head."""
     out = []
     for e in elems:
@@ -630,9 +645,9 @@ def _refit(elems):
         if e.get("role") == "eye":
             for f in ("rx", "ry", "r", "size"):
                 if isinstance(e.get(f), (int, float)):
-                    e[f] = round(e[f] * FIT_EYE_GAIN, 3)
+                    e[f] = round(e[f] * eye_gain, 3)
             if e["t"] in ("arc", "flat", "caret", "x") and "w" in e:
-                e["w"] = round(e["w"] * FIT_EYE_GAIN, 3)
+                e["w"] = round(e["w"] * eye_gain, 3)
         out.append(e)
     return out
 
@@ -652,10 +667,11 @@ def _inner_ears():
     return out
 
 
-def catify(elems):
+def catify(elems, face_name=""):
     if not CAT_STYLE:
         return elems
-    return _refit(_nose_and_whiskers(_muzzle(elems))) + _inner_ears()
+    gain = FIT_EYE_GAIN * EYE_GAIN_BY_FACE.get(face_name, 1.0)
+    return _refit(_nose_and_whiskers(_muzzle(elems)), gain) + _inner_ears()
 
 
 # --- mouth anchor --------------------------------------------------------
@@ -935,7 +951,7 @@ def main():
     }
 
     for name, data in FACES.items():
-        elems = catify(data["face"].elems)
+        elems = catify(data["face"].elems, name)
         with open(os.path.join(args.svg_dir, data["cp"] + ".svg"), "w", encoding="utf-8") as fh:
             fh.write(render_svg(elems))
         spec["faces"][data["char"]] = {
