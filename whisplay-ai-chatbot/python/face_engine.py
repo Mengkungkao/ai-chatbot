@@ -81,6 +81,11 @@ class FaceRenderer:
         frame = self.meta.get("frame") or {}
         self.frame = frame if frame.get("width", 0) > 0 else None
         self.ink = self.meta.get("ink", "#22222A")
+        # Silhouette shared by the panel, the content clip and the bezel ring.
+        # Absent (older specs) the card falls back to the rounded rectangle.
+        shape = self.meta.get("shape") or {}
+        self.shape = shape.get("points") or None
+        self._shape_cache = {}
 
     def has(self, char):
         return char in self.faces
@@ -325,9 +330,67 @@ class FaceRenderer:
 
     # -- frame composition -------------------------------------------------
 
+    def _paint_ring(self, img, size, mask, color=None):
+        """Fill a ring mask with the bezel gradient, or a solid status tint."""
+        grad = self.frame.get("gradient")
+        if grad and not color:
+            top, bottom = _as_rgb(grad["from"]), _as_rgb(grad["to"])
+            ring = Image.new("RGBA", (size, size))
+            rd = ImageDraw.Draw(ring)
+            span = max(size - 1, 1)
+            for y in range(size):
+                t = y / span
+                rd.line([(0, y), (size, y)],
+                        fill=tuple(int(a + (b - a) * t) for a, b in zip(top, bottom)) + (255,))
+        else:
+            ring = Image.new("RGBA", (size, size),
+                             _as_rgb(color or self.frame.get("color", "#3A4657")) + (255,))
+        ring.putalpha(mask)
+        img.alpha_composite(ring)
+
+    def _shape_masks(self, size):
+        """``(card, ring)`` masks for the silhouette, built once per size.
+
+        Both are rasterised supersampled and combined before the downscale, so
+        the ring's two edges stay as clean as the panel's.
+        """
+        hit = self._shape_cache.get(size)
+        if hit is not None:
+            return hit
+        if not self.shape:
+            self._shape_cache[size] = (None, None)
+            return None, None
+        s = FRAME_SUPERSAMPLE
+        big = size * s
+        k = big / CANVAS
+        inset = self.frame.get("inset", 0.0) if self.frame else 0.0
+        width = self.frame.get("width", 0.0) if self.frame else 0.0
+
+        def poly(shrink):
+            f = (50.0 - shrink) / 50.0
+            m = Image.new("L", (big, big), 0)
+            ImageDraw.Draw(m).polygon(
+                [((50 + (x - 50) * f) * k, (50 + (y - 50) * f) * k) for x, y in self.shape],
+                fill=255)
+            return m
+
+        outer = poly(inset)
+        card = outer.resize((size, size), Image.LANCZOS)
+        ring = None
+        if width > 0:
+            r = outer.copy()
+            r.paste(0, (0, 0), poly(inset + width))
+            ring = r.resize((size, size), Image.LANCZOS)
+        self._shape_cache[size] = (card, ring)
+        return card, ring
+
     def _draw_frame(self, img, size, k, color=None):
         """Stroke the bezel ring around the panel."""
         if not self.frame:
+            return
+        _, shaped_ring = self._shape_masks(size)
+        if shaped_ring is not None:
+            self._paint_ring(img, size, shaped_ring, color)
             return
         s = FRAME_SUPERSAMPLE
         width = max(self.frame["width"] * k * s, 1.0)
@@ -384,11 +447,18 @@ class FaceRenderer:
         if face is None:
             return None
         k = size / CANVAS
-        img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-        d = ImageDraw.Draw(img)
-        m = self.panel_margin * k
-        d.rounded_rectangle([m, m, size - m, size - m], radius=self.panel_rx * k,
-                            fill=_rgb(self.panel_fill) + (255,))
+        card, _ = self._shape_masks(size)
+        if card is not None:
+            # The card is a silhouette, so the panel is painted full bleed and
+            # everything is cut to shape at the end. That way a blush or a tear
+            # near the rim is clipped by the card instead of floating outside it.
+            img = Image.new("RGBA", (size, size), _as_rgb(self.panel_fill) + (255,))
+        else:
+            img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+            d = ImageDraw.Draw(img)
+            m = self.panel_margin * k
+            d.rounded_rectangle([m, m, size - m, size - m], radius=self.panel_rx * k,
+                                fill=_rgb(self.panel_fill) + (255,))
 
         elems = face["elems"]
         eyes = [e for e in elems if e.get("role") == "eye"]
@@ -426,6 +496,11 @@ class FaceRenderer:
         else:
             for e in mouth:
                 self._draw_elem(img, e, k)
+
+        if card is not None:
+            clipped = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+            clipped.paste(img, (0, 0), card)
+            img = clipped
 
         # Last, so a tear or a Zzz that strays into the margin sits behind it.
         self._draw_frame(img, size, k, frame_color)

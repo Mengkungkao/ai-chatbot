@@ -40,6 +40,33 @@ FRAME_RX = PANEL_RX + (PANEL_MARGIN - (FRAME_INSET + FRAME_WIDTH / 2))
 # where anything perched on the corners just crowds it.
 EARS = []
 
+# The face card is a barrel-curved CRT outline rather than a rounded square:
+# a superellipse, wider than it is tall. Both the panel and the bezel ring take
+# this silhouette, and the face art is clipped to it, so the three always agree.
+SHAPE_NAME = "tv"
+SHAPE_RX, SHAPE_RY, SHAPE_POWER, SHAPE_STEPS = 47.0, 43.0, 0.75, 160
+
+
+def shape_points(rx=SHAPE_RX, ry=SHAPE_RY, power=SHAPE_POWER, n=SHAPE_STEPS):
+    """The silhouette in 0..100 space, shared by the SVG and the runtime."""
+    pts = []
+    for i in range(n):
+        t = 2 * math.pi * i / n
+        ct, st = math.cos(t), math.sin(t)
+        pts.append([round(50 + rx * math.copysign(abs(ct) ** power, ct), 3),
+                    round(50 + ry * math.copysign(abs(st) ** power, st), 3)])
+    return pts
+
+
+SHAPE = shape_points()
+
+
+def scaled(pts, inset):
+    """The silhouette shrunk toward the centre, used for the ring's two edges."""
+    f = (50.0 - inset) / 50.0
+    return [[round(50 + (x - 50) * f, 3), round(50 + (y - 50) * f, 3)] for x, y in pts]
+
+
 PANEL = "#FFFDF8"      # warm white face card
 INK = "#22222A"        # eyes, lashes, line work
 BLUSH = "#FF9DB4"
@@ -693,28 +720,40 @@ SVG_RENDER = {"pill": svg_pill, "circle": svg_circle, "arc": svg_arc, "flat": sv
               "hatch": svg_hatch, "anger": svg_anger, "cat": svg_cat, "tri": svg_tri}
 
 
+def _pts_attr(pts):
+    return " ".join(f"{x},{y}" for x, y in pts)
+
+
+def _path_d(pts):
+    d = f"M {pts[0][0]} {pts[0][1]} " + " ".join(f"L {x} {y}" for x, y in pts[1:])
+    return d + " Z"
+
+
 def svg_frame():
-    half = FRAME_WIDTH / 2
-    x = FRAME_INSET + half
-    size = W - 2 * x
+    """The bezel as a single even-odd path between the silhouette's two edges."""
+    outer = scaled(SHAPE, FRAME_INSET)
+    inner = scaled(SHAPE, FRAME_INSET + FRAME_WIDTH)
     return (
         f'<defs><linearGradient id="bezel" x1="0" y1="0" x2="0" y2="1">'
         f'<stop offset="0" stop-color="{FRAME_FROM}"/>'
         f'<stop offset="1" stop-color="{FRAME_TO}"/></linearGradient></defs>'
-        f'<rect x="{x:.2f}" y="{x:.2f}" width="{size:.2f}" height="{size:.2f}" '
-        f'rx="{FRAME_RX:.2f}" fill="none" stroke="url(#bezel)" '
-        f'stroke-width="{FRAME_WIDTH}"/>'
+        f'<path d="{_path_d(outer)} {_path_d(inner)}" fill="url(#bezel)" '
+        f'fill-rule="evenodd"/>'
     )
 
 
 def render_svg(elems):
+    outer = scaled(SHAPE, FRAME_INSET)
     parts = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" '
              f'width="{W}" height="{H}">',
-             f'<rect x="{PANEL_MARGIN}" y="{PANEL_MARGIN}" width="{W - 2*PANEL_MARGIN}" '
-             f'height="{H - 2*PANEL_MARGIN}" rx="{PANEL_RX}" fill="{PANEL}"/>']
+             # Everything the face draws is clipped to the silhouette, so a
+             # blush or a tear near the edge cannot spill outside the card.
+             f'<clipPath id="card"><polygon points="{_pts_attr(outer)}"/></clipPath>',
+             f'<g clip-path="url(#card)">',
+             f'<polygon points="{_pts_attr(outer)}" fill="{PANEL}"/>']
     for e in elems:
         parts.append(SVG_RENDER[e["t"]](e))
-    # Last, so a tear or a Zzz that strays into the margin sits behind the ring.
+    parts.append("</g>")
     parts.append(svg_frame())
     parts.append("</svg>")
     return "\n".join(parts)
@@ -736,6 +775,7 @@ def main():
                       "color": FRAME, "inner_color": FRAME_INNER, "ears": EARS,
                       "gradient": {"from": FRAME_FROM, "to": FRAME_TO}},
             "ink": INK,
+            "shape": {"name": SHAPE_NAME, "points": SHAPE},
         },
         "faces": {},
     }
