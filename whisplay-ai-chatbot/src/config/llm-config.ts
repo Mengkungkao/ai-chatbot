@@ -1,5 +1,7 @@
 require("dotenv").config();
 
+import { facePrompt } from "./face-config";
+
 const baseSystemPrompt =
   process.env.SYSTEM_PROMPT ||
   [
@@ -29,7 +31,6 @@ const baseSystemPrompt =
     "",
     "Do stay curious about them, their day, their work, what they are avoiding, and remember what they",
     "tell you so you can bring it up later, but ask because you want to know, not to fill a turn.",
-    "At most one emoji per reply, and usually none.",
   ].join(" ");
 
 const speechFriendlyPrompt =
@@ -100,4 +101,4 @@ export const buildProactiveCue = (quietForSeconds: number): string => {
   );
 };
 
-export const systemPrompt = `${baseSystemPrompt}${speechFriendlyPrompt}${silentCuePrompt}${wakeWordConversationToolPrompt}`;
+export const systemPrompt = `${baseSystemPrompt}${facePrompt}${speechFriendlyPrompt}${silentCuePrompt}${wakeWordConversationToolPrompt}`;
