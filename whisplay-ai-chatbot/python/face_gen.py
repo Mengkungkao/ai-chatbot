@@ -32,8 +32,8 @@ PANEL_RX = 26
 
 # Bezel drawn around the panel: a rounded outline living in the canvas margin,
 # clear of the panel edge so the face reads as something mounted in a frame.
-FRAME_WIDTH = 3.8
-FRAME_INSET = 1.5
+FRAME_WIDTH = 2.2   # thin bezel; the ring is an outline, not a housing
+FRAME_INSET = 1.2
 FRAME_RX = PANEL_RX + (PANEL_MARGIN - (FRAME_INSET + FRAME_WIDTH / 2))
 
 # No ornaments on the bezel: at this size a delicate outline flatters the face,
@@ -43,19 +43,82 @@ EARS = []
 # The face card is a barrel-curved CRT outline rather than a rounded square:
 # a superellipse, wider than it is tall. Both the panel and the bezel ring take
 # this silhouette, and the face art is clipped to it, so the three always agree.
-SHAPE_NAME = "tv"
-SHAPE_RX, SHAPE_RY, SHAPE_POWER, SHAPE_STEPS = 47.0, 43.0, 0.75, 160
+# --- silhouette ----------------------------------------------------------
+# A wide, round cat head. The head is a superellipse and each ear is spliced
+# into the crown in walk order, joined at the exact points the crown arc left,
+# so the outline stays simple. Ear tips are rounded with a true tangent fillet
+# rather than a chopped corner.
+SHAPE_NAME = "cat-wide-round"
+HEAD_RX, HEAD_RY, HEAD_CY, HEAD_POWER = 47.0, 37.0, 59.0, 0.9
+EAR_SPAN = (60.0, 92.0)
+EAR_TIP = (77.0, 2.5)
+EAR_FILLET = 5.0
+SHAPE_STEPS = 280
 
 
-def shape_points(rx=SHAPE_RX, ry=SHAPE_RY, power=SHAPE_POWER, n=SHAPE_STEPS):
-    """The silhouette in 0..100 space, shared by the SVG and the runtime."""
-    pts = []
+def head_top(x, rx=HEAD_RX, ry=HEAD_RY, cy=HEAD_CY, power=HEAD_POWER):
+    """Y of the head outline directly above ``x`` -- where an ear must attach."""
+    u = min(abs(x - 50.0) / rx, 1.0)
+    ct = u ** (1.0 / power)
+    st = math.sqrt(max(0.0, 1.0 - ct * ct))
+    return cy - ry * (st ** power)
+
+
+def fillet(a, tip, b, radius, steps=14):
+    """Round the corner at ``tip`` with an arc tangent to both edges."""
+    ax, ay = a[0] - tip[0], a[1] - tip[1]
+    bx, by = b[0] - tip[0], b[1] - tip[1]
+    la = math.hypot(ax, ay) or 1.0
+    lb = math.hypot(bx, by) or 1.0
+    ux, uy = ax / la, ay / la
+    vx, vy = bx / lb, by / lb
+    theta = math.acos(max(-1.0, min(1.0, ux * vx + uy * vy)))
+    if theta < 1e-6 or theta > math.pi - 1e-6:
+        return [list(tip)]
+    half = theta / 2.0
+    d = radius / math.tan(half)
+    if d >= la or d >= lb:                      # corner too tight for this radius
+        return [list(tip)]
+    p1 = (tip[0] + ux * d, tip[1] + uy * d)
+    p2 = (tip[0] + vx * d, tip[1] + vy * d)
+    wx, wy = ux + vx, uy + vy
+    lw = math.hypot(wx, wy) or 1.0
+    c = (tip[0] + wx / lw * (radius / math.sin(half)),
+         tip[1] + wy / lw * (radius / math.sin(half)))
+    a1 = math.atan2(p1[1] - c[1], p1[0] - c[0])
+    a2 = math.atan2(p2[1] - c[1], p2[0] - c[0])
+    d_ang = (a2 - a1 + math.pi) % (2 * math.pi) - math.pi
+    return [[round(c[0] + radius * math.cos(a1 + d_ang * i / steps), 3),
+             round(c[1] + radius * math.sin(a1 + d_ang * i / steps), 3)]
+            for i in range(steps + 1)]
+
+
+def shape_points(n=SHAPE_STEPS, fillet_r=EAR_FILLET):
+    x0, x1 = EAR_SPAN
+    a = [x0, round(head_top(x0), 3)]
+    b = [x1, round(head_top(x1), 3)]
+    right = [a] + fillet(a, EAR_TIP, b, fillet_r) + [b]
+    left = [[100.0 - p[0], p[1]] for p in reversed(right)]
+    zones = [(100.0 - x1, 100.0 - x0, left), (x0, x1, right)]
+
+    out, done = [], set()
     for i in range(n):
         t = 2 * math.pi * i / n
         ct, st = math.cos(t), math.sin(t)
-        pts.append([round(50 + rx * math.copysign(abs(ct) ** power, ct), 3),
-                    round(50 + ry * math.copysign(abs(st) ** power, st), 3)])
-    return pts
+        x = 50 + HEAD_RX * math.copysign(abs(ct) ** HEAD_POWER, ct)
+        y = HEAD_CY + HEAD_RY * math.copysign(abs(st) ** HEAD_POWER, st)
+        z = next((j for j, (lo, hi, _) in enumerate(zones)
+                  if lo <= x <= hi and y < HEAD_CY), None)
+        if z is None:
+            out.append([round(x, 3), round(y, 3)])
+            continue
+        if z not in done:
+            done.add(z)
+            pts = zones[z][2]
+            if out and x < out[-1][0]:          # walking right-to-left
+                pts = list(reversed(pts))
+            out.extend([[float(p[0]), float(p[1])] for p in pts])
+    return out
 
 
 SHAPE = shape_points()
@@ -504,6 +567,97 @@ f.flat(50, MOUTH_Y, 20, stroke=3.6, role="mouth")
 f.pill(50, 16, 4, 10, 0, color=INK, role="deco")
 
 
+# --- cat treatment -------------------------------------------------------
+# The 49 expressions are authored for an upright card. The cat head is wider and
+# shorter, so rather than redraw every face the treatment is applied once here:
+# a muzzle, nose and whiskers go on, and the whole layout is refitted to the new
+# head. Set CAT_STYLE = False to ship the plain kawaii faces again.
+
+CAT_STYLE = True
+NOSE = "#FF7D93"
+WHISKER = "#3A3A44"
+INNER_EAR = "#FF9DB4"
+CLOSED_MOUTHS = {"flat", "arc", "zigzag"}
+
+# The card layout spans roughly y=20 (lashes) to y=84 (huffing's steam). The cat
+# head is shorter, so the face is compressed about its own centre and recentred;
+# translating alone pushed the low decorations out through the chin.
+SRC_CENTRE, FIT_CENTRE, FIT_YSCALE = 52.0, 59.0, 0.92
+FIT_SPREAD, FIT_EYE_GAIN = 1.05, 1.12
+FIT_MAX_DX = HEAD_RX * 0.76
+
+
+def _muzzle(elems):
+    """Swap a closed line mouth for an omega muzzle; leave open mouths alone."""
+    out, swapped = [], False
+    for e in elems:
+        if not swapped and e.get("role") == "mouth" and e["t"] in CLOSED_MOUTHS:
+            swapped = True
+            out.append({"t": "cat", "cx": e.get("cx", 50), "cy": e.get("cy", 70) - 1,
+                        "w": max(e.get("w", 16) * 1.15, 17), "h": 6.0,
+                        "stroke": 3.8, "color": INK, "role": "mouth"})
+            continue
+        out.append(e)
+    return out
+
+
+def _nose_and_whiskers(elems):
+    mouth_y = next((e.get("cy", 70) for e in elems if e.get("role") == "mouth"), 70.0)
+    out = [{"t": "tri", "cx": 50.0, "cy": round(mouth_y - 7.5, 3), "w": 7.0, "h": 5.0,
+            "color": NOSE, "down": True, "role": "deco"}]
+    for side in (-1, 1):
+        for dy, length in ((-3.0, 17.0), (2.0, 19.0), (7.0, 17.0)):
+            x0 = 50.0 + side * 20.0
+            x1 = x0 + side * length
+            out.append({"t": "flat", "cx": round((x0 + x1) / 2, 3),
+                        "cy": round(mouth_y + dy - 2.0, 3), "w": abs(x1 - x0),
+                        "stroke": 1.9, "color": WHISKER, "role": "deco"})
+    return elems + out
+
+
+def _refit(elems):
+    """Fit the card layout into the wider, shorter head."""
+    out = []
+    for e in elems:
+        e = dict(e)
+        if "cx" in e:
+            dx = (e["cx"] - 50) * FIT_SPREAD
+            # Cap the offset at the head's usable half-width, or spreading flings
+            # the outermost decorations (adoring's hearts) past the cheeks.
+            e["cx"] = round(50 + max(-FIT_MAX_DX, min(FIT_MAX_DX, dx)), 3)
+        if "cy" in e:
+            e["cy"] = round(FIT_CENTRE + (e["cy"] - SRC_CENTRE) * FIT_YSCALE, 3)
+        if e.get("role") == "eye":
+            for f in ("rx", "ry", "r", "size"):
+                if isinstance(e.get(f), (int, float)):
+                    e[f] = round(e[f] * FIT_EYE_GAIN, 3)
+            if e["t"] in ("arc", "flat", "caret", "x") and "w" in e:
+                e["w"] = round(e["w"] * FIT_EYE_GAIN, 3)
+        out.append(e)
+    return out
+
+
+def _inner_ears():
+    x0, x1 = EAR_SPAN
+    base_y = head_top((x0 + x1) / 2)
+    h = (base_y - EAR_TIP[1]) * 0.52
+    out = []
+    for side in (1, -1):
+        cx = (x0 + x1) / 2 if side == 1 else 100.0 - (x0 + x1) / 2
+        tx = EAR_TIP[0] if side == 1 else 100.0 - EAR_TIP[0]
+        out.append({"t": "tri", "cx": round((cx + tx) / 2, 3),
+                    "cy": round(EAR_TIP[1] + EAR_FILLET * 0.55 + h * 0.62, 3),
+                    "w": round((x1 - x0) * 0.42, 3), "h": round(h, 3),
+                    "color": INNER_EAR, "down": False, "role": "deco"})
+    return out
+
+
+def catify(elems):
+    if not CAT_STYLE:
+        return elems
+    return _refit(_nose_and_whiskers(_muzzle(elems))) + _inner_ears()
+
+
 # --- mouth anchor --------------------------------------------------------
 
 def mouth_anchor(elems):
@@ -781,7 +935,7 @@ def main():
     }
 
     for name, data in FACES.items():
-        elems = data["face"].elems
+        elems = catify(data["face"].elems)
         with open(os.path.join(args.svg_dir, data["cp"] + ".svg"), "w", encoding="utf-8") as fh:
             fh.write(render_svg(elems))
         spec["faces"][data["char"]] = {
