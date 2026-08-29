@@ -36,6 +36,13 @@ BREATHE_AMPLITUDE = 1.7  # canvas units
 
 TALK_ATTACK = 0.06  # how quickly the mouth follows its target
 
+# Ear flicks. A cat's ears move far more often than its face does, so a quick
+# swivel every few seconds does more for aliveness than any amount of blinking.
+FLICK_MIN_GAP = 3.4
+FLICK_MAX_GAP = 9.0
+FLICK_HOLD = 0.16
+FLICK_VARIANTS = ("flick_left", "flick_right", "perk")
+
 # Quantisation steps for the frame cache. Animation is continuous but the eye is
 # not, and re-rasterising every micro-step would be wasted work on a Pi.
 Q_BLINK = 0.125
@@ -85,6 +92,9 @@ class FaceRenderer:
         # Absent (older specs) the card falls back to the rounded rectangle.
         shape = self.meta.get("shape") or {}
         self.shape = shape.get("points") or None
+        # Alternate silhouettes (an ear flicked, both pricked up) the animator
+        # swaps to for a moment. Masks are cached per (size, variant).
+        self.shape_variants = self.meta.get("shape_variants") or {}
         self._shape_cache = {}
 
     def has(self, char):
@@ -348,17 +358,21 @@ class FaceRenderer:
         ring.putalpha(mask)
         img.alpha_composite(ring)
 
-    def _shape_masks(self, size):
+    def _shape_masks(self, size, variant=None):
         """``(card, ring)`` masks for the silhouette, built once per size.
 
         Both are rasterised supersampled and combined before the downscale, so
         the ring's two edges stay as clean as the panel's.
         """
-        hit = self._shape_cache.get(size)
+        key = (size, variant)
+        hit = self._shape_cache.get(key)
         if hit is not None:
             return hit
-        if not self.shape:
-            self._shape_cache[size] = (None, None)
+        points = self.shape_variants.get(variant) if variant else self.shape
+        if not points:
+            points = self.shape
+        if not points:
+            self._shape_cache[key] = (None, None)
             return None, None
         s = FRAME_SUPERSAMPLE
         big = size * s
@@ -370,7 +384,7 @@ class FaceRenderer:
             f = (50.0 - shrink) / 50.0
             m = Image.new("L", (big, big), 0)
             ImageDraw.Draw(m).polygon(
-                [((50 + (x - 50) * f) * k, (50 + (y - 50) * f) * k) for x, y in self.shape],
+                [((50 + (x - 50) * f) * k, (50 + (y - 50) * f) * k) for x, y in points],
                 fill=255)
             return m
 
@@ -381,14 +395,14 @@ class FaceRenderer:
             r = outer.copy()
             r.paste(0, (0, 0), poly(inset + width))
             ring = r.resize((size, size), Image.LANCZOS)
-        self._shape_cache[size] = (card, ring)
+        self._shape_cache[key] = (card, ring)
         return card, ring
 
-    def _draw_frame(self, img, size, k, color=None):
+    def _draw_frame(self, img, size, k, color=None, variant=None):
         """Stroke the bezel ring around the panel."""
         if not self.frame:
             return
-        _, shaped_ring = self._shape_masks(size)
+        _, shaped_ring = self._shape_masks(size, variant)
         if shaped_ring is not None:
             self._paint_ring(img, size, shaped_ring, color)
             return
@@ -441,13 +455,14 @@ class FaceRenderer:
             fill.putalpha(inner.resize((size, size), Image.LANCZOS))
             img.alpha_composite(fill)
 
-    def draw(self, char, size, blink=0.0, mouth_open=0.0, frame_color=None):
+    def draw(self, char, size, blink=0.0, mouth_open=0.0, frame_color=None,
+             shape_variant=None):
         """Render one face frame at ``size`` pixels square."""
         face = self.faces.get(char)
         if face is None:
             return None
         k = size / CANVAS
-        card, _ = self._shape_masks(size)
+        card, _ = self._shape_masks(size, shape_variant)
         if card is not None:
             # The card is a silhouette, so the panel is painted full bleed and
             # everything is cut to shape at the end. That way a blush or a tear
@@ -503,7 +518,7 @@ class FaceRenderer:
             img = clipped
 
         # Last, so a tear or a Zzz that strays into the margin sits behind it.
-        self._draw_frame(img, size, k, frame_color)
+        self._draw_frame(img, size, k, frame_color, shape_variant)
         return img
 
     def _paste_squashed(self, img, layer, pivot_y, factor):
@@ -548,6 +563,9 @@ class FaceAnimator:
         self._mouth = 0.0
         self._blink_start = None
         self._next_blink = time.time() + random.uniform(BLINK_MIN_GAP, BLINK_MAX_GAP)
+        self._flick_start = None
+        self._flick_variant = None
+        self._next_flick = time.time() + random.uniform(FLICK_MIN_GAP, FLICK_MAX_GAP)
         self._cache = {}
         self._t0 = time.time()
 
@@ -589,7 +607,7 @@ class FaceAnimator:
             return True
         if self.talking:
             return True
-        if self._blink_start is not None:
+        if self._blink_start is not None or self._flick_start is not None:
             return True
         return self.idle_motion
 
@@ -624,6 +642,23 @@ class FaceAnimator:
         self._mouth += (target - self._mouth) * TALK_ATTACK * 8.0
         return max(0.0, min(1.0, self._mouth))
 
+    def _ear_variant(self, now):
+        """Which silhouette to draw: a flicked ear, or the resting one."""
+        if not self.renderer.shape_variants:
+            return None
+        if self._flick_start is None:
+            if now < self._next_flick:
+                return None
+            self._flick_start = now
+            choices = [v for v in FLICK_VARIANTS if v in self.renderer.shape_variants]
+            self._flick_variant = random.choice(choices) if choices else None
+        if now - self._flick_start >= FLICK_HOLD:
+            self._flick_start = None
+            self._flick_variant = None
+            self._next_flick = now + random.uniform(FLICK_MIN_GAP, FLICK_MAX_GAP)
+            return None
+        return self._flick_variant
+
     def _breathe_offset(self, now):
         if not self.idle_motion:
             return 0.0
@@ -631,12 +666,14 @@ class FaceAnimator:
 
     # -- rendering ---------------------------------------------------------
 
-    def _cached(self, char, blink, mouth):
-        key = (char, self.size, round(blink, 3), round(mouth, 3), self.frame_color)
+    def _cached(self, char, blink, mouth, variant=None):
+        key = (char, self.size, round(blink, 3), round(mouth, 3), self.frame_color,
+               variant)
         img = self._cache.get(key)
         if img is None:
             img = self.renderer.draw(char, self.size, blink=blink, mouth_open=mouth,
-                                     frame_color=self.frame_color)
+                                     frame_color=self.frame_color,
+                                     shape_variant=variant)
             if img is not None and len(self._cache) < 512:
                 self._cache[key] = img
         return img
@@ -650,6 +687,7 @@ class FaceAnimator:
 
         blink = self._blink_amount(now)
         mouth = self._talk_amount(now)
+        variant = self._ear_variant(now)
         squash = 1.0
         char = self.current
         dip = 0.0
@@ -670,7 +708,8 @@ class FaceAnimator:
                 squash = 1.0 - 0.13 * (1.0 - abs(2 * t - 1))
                 dip = 2.4 * (1.0 - abs(2 * t - 1))
 
-        img = self._cached(char, _quantise(blink, Q_BLINK), _quantise(mouth, Q_MOUTH))
+        img = self._cached(char, _quantise(blink, Q_BLINK), _quantise(mouth, Q_MOUTH),
+                           variant)
         if img is None:
             return None, 0.0, False
 

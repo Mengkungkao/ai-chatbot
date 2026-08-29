@@ -54,6 +54,8 @@ EAR_SPAN = (56.0, 96.0)      # wider base
 EAR_TIP = (76.0, 1.0)        # taller
 EAR_FILLET = 6.0             # the tip
 EAR_BASE_FILLET = 3.2        # where each ear edge meets the head
+TWITCH_DEG = 13.0            # how far one ear swings on a flick
+PERK_DEG = 6.0               # both ears, pricked up
 SHAPE_STEPS = 280
 
 
@@ -110,7 +112,16 @@ def _dist(p, q):
     return math.hypot(p[0] - q[0], p[1] - q[1])
 
 
-def shape_points(n=SHAPE_STEPS, fillet_r=EAR_FILLET, base_r=EAR_BASE_FILLET):
+def _rotate(pts, cx, cy, deg):
+    """Swing points about a pivot, used to flick an ear."""
+    a = math.radians(deg)
+    ca, sa = math.cos(a), math.sin(a)
+    return [[cx + (x - cx) * ca - (y - cy) * sa,
+             cy + (x - cx) * sa + (y - cy) * ca] for x, y in pts]
+
+
+def shape_points(n=SHAPE_STEPS, fillet_r=EAR_FILLET, base_r=EAR_BASE_FILLET,
+                 twitch=(0.0, 0.0)):
     """Head outline with both ears spliced in, rounded at all three corners.
 
     Two things the base fillets need. A reference edge longer than their own
@@ -164,6 +175,11 @@ def shape_points(n=SHAPE_STEPS, fillet_r=EAR_FILLET, base_r=EAR_BASE_FILLET):
         nxt = raw[(j + 1 + REF) % n]
         _, _, ea, tip, eb = zones[z]
         pts = _ear(prev, ea, tip, eb, nxt, fillet_r, base_r)
+        # A flick pivots the whole ear about the midpoint of its base, so the
+        # junctions stay put and only the ear swings.
+        ang = twitch[z]
+        if ang:
+            pts = _rotate(pts, (ea[0] + eb[0]) / 2.0, (ea[1] + eb[1]) / 2.0, ang)
         if p[0] < prev[0]:
             pts = list(reversed(pts))
         first, last = pts[0], pts[-1]
@@ -1011,6 +1027,12 @@ def main():
                       "gradient": {"from": FRAME_FROM, "to": FRAME_TO}},
             "ink": INK,
             "shape": {"name": SHAPE_NAME, "points": SHAPE},
+            # Alternate silhouettes the runtime swaps to for an ear flick.
+            "shape_variants": {
+                "flick_left": shape_points(twitch=(TWITCH_DEG, 0.0)),
+                "flick_right": shape_points(twitch=(0.0, -TWITCH_DEG)),
+                "perk": shape_points(twitch=(-PERK_DEG, PERK_DEG)),
+            },
         },
         "faces": {},
     }
