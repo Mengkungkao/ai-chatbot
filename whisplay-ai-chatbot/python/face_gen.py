@@ -206,7 +206,7 @@ FRAME_TO = "#FF8FA8"     # rose at the bottom
 FRAME_INNER = "#FFE3EA"
 
 # Shared geometry so every face sits on the same grid.
-EYE_X, EYE_Y = 31, 45
+EYE_X, EYE_Y = 26, 45   # further from centre; lashes and brows follow
 EYE_RX, EYE_RY = 13, 15.5
 LASH_Y = 26
 BLUSH_X, BLUSH_Y = 14, 64
@@ -633,6 +633,8 @@ f.pill(50, 16, 4, 10, 0, color=INK, role="deco")
 CAT_STYLE = True
 NOSE = "#FF7D93"
 WHISKER = "#3A3A44"
+WHISK_ORIGIN_DX, WHISK_LEN = 17.0, 15.0
+WHISK_ANGLES = (-17.0, 0.0, 17.0)
 INNER_EAR = "#FF9DB4"
 CLOSED_MOUTHS = {"flat", "arc", "zigzag"}
 
@@ -640,7 +642,7 @@ CLOSED_MOUTHS = {"flat", "arc", "zigzag"}
 # head is shorter, so the face is compressed about its own centre and recentred;
 # translating alone pushed the low decorations out through the chin.
 SRC_CENTRE, FIT_CENTRE, FIT_YSCALE = 52.0, 59.0, 0.92
-FIT_SPREAD, FIT_EYE_GAIN = 1.05, 0.68
+FIT_SPREAD, FIT_EYE_GAIN = 1.05, 0.60
 
 # Eyes are not one size. A person's eyes widen when startled and narrow when
 # cross, and the face reads flat if they never change, so each expression scales
@@ -677,13 +679,19 @@ def _nose_and_whiskers(elems):
     mouth_y = next((e.get("cy", 70) for e in elems if e.get("role") == "mouth"), 70.0)
     out = [{"t": "tri", "cx": 50.0, "cy": round(mouth_y - 7.5, 3), "w": 7.0, "h": 5.0,
             "color": NOSE, "down": True, "role": "deco"}]
+    # Three short whiskers fanning from one point on each cheek, angled up,
+    # level and down. Three parallel horizontal lines read as a stave, not a cat.
     for side in (-1, 1):
-        for dy, length in ((-3.0, 17.0), (2.0, 19.0), (7.0, 17.0)):
-            x0 = 50.0 + side * 20.0
-            x1 = x0 + side * length
-            out.append({"t": "flat", "cx": round((x0 + x1) / 2, 3),
-                        "cy": round(mouth_y + dy - 2.0, 3), "w": abs(x1 - x0),
-                        "stroke": 1.9, "color": WHISKER, "role": "deco"})
+        ox = 50.0 + side * WHISK_ORIGIN_DX
+        oy = mouth_y - 2.0
+        for ang in WHISK_ANGLES:
+            a = math.radians(ang)
+            dx = math.cos(a) * WHISK_LEN * side
+            dy = math.sin(a) * WHISK_LEN
+            out.append({"t": "pill", "cx": round(ox + dx / 2, 3),
+                        "cy": round(oy + dy / 2, 3), "w": WHISK_LEN, "h": 1.9,
+                        "rot": round(ang * side, 3), "color": WHISKER,
+                        "role": "deco"})
     return elems + out
 
 
