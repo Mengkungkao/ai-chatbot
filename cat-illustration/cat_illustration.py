@@ -36,6 +36,10 @@ EYE_R_POS = (218.0, 163.0)
 # cubic segment: two control points and an end point. The ears are part of the
 # contour rather than shapes stuck on top, and every corner is a curve, so the
 # silhouette reads as drawn by hand rather than assembled from polygons.
+EAR_FILLET = 8.0   # radius of the rounded ear tips; 0 leaves them sharp
+EAR_LIFT = 4.0     # raises the tips to give the fillet something to cut away,
+                   # so rounding them does not shorten the whole drawing
+
 HEAD_START = (96.0, 48.5)
 HEAD_CURVES = [
     ((108, 62), (120, 78), (133, 93)),       # left ear, inner edge down
@@ -71,6 +75,115 @@ MOUTH_CURVES = [
 ]
 
 
+# --- fillet --------------------------------------------------------------
+# The ear tips are authored as sharp corners above, then rounded here, so the
+# radius stays one number instead of being baked into hand-tuned control
+# points. Each corner is trimmed back along both curves by the radius and the
+# gap bridged with a cubic that approximates a circular arc.
+
+def _split(seg, t):
+    """de Casteljau: cut one cubic into two at parameter t."""
+    p0, c1, c2, p1 = seg
+    def lerp(a, b):
+        return (a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t)
+    a, b, c = lerp(p0, c1), lerp(c1, c2), lerp(c2, p1)
+    d, e = lerp(a, b), lerp(b, c)
+    f = lerp(d, e)
+    return (p0, a, d, f), (f, e, c, p1)
+
+
+def _arc_len_ts(seg, n=200):
+    """Cumulative chord length along a cubic, sampled evenly in t."""
+    p0, c1, c2, p1 = seg
+    pts = _bezier(p0, c1, c2, p1, n)
+    acc, total = [0.0], 0.0
+    for i in range(1, len(pts)):
+        total += math.dist(pts[i - 1], pts[i])
+        acc.append(total)
+    return acc, total
+
+
+def _t_at_dist(seg, dist, from_end):
+    """Parameter t sitting ``dist`` of arc length from one end of ``seg``."""
+    acc, total = _arc_len_ts(seg)
+    if total <= dist * 1.2:          # segment too short to give up that much
+        dist = total * 0.45
+    target = total - dist if from_end else dist
+    n = len(acc) - 1
+    for i in range(1, len(acc)):
+        if acc[i] >= target:
+            span = acc[i] - acc[i - 1] or 1.0
+            return (i - 1 + (target - acc[i - 1]) / span) / n
+    return 1.0
+
+
+def _unit(v):
+    m = math.hypot(*v) or 1.0
+    return (v[0] / m, v[1] / m)
+
+
+def _arc_blend(a, b):
+    """A cubic joining the two trimmed ends, curving like a circular arc."""
+    q1, q2 = a[3], b[0]
+    da = _unit((q1[0] - a[2][0], q1[1] - a[2][1]))    # tangent leaving a
+    db = _unit((b[1][0] - q2[0], b[1][1] - q2[1]))    # tangent entering b
+
+    # where the two tangent lines meet: the apex the arc is rounding off
+    den = da[0] * db[1] - da[1] * db[0]
+    if abs(den) < 1e-9:
+        k, apex = 1 / 3, ((q1[0] + q2[0]) / 2, (q1[1] + q2[1]) / 2)
+    else:
+        s = ((q2[0] - q1[0]) * db[1] - (q2[1] - q1[1]) * db[0]) / den
+        apex = (q1[0] + da[0] * s, q1[1] + da[1] * s)
+        turn = abs(math.atan2(den, da[0] * db[0] + da[1] * db[1]))
+        k = (4 / 3) * math.tan(turn / 4) / math.tan(turn / 2) if turn > 1e-6 else 2 / 3
+    c1 = (q1[0] + (apex[0] - q1[0]) * k, q1[1] + (apex[1] - q1[1]) * k)
+    c2 = (q2[0] + (apex[0] - q2[0]) * k, q2[1] + (apex[1] - q2[1]) * k)
+    return (q1, c1, c2, q2)
+
+
+def _fillet(segs, i, r):
+    """Round the corner where segs[i] meets segs[i + 1]."""
+    a, b = segs[i], segs[i + 1]
+    a2 = _split(a, _t_at_dist(a, r, from_end=True))[0]
+    b2 = _split(b, _t_at_dist(b, r, from_end=False))[1]
+    return segs[:i] + [a2, _arc_blend(a2, b2), b2] + segs[i + 2:]
+
+
+def _lifted():
+    """Head control points with the ear tips raised by ``EAR_LIFT``.
+
+    The authored numbers stay exactly as measured off the reference; the lift
+    is applied here because it exists only to pay for what the fillet removes.
+    Neighbouring controls move half as far, which keeps the flank angles.
+    """
+    start = list(HEAD_START)
+    curves = [[list(c1), list(c2), list(end)] for c1, c2, end in HEAD_CURVES]
+    if EAR_LIFT:
+        start[1] -= EAR_LIFT
+        curves[10][2][1] -= EAR_LIFT          # left tip, same point as start
+        curves[2][2][1] -= EAR_LIFT           # right tip
+        for seg, idx in ((10, 1), (0, 0), (2, 1), (3, 0)):
+            curves[seg][idx][1] -= EAR_LIFT * 0.5
+    return tuple(start), [tuple(tuple(p) for p in c) for c in curves]
+
+
+def head_segments():
+    """The head as cubic segments, with the two ear tips rounded."""
+    start, curves = _lifted()
+    segs, cur = [], start
+    for c1, c2, end in curves:
+        segs.append((cur, c1, c2, end))
+        cur = end
+    if EAR_FILLET > 0:
+        # The left tip sits on the seam where the closed path joins itself, so
+        # rotate by one segment first and both tips become ordinary corners.
+        segs = segs[1:] + segs[:1]
+        segs = _fillet(segs, 9, EAR_FILLET)    # left tip
+        segs = _fillet(segs, 1, EAR_FILLET)    # right tip
+    return segs
+
+
 def _fmt(v):
     return f"{v:g}"
 
@@ -87,7 +200,9 @@ def _path_d(start, curves, close=False):
 
 def createCatHead():
     """The head silhouette: one continuous path, filled and stroked."""
-    return (f'  <path d="{_path_d(HEAD_START, HEAD_CURVES, close=True)}"\n'
+    segs = head_segments()
+    d = _path_d(segs[0][0], [(s[1], s[2], s[3]) for s in segs], close=True)
+    return (f'  <path d="{d}"\n'
             f'        fill="{FILL}" stroke="{OUTLINE}" stroke-width="{_fmt(OUTLINE_W)}"\n'
             f'        stroke-linecap="round" stroke-linejoin="round"/>')
 
@@ -141,10 +256,9 @@ def _bezier(p0, c1, c2, p1, n=60):
 
 
 def _outline_points():
-    pts, cur = [], HEAD_START
-    for c1, c2, end in HEAD_CURVES:
-        pts.extend(_bezier(cur, c1, c2, end)[:-1])
-        cur = end
+    pts = []
+    for p0, c1, c2, p1 in head_segments():
+        pts.extend(_bezier(p0, c1, c2, p1)[:-1])
     return pts
 
 
