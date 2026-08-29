@@ -33,6 +33,12 @@ approximating a circular arc. Rounding a tip also shortens it, so `EAR_LIFT`
 raises the tips by half the radius to pay for what the fillet removes — without
 it the whole drawing loses six pixels of height.
 
+The left ear is the only one authored. The right is derived from it by `_m()`,
+mirroring across `AXIS` — the head's own axis of symmetry at x=155, which its
+cheeks and chin already share to within a pixel. The two ears therefore cannot
+drift apart the way independently measured numbers had: the right one was two
+to three pixels wider than the left before this.
+
 `EAR_BOW` offsets the control points of all four ear edges perpendicular to the
 edge, away from that ear's own centreline, so both sides of each ear swell
 instead of running straight. The offset has to be perpendicular rather than
@@ -65,7 +71,7 @@ Taken from the reference image itself, not from description:
 | top of drawing | 45 | 45 | 0 |
 | bottom | 239 | 239 | 0 |
 | valley between ears | 94 | 94 | 0 |
-| ear tips | 96.0, 209.5 | 96.0, 208.5 | <1 |
+| ear tips | 96.0, 209.5 | 96.0, 213.0 | 3.5 (see below) |
 | ear edge bow, outer / inner | −3.3 / +2.6 | −2.8 / +3.4 | <1 |
 | width at y=140 | 222 | 224 | +2 |
 | width at y=150 | 226 | 228 | +2 |
@@ -77,5 +83,12 @@ Taken from the reference image itself, not from description:
 | mouth centre | 152.5, 186.5 | 153.5, 187.0 | ≤1 |
 | mouth size | 48 × 12 | 50 × 13 | ≤2 |
 
-Silhouette overlap with the reference is **94.7%** by intersection over union.
+The right ear tip is the one figure that moved away from the reference. The
+reference centres its ears on x=152.5, two and a half pixels left of where this
+head's body is centred, so an ear pair that is both mirrored *and* centred on
+its own head cannot also sit exactly where the reference puts it. Mirroring
+about 152.5 instead was measured and scores worse overall (94.1% against
+94.5%), because the ears then meet the head's flanks unevenly.
+
+Silhouette overlap with the reference is **94.5%** by intersection over union.
 Every figure is within 3px on a 313px canvas.

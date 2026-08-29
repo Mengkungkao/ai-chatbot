@@ -42,20 +42,41 @@ EAR_LIFT = 2.5     # raises the tips to give the fillet something to cut away,
 EAR_BOW = 5.0      # pushes both edges of each ear outward from its own
                    # centreline, so the ears swell rather than run straight
 
-HEAD_START = (96.0, 48.5)
+AXIS = 155.0       # the head's own axis of symmetry, from its cheeks and chin
+
+# The left ear is authored; the right one is its mirror, so the two cannot
+# drift apart. Points run from the outer base up over the tip and back down to
+# the inner base, which is where the valley between the ears begins.
+EAR_OUTER_BASE = (67.0, 105.0)
+EAR_OUTER_C1 = (78.0, 84.0)
+EAR_OUTER_C2 = (86.0, 62.0)
+EAR_TIP = (96.0, 48.5)
+EAR_INNER_C1 = (108.0, 62.0)
+EAR_INNER_C2 = (120.0, 78.0)
+EAR_INNER_BASE = (133.0, 93.0)
+VALLEY_C = (146.0, 100.0)
+
+
+def _m(p):
+    """Mirror a point across the head's axis."""
+    return (2 * AXIS - p[0], p[1])
+
+
+HEAD_START = EAR_TIP
 HEAD_CURVES = [
-    ((108, 62), (120, 78), (133, 93)),       # left ear, inner edge down
-    ((146, 100), (158, 100), (171, 93)),     # valley between the ears
-    ((185, 78), (197, 62), (209, 48.5)),     # right ear, inner edge up
-    ((222, 64), (233, 85), (244, 105)),      # right ear, outer edge down
+    (EAR_INNER_C1, EAR_INNER_C2, EAR_INNER_BASE),        # left ear, inner edge
+    (VALLEY_C, _m(VALLEY_C), _m(EAR_INNER_BASE)),        # valley between ears
+    (_m(EAR_INNER_C2), _m(EAR_INNER_C1), _m(EAR_TIP)),   # right ear, inner edge
+    (_m(EAR_OUTER_C2), _m(EAR_OUTER_C1), _m(EAR_OUTER_BASE)),  # right, outer
     ((252, 119), (258, 129), (263, 141)),    # into the right cheek
     ((269, 163), (268, 187), (250, 206)),    # right cheek, full width
     ((238, 224), (197, 236), (155, 236)),    # bottom, shallow U
     ((113, 236), (72, 224), (60, 206)),      # bottom left
     ((42, 187), (41, 163), (47, 141)),       # left cheek, full width
-    ((53, 129), (59, 119), (67, 105)),       # up the left side
-    ((78, 84), (86, 62), (96, 48.5)),        # left ear, outer edge to the tip
+    ((53, 129), (59, 119), EAR_OUTER_BASE),  # up the left side
+    (EAR_OUTER_C1, EAR_OUTER_C2, EAR_TIP),   # left ear, outer edge to the tip
 ]
+
 
 # --- whiskers ------------------------------------------------------------
 # Three a side, deliberately not parallel, angles taken from the reference.
