@@ -817,7 +817,11 @@ def catify(elems, face_name=""):
     if not CAT_STYLE:
         return elems
     gain = FIT_EYE_GAIN * EYE_GAIN_BY_FACE.get(face_name, 1.0)
-    built = _refit(_nose_and_whiskers(_muzzle(elems)), gain)
+    # Nose and whiskers are added AFTER the refit, in final coordinates. Built
+    # before it, the refit squashed their centres vertically while leaving their
+    # rotation alone, which pinched the pair together until the two whiskers on
+    # a cheek crossed over each other.
+    built = _nose_and_whiskers(_refit(_muzzle(elems), gain))
     if not MINIMAL_STYLE:
         return built + _inner_ears()
     return _minimal(built)
