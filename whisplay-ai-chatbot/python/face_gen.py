@@ -49,7 +49,7 @@ EARS = []
 # so the outline stays simple. Ear tips are rounded with a true tangent fillet
 # rather than a chopped corner.
 SHAPE_NAME = "cat-wide-round"
-HEAD_RX, HEAD_RY, HEAD_CY, HEAD_POWER = 47.0, 37.0, 59.0, 0.9
+HEAD_RX, HEAD_RY, HEAD_CY, HEAD_POWER = 49.5, 37.0, 59.0, 0.9
 EAR_SPAN = (60.0, 92.0)
 EAR_TIP = (77.0, 2.5)
 EAR_FILLET = 5.0
