@@ -8,6 +8,9 @@ then emits both consumers of that definition:
   * ``faces.json`` — the same primitives with role tags, read at runtime by
     ``face_engine.py`` to animate blinking, talking and emotion transitions.
 
+The set is drawn in a kawaii style: glossy black eyes with highlight glints,
+thin lashes, pink cheek blush and small coloured mouths on a warm white panel.
+
 Run it after changing any expression:
 
     python3 face_gen.py                 # writes both outputs in place
@@ -29,22 +32,28 @@ PANEL_RX = 26
 
 # Bezel drawn around the panel: a rounded outline living in the canvas margin,
 # clear of the panel edge so the face reads as something mounted in a frame.
-# ``FRAME_INSET`` is the gap from the canvas edge to the outer edge of the ring;
-# the radius is grown to keep the ring concentric with the panel corners.
 FRAME_WIDTH = 3.0
 FRAME_INSET = 1.5
 FRAME_RX = PANEL_RX + (PANEL_MARGIN - (FRAME_INSET + FRAME_WIDTH / 2))
 
-BLACK = "#0A0A0A"
-WHITE = "#F5F5F0"
-BLUE = "#4FB8FF"
-PINK = "#FF4D77"
-RED = "#FF3B30"
-ORANGE = "#FF8C1A"
-BLUSH = "#FF7A9C"
-MOUTH_IN = "#B32B3E"
-TONGUE = "#FF6B81"
-FRAME = "#3A4657"  # neutral bezel; the runtime may tint it with the status colour
+PANEL = "#FFFDF8"      # warm white face card
+INK = "#22222A"        # eyes, lashes, line work
+BLUSH = "#FF9DB4"
+MOUTH = "#E8455F"
+MOUTH_IN = "#C42B45"
+TONGUE = "#FF7D93"
+TEAR = "#6FC3F5"
+GREEN = "#9BD94E"
+ANGER = "#FF3B5C"
+GOLD = "#FFC93D"
+FRAME = "#3A4657"      # neutral bezel
+
+# Shared geometry so every face sits on the same grid.
+EYE_X, EYE_Y = 31, 45
+EYE_RX, EYE_RY = 13, 15.5
+LASH_Y = 26
+BLUSH_X, BLUSH_Y = 14, 64
+MOUTH_Y = 72
 
 
 class Face:
@@ -54,60 +63,82 @@ class Face:
     def _add(self, **kw):
         self.elems.append(kw)
 
-    def pill(self, cx, cy, w, h, rot=0, color=WHITE, role=None):
+    # -- kawaii primitives -------------------------------------------------
+
+    def eye(self, cx, cy, rx, ry, color=INK, glint=True, lid=0.0, role="eye"):
+        """Glossy oval eye. ``lid`` (0..1) covers the top for a half-shut look."""
+        self._add(t="eye", cx=cx, cy=cy, rx=rx, ry=ry, color=color,
+                  glint=glint, lid=lid, panel=PANEL, role=role)
+
+    def oval(self, cx, cy, rx, ry, color=MOUTH, outline=None, stroke=2.5, role=None):
+        self._add(t="oval", cx=cx, cy=cy, rx=rx, ry=ry, color=color,
+                  outline=outline, stroke=stroke, role=role)
+
+    def hatch(self, cx, cy, w, h, n=3, stroke=2.6, color=BLUSH, role="blush"):
+        self._add(t="hatch", cx=cx, cy=cy, w=w, h=h, n=n, stroke=stroke,
+                  color=color, role=role)
+
+    def anger(self, cx, cy, size, color=ANGER, role="deco"):
+        self._add(t="anger", cx=cx, cy=cy, size=size, color=color, role=role)
+
+    def cat(self, cx, cy, w, h, stroke=4.0, color=INK, role="mouth"):
+        self._add(t="cat", cx=cx, cy=cy, w=w, h=h, stroke=stroke, color=color, role=role)
+
+    def tri(self, cx, cy, w, h, color=MOUTH, down=True, role="mouth"):
+        self._add(t="tri", cx=cx, cy=cy, w=w, h=h, color=color, down=down, role=role)
+
+    # -- shared primitives -------------------------------------------------
+
+    def pill(self, cx, cy, w, h, rot=0, color=INK, role=None):
         self._add(t="pill", cx=cx, cy=cy, w=w, h=h, rot=rot, color=color, role=role)
 
-    def circle(self, cx, cy, r, color=WHITE, pupil_r=None, pupil_color=BLACK, role=None):
+    def circle(self, cx, cy, r, color=INK, pupil_r=None, pupil_color=PANEL, role=None):
         self._add(t="circle", cx=cx, cy=cy, r=r, color=color,
                   pupil_r=pupil_r, pupil_color=pupil_color, role=role)
 
-    def arc(self, cx, cy, w, depth, rot=0, stroke=6, color=WHITE, role=None):
+    def arc(self, cx, cy, w, depth, rot=0, stroke=3.4, color=INK, role=None):
         self._add(t="arc", cx=cx, cy=cy, w=w, depth=depth, rot=rot,
                   stroke=stroke, color=color, role=role)
 
-    def curve(self, cx, cy, w, depth, stroke=6, color=WHITE, role=None):
+    def curve(self, cx, cy, w, depth, stroke=3.4, color=INK, role=None):
         self.arc(cx, cy, w, depth, rot=0, stroke=stroke, color=color, role=role)
 
-    def flat(self, cx, cy, w, stroke=6, color=WHITE, role=None):
+    def flat(self, cx, cy, w, stroke=4.2, color=INK, role=None):
         self._add(t="flat", cx=cx, cy=cy, w=w, stroke=stroke, color=color, role=role)
 
-    def o_mouth(self, cx, cy, r, stroke=5, color=WHITE, role="mouth"):
+    def o_mouth(self, cx, cy, r, stroke=3.8, color=INK, role="mouth"):
         self._add(t="o", cx=cx, cy=cy, r=r, stroke=stroke, color=color, role=role)
 
-    def zigzag(self, cx, cy, w, h, n, stroke=5, color=WHITE, role=None):
+    def zigzag(self, cx, cy, w, h, n, stroke=3.6, color=INK, role=None):
         self._add(t="zigzag", cx=cx, cy=cy, w=w, h=h, n=n, stroke=stroke,
                   color=color, role=role)
 
-    def heart(self, cx, cy, size, color=WHITE, role=None):
+    def heart(self, cx, cy, size, color=MOUTH, role=None):
         self._add(t="heart", cx=cx, cy=cy, size=size, color=color, role=role)
 
-    def star(self, cx, cy, size, color=WHITE, role=None):
+    def star(self, cx, cy, size, color=GOLD, role=None):
         self._add(t="star", cx=cx, cy=cy, size=size, color=color, role=role)
 
-    def drop(self, cx, cy, w, h, color=WHITE, role="deco"):
+    def drop(self, cx, cy, w, h, color=TEAR, role="deco"):
         self._add(t="drop", cx=cx, cy=cy, w=w, h=h, color=color, role=role)
 
-    def zzz(self, cx, cy, scale=1.0, color=WHITE, role="deco"):
+    def zzz(self, cx, cy, scale=1.0, color=INK, role="deco"):
         self._add(t="zzz", cx=cx, cy=cy, scale=scale, color=color, role=role)
 
-    def blush(self, cx, cy, rx, ry=None, color=BLUSH, opacity=0.9, role="blush"):
-        self._add(t="blush", cx=cx, cy=cy, rx=rx, ry=ry if ry else rx * 0.72,
+    def blush(self, cx, cy, rx, ry=None, color=BLUSH, opacity=1.0, role="blush"):
+        self._add(t="blush", cx=cx, cy=cy, rx=rx, ry=ry if ry else rx * 0.64,
                   color=color, opacity=opacity, role=role)
 
-    def grin(self, cx, cy, w, h, tongue=False, color=WHITE, inner=MOUTH_IN, role="mouth"):
+    def grin(self, cx, cy, w, h, tongue=False, color=INK, inner=MOUTH_IN, role="mouth"):
         self._add(t="grin", cx=cx, cy=cy, w=w, h=h, tongue=tongue, color=color,
                   inner=inner, tongue_color=TONGUE, role=role)
 
-    def caret(self, cx, cy, w, h, down=False, stroke=6, color=WHITE, role=None):
+    def caret(self, cx, cy, w, h, down=False, stroke=3.4, color=INK, role=None):
         self._add(t="caret", cx=cx, cy=cy, w=w, h=h, down=down, stroke=stroke,
                   color=color, role=role)
 
-    def x_mark(self, cx, cy, size, stroke=5, color=WHITE, role=None):
+    def x_mark(self, cx, cy, size, stroke=3.2, color=INK, role=None):
         self._add(t="x", cx=cx, cy=cy, size=size, stroke=stroke, color=color, role=role)
-
-    def glint(self, cx, cy, r, color=BLACK, role="eye"):
-        self._add(t="circle", cx=cx, cy=cy, r=r, color=color,
-                  pupil_r=None, pupil_color=BLACK, role=role)
 
 
 def pair(f, method, cx, cy, *args, **kw):
@@ -116,6 +147,8 @@ def pair(f, method, cx, cy, *args, **kw):
     mk = dict(kw)
     if mk.get("rot"):
         mk["rot"] = -mk["rot"]
+    if mk.get("down_mirror"):
+        mk.pop("down_mirror")
     getattr(f, method)(100 - cx, cy, *args, **mk)
 
 
@@ -128,134 +161,310 @@ def emo(name, codepoint, char):
     return f
 
 
-def blush_pair(f, cy=62, cx=18, r=7.5, opacity=0.9):
-    f.blush(cx, cy, r, opacity=opacity)
-    f.blush(100 - cx, cy, r, opacity=opacity)
+# --- composition helpers -------------------------------------------------
+
+def eyes(f, cy=EYE_Y, rx=EYE_RX, ry=EYE_RY, glint=True, lid=0.0, color=INK):
+    f.eye(EYE_X, cy, rx, ry, color=color, glint=glint, lid=lid)
+    f.eye(100 - EYE_X, cy, rx, ry, color=color, glint=glint, lid=lid)
+
+
+def happy_eyes(f, cy=46, w=22, depth=-11, stroke=4.0):
+    """The upward ^^ arcs used for closed, delighted eyes."""
+    f.arc(EYE_X, cy, w, depth, stroke=stroke, role="eye")
+    f.arc(100 - EYE_X, cy, w, depth, stroke=stroke, role="eye")
+
+
+def lashes(f, cy=LASH_Y, w=20, depth=-8, stroke=3.0):
+    f.arc(EYE_X, cy, w, depth, stroke=stroke, role="deco")
+    f.arc(100 - EYE_X, cy, w, depth, stroke=stroke, role="deco")
+
+
+def brows(f, cy=25, w=19, tilt=16, stroke=3.6, color=INK):
+    """Angled brows; positive tilt slants inward (angry)."""
+    f.pill(EYE_X - 1, cy, w, stroke, -tilt, color=color, role="deco")
+    f.pill(101 - EYE_X, cy, w, stroke, tilt, color=color, role="deco")
+
+
+def cheeks(f, cy=BLUSH_Y, cx=BLUSH_X, rx=8.6):
+    f.blush(cx, cy, rx)
+    f.blush(100 - cx, cy, rx)
+
+
+def hatch_cheeks(f, cy=BLUSH_Y, cx=BLUSH_X, w=13, h=9, n=3):
+    f.hatch(cx, cy, w, h, n)
+    f.hatch(100 - cx, cy, w, h, n)
 
 
 # --- expressions ---------------------------------------------------------
-# Eyes are tagged role="eye" so blinks can squash them; the resting mouth is
-# role="mouth" so talking can replace it; brows/tears/zzz stay put as "deco".
+# Eyes are role="eye" so blinks can squash them; the resting mouth is
+# role="mouth" so talking can replace it; lashes/brows/tears stay as "deco".
 
 f = emo("neutral", "1f610", "😐")
-blush_pair(f, cy=60)
-pair(f, "pill", 30, 43, 15, 30, 0, role="eye")
-f.glint(33, 35, 4)
-f.glint(73, 35, 4)
-f.flat(50, 71, 16, role="mouth")
+cheeks(f); lashes(f); eyes(f)
+f.flat(50, MOUTH_Y, 13, role="mouth")
+
+f = emo("slight_smile", "1f642", "🙂")
+cheeks(f); lashes(f); eyes(f)
+f.curve(50, MOUTH_Y - 3, 17, 7, role="mouth", stroke=4.2)
 
 f = emo("happy", "1f60a", "😊")
-blush_pair(f)
-pair(f, "circle", 30, 42, 12, role="eye")
-f.glint(33.5, 38, 4)
-f.glint(73.5, 38, 4)
-f.curve(50, 68, 28, 9, role="mouth")
+cheeks(f); lashes(f); eyes(f)
+f.curve(50, MOUTH_Y - 3, 21, 9, role="mouth", stroke=4.2)
 
 f = emo("joy", "1f604", "😄")
-blush_pair(f, cy=64)
-pair(f, "caret", 30, 41, 18, 11, stroke=7, role="eye")
-f.grin(50, 60, 34, 20)
+cheeks(f, cy=66); happy_eyes(f)
+f.grin(50, 62, 30, 18)
+
+f = emo("grin", "1f601", "😁")
+cheeks(f, cy=66); happy_eyes(f)
+f.grin(50, 61, 34, 20)
+
+f = emo("laughing_squint", "1f606", "😆")
+cheeks(f, cy=66); happy_eyes(f, cy=47, w=24, depth=-13)
+f.grin(50, 60, 36, 22)
 
 f = emo("laughing", "1f602", "😂")
-blush_pair(f, cy=64)
-pair(f, "x_mark", 30, 41, 17, stroke=6, role="eye")
-f.grin(50, 59, 36, 22, tongue=True)
-f.drop(13, 50, 6, 11, color=BLUE)
-f.drop(87, 50, 6, 11, color=BLUE)
+cheeks(f, cy=66); happy_eyes(f, cy=47, w=23, depth=-12)
+f.grin(50, 60, 34, 21, tongue=True)
+f.drop(12, 54, 7, 12); f.drop(88, 54, 7, 12)
 
-f = emo("sad", "1f622", "😢")
-blush_pair(f, cy=64)
-pair(f, "pill", 30, 46, 13, 24, -10, role="eye")
-f.glint(33, 39, 3.5)
-f.glint(73, 39, 3.5)
-f.curve(50, 76, 24, -9, role="mouth")
-f.drop(30, 60, 6, 10, color=BLUE)
+f = emo("rofl", "1f923", "🤣")
+cheeks(f, cy=66); happy_eyes(f, cy=47, w=24, depth=-13)
+f.grin(50, 59, 36, 23, tongue=True)
+f.drop(11, 52, 7, 13); f.drop(89, 52, 7, 13)
+f.drop(15, 70, 5, 9); f.drop(85, 70, 5, 9)
 
-f = emo("crying", "1f62d", "😭")
-blush_pair(f, cy=66)
-pair(f, "caret", 30, 42, 17, 9, down=True, stroke=6, role="eye")
-f.grin(50, 66, 26, 17)
-f.drop(23, 56, 7, 15, color=BLUE)
-f.drop(77, 56, 7, 15, color=BLUE)
-
-f = emo("angry", "1f620", "😠")
-f.pill(24, 33, 20, 7, -18, color=RED, role="deco")
-f.pill(76, 33, 20, 7, 18, color=RED, role="deco")
-f.pill(30, 46, 16, 21, -14, role="eye")
-f.pill(70, 46, 16, 21, 14, role="eye")
-f.circle(32.5, 49, 4.5, color=ORANGE, role="eye")
-f.circle(67.5, 49, 4.5, color=ORANGE, role="eye")
-f.flat(50, 72, 14, stroke=7, role="mouth")
-
-f = emo("surprised", "1f62e", "😮")
-blush_pair(f, cy=63)
-pair(f, "circle", 30, 42, 12, role="eye")
-f.glint(34, 37.5, 4.5)
-f.glint(74, 37.5, 4.5)
-f.o_mouth(50, 74, 7)
-
-f = emo("love", "1f60d", "😍")
-blush_pair(f)
-pair(f, "heart", 30, 42, 19, color=PINK, role="eye")
-f.curve(50, 68, 26, 8, role="mouth")
-
-f = emo("thinking", "1f914", "🤔")
-f.blush(18, 62, 7.5)
-f.blush(82, 62, 7.5)
-f.pill(30, 44, 14, 26, 0, role="eye")
-f.glint(33, 37, 3.5)
-f.circle(72, 38, 6, role="eye")
-f.pill(72, 27, 15, 5, -14, role="deco")
-f.curve(53, 72, 15, 3, stroke=6, role="mouth")
-
-f = emo("sleepy", "1f634", "😴")
-blush_pair(f, cy=58)
-pair(f, "arc", 30, 45, 16, 3, 0, stroke=6, role="eye")
-f.o_mouth(50, 72, 6, stroke=5)
-f.drop(50, 81, 5, 8, color=BLUE)
-f.zzz(80, 22, scale=1.0)
-
-f = emo("confused", "1f615", "😕")
-blush_pair(f, cy=62)
-f.pill(30, 43, 14, 26, 0, role="eye")
-f.glint(33, 36, 3.5)
-f.arc(72, 42, 14, 2, 18, stroke=6, role="eye")
-f.zigzag(50, 72, 22, 6, 3, role="mouth")
-
-f = emo("excited", "1f929", "🤩")
-blush_pair(f, cy=64)
-pair(f, "star", 30, 41, 15, role="eye")
-f.grin(50, 61, 32, 19)
-
-f = emo("embarrassed", "1f633", "😳")
-blush_pair(f, cy=58, cx=20, r=10.5, opacity=0.95)
-pair(f, "pill", 30, 45, 11, 17, 0, role="eye")
-f.o_mouth(50, 73, 5, stroke=5)
-
-f = emo("worried", "1f61f", "😟")
-blush_pair(f, cy=64)
-f.pill(33, 29, 15, 5, 16, role="deco")
-f.pill(67, 29, 15, 5, -16, role="deco")
-pair(f, "pill", 30, 45, 12, 20, 0, role="eye")
-f.curve(50, 74, 18, -4, stroke=6, role="mouth")
-f.drop(88, 31, 5, 9, color=BLUE)
-
-f = emo("cool", "1f60e", "😎")
-pair(f, "pill", 30, 43, 17, 7, 0, role="eye")
-f.curve(56, 70, 20, 6, stroke=6, role="mouth")
-
-f = emo("scared", "1f631", "😱")
-pair(f, "circle", 30, 40, 13, pupil_r=4, role="eye")
-f.blush(50, 71, 10, 13, color=WHITE, opacity=1.0, role="mouth")
-f.blush(50, 72, 7.5, 10, color=MOUTH_IN, opacity=1.0, role="mouth")
-f.drop(86, 28, 5, 9, color=BLUE)
+f = emo("nervous", "1f605", "😅")
+cheeks(f, cy=66); happy_eyes(f)
+f.grin(50, 62, 28, 17)
+f.drop(84, 27, 7, 12)
 
 f = emo("wink", "1f609", "😉")
-blush_pair(f)
-f.circle(30, 42, 12, role="eye")
-f.glint(33.5, 38, 4)
-f.caret(70, 43, 15, 8, stroke=6, role="eye")
-f.curve(50, 68, 24, 8, role="mouth")
+cheeks(f); lashes(f)
+f.eye(EYE_X, EYE_Y, EYE_RX, EYE_RY)
+f.arc(100 - EYE_X, 47, 22, -11, stroke=4.0, role="eye")
+f.curve(50, MOUTH_Y - 3, 19, 8, role="mouth", stroke=4.2)
+
+f = emo("love", "1f60d", "😍")
+cheeks(f, cy=66)
+f.heart(EYE_X, 45, 21, color=MOUTH, role="eye")
+f.heart(100 - EYE_X, 45, 21, color=MOUTH, role="eye")
+f.grin(50, 64, 26, 15)
+
+f = emo("adoring", "1f970", "🥰")
+cheeks(f); lashes(f); eyes(f)
+f.curve(50, MOUTH_Y - 3, 21, 9, role="mouth", stroke=4.2)
+f.heart(12, 30, 13, color=MOUTH); f.heart(88, 30, 13, color=MOUTH)
+
+f = emo("kiss", "1f618", "😘")
+cheeks(f); lashes(f)
+f.eye(EYE_X, EYE_Y, EYE_RX, EYE_RY)
+f.arc(100 - EYE_X, 47, 22, -11, stroke=4.0, role="eye")
+f.oval(50, MOUTH_Y - 1, 6, 4.6, role="mouth")
+f.heart(84, 66, 14, color=MOUTH)
+
+f = emo("yum", "1f60b", "😋")
+cheeks(f, cy=66); happy_eyes(f)
+f.grin(50, 63, 26, 15, tongue=True)
+
+f = emo("playful", "1f61c", "😜")
+cheeks(f, cy=66); lashes(f)
+f.eye(EYE_X, EYE_Y, EYE_RX, EYE_RY)
+f.arc(100 - EYE_X, 47, 22, -11, stroke=4.0, role="eye")
+f.grin(50, 64, 26, 15, tongue=True)
+
+f = emo("tongue", "1f61b", "😛")
+cheeks(f, cy=66); lashes(f); eyes(f)
+f.grin(50, 66, 24, 14, tongue=True)
+
+f = emo("excited", "1f929", "🤩")
+cheeks(f, cy=66)
+f.star(EYE_X, 45, 16, role="eye"); f.star(100 - EYE_X, 45, 16, role="eye")
+f.grin(50, 63, 30, 18)
+
+f = emo("cool", "1f60e", "😎")
+cheeks(f, cy=66)
+f.pill(50, 43, 62, 19, 0, color=INK, role="eye")
+f.pill(50, 43, 6, 21, 0, color=PANEL, role="eye")
+f.oval(38, 43, 12, 7, color="#4A5568", role="eye")
+f.oval(62, 43, 12, 7, color="#4A5568", role="eye")
+f.curve(54, MOUTH_Y - 2, 19, 8, role="mouth", stroke=4.2)
+
+f = emo("smirk", "1f60f", "😏")
+cheeks(f); eyes(f, lid=0.45)
+f.arc(56, MOUTH_Y - 3, 20, 8, rot=-8, stroke=3.4, role="mouth")
+
+f = emo("content", "1f60c", "😌")
+cheeks(f); lashes(f); happy_eyes(f, cy=46, w=20, depth=-8)
+f.curve(50, MOUTH_Y - 2, 15, 6, role="mouth", stroke=4.2)
+
+f = emo("thinking", "1f914", "🤔")
+f.blush(BLUSH_X, BLUSH_Y, 8.6); f.blush(100 - BLUSH_X, BLUSH_Y, 8.6)
+f.arc(EYE_X, LASH_Y, 20, -8, stroke=3.0, role="deco")
+f.pill(100 - EYE_X, 22, 18, 3.4, -18, color=INK, role="deco")
+f.eye(EYE_X, EYE_Y, EYE_RX, EYE_RY)
+f.eye(100 - EYE_X, 43, 11, 12.5)
+f.arc(54, MOUTH_Y - 1, 15, 5, rot=-10, stroke=3.2, role="mouth")
+
+f = emo("expressionless", "1f611", "😑")
+cheeks(f, cy=62); lashes(f)
+f.flat(EYE_X, 46, 22, stroke=4.0, role="eye")
+f.flat(100 - EYE_X, 46, 22, stroke=4.0, role="eye")
+f.flat(50, MOUTH_Y, 12, role="mouth")
+
+f = emo("no_mouth", "1f636", "😶")
+cheeks(f); lashes(f); eyes(f)
+
+f = emo("grimace", "1f62c", "😬")
+cheeks(f, cy=64); lashes(f); eyes(f, ry=13)
+f.oval(50, MOUTH_Y, 15, 6.5, color=PANEL, outline=INK, stroke=3.0, role="mouth")
+f.flat(50, MOUTH_Y, 26, stroke=2.6, role="deco")
+
+f = emo("confused", "1f615", "😕")
+cheeks(f); lashes(f)
+f.eye(EYE_X, EYE_Y, EYE_RX, EYE_RY)
+f.eye(100 - EYE_X, 43, 11, 12.5)
+f.zigzag(50, MOUTH_Y, 19, 5, 3, role="mouth")
+
+f = emo("worried", "1f61f", "😟")
+cheeks(f); brows(f, cy=24, tilt=-15)
+eyes(f, ry=14)
+f.curve(50, MOUTH_Y + 2, 16, -7, role="mouth", stroke=4.2)
+
+f = emo("slight_frown", "1f641", "🙁")
+cheeks(f); lashes(f); eyes(f)
+f.curve(50, MOUTH_Y + 2, 17, -7, role="mouth", stroke=4.2)
+
+f = emo("dejected", "1f614", "😔")
+cheeks(f, cy=62); brows(f, cy=25, tilt=-13)
+eyes(f, cy=47, ry=11, lid=0.5)
+f.curve(50, MOUTH_Y + 2, 15, -6, role="mouth", stroke=4.2)
+
+f = emo("sad", "1f622", "😢")
+cheeks(f); brows(f, cy=24, tilt=-15)
+eyes(f)
+f.curve(50, MOUTH_Y + 2, 16, -7, role="mouth", stroke=4.2)
+f.drop(20, 62, 7, 12)
+
+f = emo("crying", "1f62d", "😭")
+cheeks(f, cy=68); brows(f, cy=24, tilt=-15)
+happy_eyes(f, cy=52, w=22, depth=11)
+f.grin(50, 66, 26, 16)
+f.oval(20, 66, 5.5, 12, color=TEAR); f.oval(80, 66, 5.5, 12, color=TEAR)
+
+f = emo("pleading", "1f97a", "🥺")
+cheeks(f, cy=66); brows(f, cy=22, tilt=-14)
+eyes(f, cy=46, rx=14.5, ry=17)
+f.curve(50, MOUTH_Y + 3, 13, -5, stroke=3.0, role="mouth")
+
+f = emo("flushed", "1f633", "😳")
+f.blush(BLUSH_X + 1, 62, 11.5); f.blush(99 - BLUSH_X, 62, 11.5)
+lashes(f)
+eyes(f, rx=14, ry=16.5)
+f.oval(50, MOUTH_Y + 1, 5.5, 4.2, role="mouth")
+
+f = emo("surprised", "1f62e", "😮")
+cheeks(f, cy=66); lashes(f); eyes(f)
+f.oval(50, MOUTH_Y + 1, 6.5, 8, color=MOUTH_IN, role="mouth")
+
+f = emo("astonished", "1f632", "😲")
+cheeks(f, cy=68); lashes(f, cy=24)
+eyes(f, cy=43, rx=14, ry=16.5)
+f.oval(50, 73, 8.5, 11, color=MOUTH_IN, role="mouth")
+
+f = emo("scared", "1f631", "😱")
+brows(f, cy=22, tilt=-16)
+eyes(f, cy=43, rx=14.5, ry=17)
+f.oval(50, 74, 9, 12, color=MOUTH_IN, role="mouth")
+f.drop(86, 30, 6, 11)
+
+f = emo("fearful", "1f628", "😨")
+cheeks(f, cy=68); brows(f, cy=23, tilt=-15)
+eyes(f, cy=45, rx=13.5, ry=16)
+f.oval(50, MOUTH_Y + 2, 7, 8.5, color=MOUTH_IN, role="mouth")
+f.drop(85, 28, 6, 11)
+
+f = emo("anxious", "1f630", "😰")
+hatch_cheeks(f, cy=64)
+brows(f, cy=23, tilt=-15)
+eyes(f, cy=45, ry=15)
+f.curve(50, MOUTH_Y + 2, 15, -6, role="mouth", stroke=4.2)
+f.drop(85, 28, 6, 11); f.drop(14, 30, 5, 9)
+
+f = emo("angry", "1f620", "😠")
+cheeks(f, cy=66); brows(f, cy=25, tilt=18, color=INK)
+eyes(f, cy=47, ry=14)
+f.flat(50, MOUTH_Y + 1, 13, stroke=3.6, role="mouth")
+f.anger(80, 24, 13)
+
+f = emo("rage", "1f621", "😡")
+cheeks(f, cy=66); brows(f, cy=25, tilt=18, color=ANGER)
+eyes(f, cy=47, ry=14, color=ANGER)
+f.grin(50, 68, 22, 13, color=ANGER, inner=MOUTH_IN)
+f.anger(80, 23, 14); f.anger(20, 23, 12)
+
+f = emo("huffing", "1f624", "😤")
+cheeks(f, cy=66); brows(f, cy=25, tilt=16)
+eyes(f, cy=47, ry=13, lid=0.35)
+f.flat(50, MOUTH_Y + 1, 14, stroke=3.6, role="mouth")
+f.arc(34, 84, 13, 7, stroke=3.0, color="#9FB3C8", role="deco")
+f.arc(66, 84, 13, 7, stroke=3.0, color="#9FB3C8", role="deco")
+
+f = emo("sleepy", "1f634", "😴")
+cheeks(f, cy=62)
+happy_eyes(f, cy=47, w=21, depth=9)
+f.oval(50, MOUTH_Y + 2, 5.5, 6.5, color=MOUTH_IN, role="mouth")
+f.zzz(80, 20, scale=1.0)
+
+f = emo("drowsy", "1f62a", "😪")
+cheeks(f, cy=62); lashes(f)
+eyes(f, cy=47, ry=10, lid=0.55)
+f.curve(50, MOUTH_Y + 1, 13, -5, stroke=3.0, role="mouth")
+f.oval(78, 60, 6, 8, color=TEAR)
+
+f = emo("drooling", "1f924", "🤤")
+cheeks(f, cy=64); happy_eyes(f, cy=46, w=20, depth=-8)
+f.curve(50, MOUTH_Y - 2, 18, 8, role="mouth", stroke=4.2)
+f.oval(60, 80, 3.6, 6, color=TEAR)
+
+f = emo("nauseated", "1f922", "🤢")
+f.blush(BLUSH_X, BLUSH_Y, 8.6, color=GREEN); f.blush(100 - BLUSH_X, BLUSH_Y, 8.6, color=GREEN)
+brows(f, cy=24, tilt=-14)
+happy_eyes(f, cy=47, w=21, depth=9)
+f.oval(50, 74, 11, 8, color=GREEN, role="mouth")
+f.oval(50, 82, 7, 6, color=GREEN, role="deco")
+
+f = emo("sick", "1f912", "🤒")
+cheeks(f, cy=66, rx=9.5)
+brows(f, cy=24, tilt=-13)
+eyes(f, cy=47, ry=12, lid=0.4)
+f.curve(50, MOUTH_Y + 2, 14, -6, role="mouth", stroke=4.2)
+f.pill(50, 22, 42, 7, 0, color="#DCE7F2", role="deco")
+f.oval(31, 22, 4.2, 4.2, color=MOUTH, role="deco")
+
+f = emo("dizzy", "1f635", "😵")
+cheeks(f, cy=66); lashes(f)
+f.x_mark(EYE_X, 46, 18, stroke=4.0, role="eye")
+f.x_mark(100 - EYE_X, 46, 18, stroke=4.0, role="eye")
+f.zigzag(50, MOUTH_Y, 21, 5, 4, role="mouth")
+
+f = emo("hug", "1f917", "🤗")
+cheeks(f, cy=66); happy_eyes(f)
+f.grin(50, 63, 28, 17)
+f.arc(13, 68, 15, -9, stroke=3.4, role="deco")
+f.arc(87, 68, 15, -9, stroke=3.4, role="deco")
+
+f = emo("cat_smile", "1f63a", "😺")
+cheeks(f); lashes(f); eyes(f)
+f.cat(50, MOUTH_Y - 2, 20, 7)
+
+f = emo("robot", "1f916", "🤖")
+f.pill(EYE_X, 45, 20, 12, 0, color=INK, role="eye")
+f.pill(100 - EYE_X, 45, 20, 12, 0, color=INK, role="eye")
+f.oval(EYE_X, 45, 4, 4, color="#6FE3FF", role="eye")
+f.oval(100 - EYE_X, 45, 4, 4, color="#6FE3FF", role="eye")
+f.flat(50, MOUTH_Y, 20, stroke=3.6, role="mouth")
+f.pill(50, 16, 4, 10, 0, color=INK, role="deco")
 
 
 # --- mouth anchor --------------------------------------------------------
@@ -264,17 +473,20 @@ def mouth_anchor(elems):
     """Where a talking mouth should be drawn, derived from the resting mouth."""
     mouths = [e for e in elems if e.get("role") == "mouth"]
     if not mouths:
-        return None
+        return {"cx": 50, "cy": MOUTH_Y - 4, "w": 24, "color": INK, "inner": MOUTH_IN}
     e = mouths[0]
+    base = {"color": INK, "inner": MOUTH_IN}
     if e["t"] == "grin":
-        return {"cx": e["cx"], "cy": e["cy"], "w": e["w"]}
-    if e["t"] == "o":
-        return {"cx": e["cx"], "cy": e["cy"] - e["r"], "w": e["r"] * 3.4}
-    if e["t"] in ("flat", "arc", "zigzag"):
-        return {"cx": e["cx"], "cy": e["cy"] - 2, "w": e.get("w", 20) * 1.15}
-    if e["t"] == "blush":  # scared uses an oval scream mouth
-        return {"cx": e["cx"], "cy": e["cy"] - e["ry"], "w": e["rx"] * 2.2}
-    return {"cx": e.get("cx", 50), "cy": e.get("cy", 70), "w": 22}
+        base.update(cx=e["cx"], cy=e["cy"], w=e["w"])
+    elif e["t"] == "o":
+        base.update(cx=e["cx"], cy=e["cy"] - e["r"], w=e["r"] * 3.4)
+    elif e["t"] == "oval":
+        base.update(cx=e["cx"], cy=e["cy"] - e["ry"], w=max(e["rx"] * 2.6, 18))
+    elif e["t"] in ("flat", "arc", "zigzag", "cat"):
+        base.update(cx=e["cx"], cy=e["cy"] - 3, w=e.get("w", 20) * 1.25)
+    else:
+        base.update(cx=e.get("cx", 50), cy=e.get("cy", MOUTH_Y) - 3, w=22)
+    return base
 
 
 # --- SVG output ----------------------------------------------------------
@@ -292,6 +504,73 @@ def svg_circle(e):
         out.append(f'<circle cx="{e["cx"]}" cy="{e["cy"]}" r="{e["pupil_r"]}" '
                    f'fill="{e["pupil_color"]}"/>')
     return "".join(out)
+
+
+def svg_eye(e):
+    cx, cy, rx, ry = e["cx"], e["cy"], e["rx"], e["ry"]
+    out = [f'<ellipse cx="{cx}" cy="{cy}" rx="{rx}" ry="{ry}" fill="{e["color"]}"/>']
+    if e.get("lid"):
+        lid_h = 2 * ry * e["lid"]
+        out.append(f'<rect x="{cx - rx - 1:.2f}" y="{cy - ry - 1:.2f}" '
+                   f'width="{2 * rx + 2:.2f}" height="{lid_h:.2f}" fill="{e["panel"]}"/>')
+        out.append(f'<line x1="{cx - rx:.2f}" y1="{cy - ry + lid_h:.2f}" '
+                   f'x2="{cx + rx:.2f}" y2="{cy - ry + lid_h:.2f}" '
+                   f'stroke="{e["color"]}" stroke-width="3" stroke-linecap="round"/>')
+    if e.get("glint"):
+        gy = cy - ry * 0.38 + (2 * ry * e.get("lid", 0)) * 0.5
+        out.append(f'<circle cx="{cx - rx * 0.34:.2f}" cy="{gy:.2f}" '
+                   f'r="{rx * 0.36:.2f}" fill="#FFFFFF"/>')
+        out.append(f'<circle cx="{cx + rx * 0.36:.2f}" cy="{cy + ry * 0.34:.2f}" '
+                   f'r="{rx * 0.17:.2f}" fill="#FFFFFF"/>')
+    return "".join(out)
+
+
+def svg_oval(e):
+    s = (f'<ellipse cx="{e["cx"]}" cy="{e["cy"]}" rx="{e["rx"]}" ry="{e["ry"]}" '
+         f'fill="{e["color"]}"')
+    if e.get("outline"):
+        s += f' stroke="{e["outline"]}" stroke-width="{e["stroke"]}"'
+    return s + "/>"
+
+
+def svg_hatch(e):
+    cx, cy, w, h, n = e["cx"], e["cy"], e["w"], e["h"], e["n"]
+    step = w / max(n - 1, 1)
+    x0 = cx - w / 2
+    out = []
+    for i in range(n):
+        x = x0 + i * step
+        out.append(f'<line x1="{x:.2f}" y1="{cy + h/2:.2f}" x2="{x + h*0.45:.2f}" '
+                   f'y2="{cy - h/2:.2f}" stroke="{e["color"]}" '
+                   f'stroke-width="{e["stroke"]}" stroke-linecap="round"/>')
+    return "".join(out)
+
+
+def svg_anger(e):
+    cx, cy, s = e["cx"], e["cy"], e["size"] / 2
+    d = (f"M {cx-s} {cy-s} L {cx-s*0.25} {cy-s*0.35} L {cx} {cy-s} "
+         f"L {cx+s*0.25} {cy-s*0.35} L {cx+s} {cy-s} L {cx+s*0.35} {cy} "
+         f"L {cx+s} {cy+s} L {cx+s*0.25} {cy+s*0.35} L {cx} {cy+s} "
+         f"L {cx-s*0.25} {cy+s*0.35} L {cx-s} {cy+s} L {cx-s*0.35} {cy} Z")
+    return f'<path d="{d}" fill="{e["color"]}"/>'
+
+
+def svg_cat(e):
+    cx, cy, w, h = e["cx"], e["cy"], e["w"], e["h"]
+    q = w / 4
+    d = (f"M {cx-w/2:.2f} {cy:.2f} Q {cx-q:.2f} {cy+h:.2f} {cx:.2f} {cy:.2f} "
+         f"Q {cx+q:.2f} {cy+h:.2f} {cx+w/2:.2f} {cy:.2f}")
+    return (f'<path d="{d}" fill="none" stroke="{e["color"]}" '
+            f'stroke-width="{e["stroke"]}" stroke-linecap="round"/>')
+
+
+def svg_tri(e):
+    cx, cy, w, h = e["cx"], e["cy"], e["w"], e["h"]
+    if e.get("down"):
+        pts = f"{cx-w/2:.2f},{cy-h/2:.2f} {cx+w/2:.2f},{cy-h/2:.2f} {cx:.2f},{cy+h/2:.2f}"
+    else:
+        pts = f"{cx-w/2:.2f},{cy+h/2:.2f} {cx+w/2:.2f},{cy+h/2:.2f} {cx:.2f},{cy-h/2:.2f}"
+    return f'<polygon points="{pts}" fill="{e["color"]}"/>'
 
 
 def svg_arc(e):
@@ -371,13 +650,13 @@ def svg_grin(e):
     d = (f'M {cx - w/2:.2f} {cy:.2f} L {cx + w/2:.2f} {cy:.2f} '
          f'A {w/2:.2f} {h:.2f} 0 0 1 {cx - w/2:.2f} {cy:.2f} Z')
     out = [f'<path d="{d}" fill="{e["color"]}"/>']
-    iw, ih, iy = w * 0.82, h * 0.78, cy + h * 0.12
+    iw, ih, iy = w * 0.84, h * 0.8, cy + h * 0.1
     di = (f'M {cx - iw/2:.2f} {iy:.2f} L {cx + iw/2:.2f} {iy:.2f} '
           f'A {iw/2:.2f} {ih:.2f} 0 0 1 {cx - iw/2:.2f} {iy:.2f} Z')
     out.append(f'<path d="{di}" fill="{e["inner"]}"/>')
     if e.get("tongue"):
-        out.append(f'<ellipse cx="{cx}" cy="{cy + h*0.62:.2f}" rx="{w*0.20:.2f}" '
-                   f'ry="{h*0.26:.2f}" fill="{e["tongue_color"]}"/>')
+        out.append(f'<ellipse cx="{cx}" cy="{cy + h*0.62:.2f}" rx="{w*0.22:.2f}" '
+                   f'ry="{h*0.28:.2f}" fill="{e["tongue_color"]}"/>')
     return "".join(out)
 
 
@@ -400,13 +679,15 @@ def svg_x(e):
 SVG_RENDER = {"pill": svg_pill, "circle": svg_circle, "arc": svg_arc, "flat": svg_flat,
               "o": svg_o, "zigzag": svg_zigzag, "heart": svg_heart, "star": svg_star,
               "drop": svg_drop, "zzz": svg_zzz, "blush": svg_blush, "grin": svg_grin,
-              "caret": svg_caret, "x": svg_x}
+              "caret": svg_caret, "x": svg_x, "eye": svg_eye, "oval": svg_oval,
+              "hatch": svg_hatch, "anger": svg_anger, "cat": svg_cat, "tri": svg_tri}
 
 
 def svg_frame():
-    """The bezel ring, stroked on its centre line like the PIL renderer draws it."""
-    c = FRAME_INSET + FRAME_WIDTH / 2
-    return (f'<rect x="{c:.2f}" y="{c:.2f}" width="{W - 2*c:.2f}" height="{H - 2*c:.2f}" '
+    half = FRAME_WIDTH / 2
+    x = FRAME_INSET + half
+    size = W - 2 * x
+    return (f'<rect x="{x:.2f}" y="{x:.2f}" width="{size:.2f}" height="{size:.2f}" '
             f'rx="{FRAME_RX:.2f}" fill="none" stroke="{FRAME}" '
             f'stroke-width="{FRAME_WIDTH}"/>')
 
@@ -415,7 +696,7 @@ def render_svg(elems):
     parts = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" '
              f'width="{W}" height="{H}">',
              f'<rect x="{PANEL_MARGIN}" y="{PANEL_MARGIN}" width="{W - 2*PANEL_MARGIN}" '
-             f'height="{H - 2*PANEL_MARGIN}" rx="{PANEL_RX}" fill="{BLACK}"/>']
+             f'height="{H - 2*PANEL_MARGIN}" rx="{PANEL_RX}" fill="{PANEL}"/>']
     for e in elems:
         parts.append(SVG_RENDER[e["t"]](e))
     # Last, so a tear or a Zzz that strays into the margin sits behind the ring.
@@ -435,9 +716,10 @@ def main():
     spec = {
         "meta": {
             "canvas": W,
-            "panel": {"margin": PANEL_MARGIN, "rx": PANEL_RX, "fill": BLACK},
+            "panel": {"margin": PANEL_MARGIN, "rx": PANEL_RX, "fill": PANEL},
             "frame": {"width": FRAME_WIDTH, "inset": FRAME_INSET, "rx": FRAME_RX,
                       "color": FRAME},
+            "ink": INK,
         },
         "faces": {},
     }
@@ -468,14 +750,14 @@ def write_preview(spec, path):
     import face_engine
 
     renderer = face_engine.FaceRenderer(spec)
-    cols, cell, pad, label_h = 6, 120, 18, 22
+    cols, cell, pad, label_h = 8, 104, 14, 20
     items = list(spec["faces"].items())
     rows = (len(items) + cols - 1) // cols
     sheet = Image.new("RGB", (cols * (cell + pad) + pad,
-                              rows * (cell + label_h + pad) + pad), (235, 230, 220))
+                              rows * (cell + label_h + pad) + pad), (38, 38, 44))
     draw = ImageDraw.Draw(sheet)
     try:
-        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 14)
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 12)
     except OSError:
         font = ImageFont.load_default()
     for i, (char, face) in enumerate(items):
@@ -483,7 +765,7 @@ def write_preview(spec, path):
         x = pad + (i % cols) * (cell + pad)
         y = pad + (i // cols) * (cell + label_h + pad)
         sheet.paste(img, (x, y), img)
-        draw.text((x, y + cell + 3), face["name"], fill=(20, 20, 20), font=font)
+        draw.text((x, y + cell + 3), face["name"], fill=(235, 235, 235), font=font)
     sheet.save(path)
     print(f"wrote preview {path}")
 

@@ -80,6 +80,7 @@ class FaceRenderer:
         self.panel_fill = panel.get("fill", "#0A0A0A")
         frame = self.meta.get("frame") or {}
         self.frame = frame if frame.get("width", 0) > 0 else None
+        self.ink = self.meta.get("ink", "#22222A")
 
     def has(self, char):
         return char in self.faces
@@ -232,13 +233,92 @@ class FaceRenderer:
         self._stroke(img, [(cx - s, cy - s), (cx + s, cy + s)], e["stroke"], e["color"], k)
         self._stroke(img, [(cx + s, cy - s), (cx - s, cy + s)], e["stroke"], e["color"], k)
 
+    def _eye(self, img, e, k):
+        """Glossy oval eye: dark body, optional lid, highlight glints."""
+        d = ImageDraw.Draw(img)
+        cx, cy = e["cx"] * k, e["cy"] * k
+        rx, ry = e["rx"] * k, e["ry"] * k
+        d.ellipse([cx - rx, cy - ry, cx + rx, cy + ry], fill=_as_rgb(e["color"]) + (255,))
+        lid = e.get("lid") or 0.0
+        if lid > 0:
+            lid_h = 2 * ry * lid
+            d.rectangle([cx - rx - 1, cy - ry - 1, cx + rx + 1, cy - ry + lid_h],
+                        fill=_as_rgb(e.get("panel", self.panel_fill)) + (255,))
+            self._stroke(img, [(e["cx"] - e["rx"], e["cy"] - e["ry"] + lid_h / k),
+                               (e["cx"] + e["rx"], e["cy"] - e["ry"] + lid_h / k)],
+                         3.0, e["color"], k)
+        if e.get("glint"):
+            gy = cy - ry * 0.38 + (2 * ry * lid) * 0.5
+            gr = rx * 0.36
+            d.ellipse([cx - rx * 0.34 - gr, gy - gr, cx - rx * 0.34 + gr, gy + gr],
+                      fill=(255, 255, 255, 255))
+            sr = rx * 0.17
+            sx, sy = cx + rx * 0.36, cy + ry * 0.34
+            d.ellipse([sx - sr, sy - sr, sx + sr, sy + sr], fill=(255, 255, 255, 255))
+
+    def _oval(self, img, e, k):
+        d = ImageDraw.Draw(img)
+        cx, cy = e["cx"] * k, e["cy"] * k
+        rx, ry = e["rx"] * k, e["ry"] * k
+        box = [cx - rx, cy - ry, cx + rx, cy + ry]
+        if e.get("outline"):
+            d.ellipse(box, fill=_as_rgb(e["color"]) + (255,),
+                      outline=_as_rgb(e["outline"]) + (255,),
+                      width=max(int(e.get("stroke", 2.5) * k), 1))
+        else:
+            d.ellipse(box, fill=_as_rgb(e["color"]) + (255,))
+
+    def _hatch(self, img, e, k):
+        cx, cy, w, h, n = e["cx"], e["cy"], e["w"], e["h"], e["n"]
+        step = w / max(n - 1, 1)
+        x0 = cx - w / 2
+        for i in range(n):
+            x = x0 + i * step
+            self._stroke(img, [(x, cy + h / 2), (x + h * 0.45, cy - h / 2)],
+                         e["stroke"], e["color"], k)
+
+    def _anger(self, img, e, k):
+        d = ImageDraw.Draw(img)
+        cx, cy, s = e["cx"], e["cy"], e["size"] / 2
+        pts = [(cx - s, cy - s), (cx - s * 0.25, cy - s * 0.35), (cx, cy - s),
+               (cx + s * 0.25, cy - s * 0.35), (cx + s, cy - s),
+               (cx + s * 0.35, cy), (cx + s, cy + s),
+               (cx + s * 0.25, cy + s * 0.35), (cx, cy + s),
+               (cx - s * 0.25, cy + s * 0.35), (cx - s, cy + s), (cx - s * 0.35, cy)]
+        d.polygon([(x * k, y * k) for x, y in pts], fill=_as_rgb(e["color"]) + (255,))
+
+    def _cat(self, img, e, k, n=14):
+        """The ω mouth: two shallow scallops side by side."""
+        cx, cy, w, h = e["cx"], e["cy"], e["w"], e["h"]
+        pts = []
+        for half in (-1, 1):
+            hx = cx + half * w / 4
+            x0, x1 = hx - w / 4, hx + w / 4
+            for i in range(n + 1):
+                t = i / n
+                x = (1 - t) ** 2 * x0 + 2 * (1 - t) * t * hx + t ** 2 * x1
+                y = (1 - t) ** 2 * cy + 2 * (1 - t) * t * (cy + h) + t ** 2 * cy
+                pts.append((x, y))
+        self._stroke(img, pts, e["stroke"], e["color"], k)
+
+    def _tri(self, img, e, k):
+        d = ImageDraw.Draw(img)
+        cx, cy, w, h = e["cx"], e["cy"], e["w"], e["h"]
+        if e.get("down"):
+            pts = [(cx - w / 2, cy - h / 2), (cx + w / 2, cy - h / 2), (cx, cy + h / 2)]
+        else:
+            pts = [(cx - w / 2, cy + h / 2), (cx + w / 2, cy + h / 2), (cx, cy - h / 2)]
+        d.polygon([(x * k, y * k) for x, y in pts], fill=_as_rgb(e["color"]) + (255,))
+
     def _draw_elem(self, img, e, k):
         fn = {
             "pill": self._pill, "circle": self._circle, "arc": self._arc,
             "flat": self._flat, "o": self._o, "zigzag": self._zigzag,
             "heart": self._heart, "star": self._star, "drop": self._drop,
             "zzz": self._zzz, "blush": self._blush, "grin": self._grin,
-            "caret": self._caret, "x": self._x,
+            "caret": self._caret, "x": self._x, "eye": self._eye,
+            "oval": self._oval, "hatch": self._hatch, "anger": self._anger,
+            "cat": self._cat, "tri": self._tri,
         }.get(e["t"])
         if fn:
             fn(img, e, k)
@@ -333,10 +413,13 @@ class FaceRenderer:
             if any(abs(cx - sx) < 4 and abs(cy - sy) < 6 for sx, sy in seen):
                 continue
             seen.append((cx, cy))
-            w = e.get("w") or (e.get("r", 6) * 2) or (e.get("size", 12))
+            w = (e.get("w") or (e.get("rx", 0) * 2) or (e.get("r", 0) * 2)
+                 or e.get("size", 12))
             layer = Image.new("RGBA", img.size, (0, 0, 0, 0))
-            self._stroke(layer, [(cx - w * 0.55, cy), (cx + w * 0.55, cy)],
-                         4.5, e.get("color", "#F5F5F0"), k)
+            # A shut kawaii eye is a shallow upward arc, not a flat dash.
+            self._arc(layer, {"cx": cx, "cy": cy + w * 0.10, "w": w * 1.05,
+                              "depth": -w * 0.34, "stroke": 3.6,
+                              "color": e.get("color", self.ink)}, k)
             if alpha < 1.0:
                 layer.putalpha(layer.getchannel("A").point(lambda v: int(v * alpha)))
             img.alpha_composite(layer)

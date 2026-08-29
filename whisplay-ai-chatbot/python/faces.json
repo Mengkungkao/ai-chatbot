@@ -4,92 +4,191 @@
   "panel": {
    "margin": 6,
    "rx": 26,
-   "fill": "#0A0A0A"
+   "fill": "#FFFDF8"
   },
   "frame": {
    "width": 3.0,
    "inset": 1.5,
    "rx": 29.0,
    "color": "#3A4657"
-  }
+  },
+  "ink": "#22222A"
  },
  "faces": {
   "😐": {
    "name": "neutral",
    "codepoint": "1f610",
    "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
     "cx": 50,
     "cy": 69,
-    "w": 18.4
+    "w": 16.25
    },
    "elems": [
     {
      "t": "blush",
-     "cx": 18,
-     "cy": 60,
-     "rx": 7.5,
-     "ry": 5.3999999999999995,
-     "color": "#FF7A9C",
-     "opacity": 0.9,
+     "cx": 14,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
      "role": "blush"
     },
     {
      "t": "blush",
-     "cx": 82,
-     "cy": 60,
-     "rx": 7.5,
-     "ry": 5.3999999999999995,
-     "color": "#FF7A9C",
-     "opacity": 0.9,
+     "cx": 86,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
      "role": "blush"
     },
     {
-     "t": "pill",
-     "cx": 30,
-     "cy": 43,
-     "w": 15,
-     "h": 30,
+     "t": "arc",
+     "cx": 31,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
      "rot": 0,
-     "color": "#F5F5F0",
-     "role": "eye"
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
     },
     {
-     "t": "pill",
-     "cx": 70,
-     "cy": 43,
-     "w": 15,
-     "h": 30,
+     "t": "arc",
+     "cx": 69,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
      "rot": 0,
-     "color": "#F5F5F0",
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 45,
+     "rx": 13,
+     "ry": 15.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
      "role": "eye"
     },
     {
-     "t": "circle",
-     "cx": 33,
-     "cy": 35,
-     "r": 4,
-     "color": "#0A0A0A",
-     "pupil_r": null,
-     "pupil_color": "#0A0A0A",
-     "role": "eye"
-    },
-    {
-     "t": "circle",
-     "cx": 73,
-     "cy": 35,
-     "r": 4,
-     "color": "#0A0A0A",
-     "pupil_r": null,
-     "pupil_color": "#0A0A0A",
+     "t": "eye",
+     "cx": 69,
+     "cy": 45,
+     "rx": 13,
+     "ry": 15.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
      "role": "eye"
     },
     {
      "t": "flat",
      "cx": 50,
-     "cy": 71,
-     "w": 16,
-     "stroke": 6,
-     "color": "#F5F5F0",
+     "cy": 72,
+     "w": 13,
+     "stroke": 4.2,
+     "color": "#22222A",
+     "role": "mouth"
+    }
+   ]
+  },
+  "🙂": {
+   "name": "slight_smile",
+   "codepoint": "1f642",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 66,
+    "w": 21.25
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "arc",
+     "cx": 31,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 45,
+     "rx": 13,
+     "ry": 15.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "eye",
+     "cx": 69,
+     "cy": 45,
+     "rx": 13,
+     "ry": 15.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "arc",
+     "cx": 50,
+     "cy": 69,
+     "w": 17,
+     "depth": 7,
+     "rot": 0,
+     "stroke": 4.2,
+     "color": "#22222A",
      "role": "mouth"
     }
    ]
@@ -98,80 +197,88 @@
    "name": "happy",
    "codepoint": "1f60a",
    "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
     "cx": 50,
     "cy": 66,
-    "w": 32.199999999999996
+    "w": 26.25
    },
    "elems": [
     {
      "t": "blush",
-     "cx": 18,
-     "cy": 62,
-     "rx": 7.5,
-     "ry": 5.3999999999999995,
-     "color": "#FF7A9C",
-     "opacity": 0.9,
+     "cx": 14,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
      "role": "blush"
     },
     {
      "t": "blush",
-     "cx": 82,
-     "cy": 62,
-     "rx": 7.5,
-     "ry": 5.3999999999999995,
-     "color": "#FF7A9C",
-     "opacity": 0.9,
+     "cx": 86,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
      "role": "blush"
     },
     {
-     "t": "circle",
-     "cx": 30,
-     "cy": 42,
-     "r": 12,
-     "color": "#F5F5F0",
-     "pupil_r": null,
-     "pupil_color": "#0A0A0A",
+     "t": "arc",
+     "cx": 31,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 45,
+     "rx": 13,
+     "ry": 15.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
      "role": "eye"
     },
     {
-     "t": "circle",
-     "cx": 70,
-     "cy": 42,
-     "r": 12,
-     "color": "#F5F5F0",
-     "pupil_r": null,
-     "pupil_color": "#0A0A0A",
-     "role": "eye"
-    },
-    {
-     "t": "circle",
-     "cx": 33.5,
-     "cy": 38,
-     "r": 4,
-     "color": "#0A0A0A",
-     "pupil_r": null,
-     "pupil_color": "#0A0A0A",
-     "role": "eye"
-    },
-    {
-     "t": "circle",
-     "cx": 73.5,
-     "cy": 38,
-     "r": 4,
-     "color": "#0A0A0A",
-     "pupil_r": null,
-     "pupil_color": "#0A0A0A",
+     "t": "eye",
+     "cx": 69,
+     "cy": 45,
+     "rx": 13,
+     "ry": 15.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
      "role": "eye"
     },
     {
      "t": "arc",
      "cx": 50,
-     "cy": 68,
-     "w": 28,
+     "cy": 69,
+     "w": 21,
      "depth": 9,
      "rot": 0,
-     "stroke": 6,
-     "color": "#F5F5F0",
+     "stroke": 4.2,
+     "color": "#22222A",
      "role": "mouth"
     }
    ]
@@ -180,63 +287,199 @@
    "name": "joy",
    "codepoint": "1f604",
    "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
     "cx": 50,
-    "cy": 60,
+    "cy": 62,
+    "w": 30
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "arc",
+     "cx": 31,
+     "cy": 46,
+     "w": 22,
+     "depth": -11,
+     "rot": 0,
+     "stroke": 4.0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 46,
+     "w": 22,
+     "depth": -11,
+     "rot": 0,
+     "stroke": 4.0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "grin",
+     "cx": 50,
+     "cy": 62,
+     "w": 30,
+     "h": 18,
+     "tongue": false,
+     "color": "#22222A",
+     "inner": "#C42B45",
+     "tongue_color": "#FF7D93",
+     "role": "mouth"
+    }
+   ]
+  },
+  "😁": {
+   "name": "grin",
+   "codepoint": "1f601",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 61,
     "w": 34
    },
    "elems": [
     {
      "t": "blush",
-     "cx": 18,
-     "cy": 64,
-     "rx": 7.5,
-     "ry": 5.3999999999999995,
-     "color": "#FF7A9C",
-     "opacity": 0.9,
+     "cx": 14,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
      "role": "blush"
     },
     {
      "t": "blush",
-     "cx": 82,
-     "cy": 64,
-     "rx": 7.5,
-     "ry": 5.3999999999999995,
-     "color": "#FF7A9C",
-     "opacity": 0.9,
+     "cx": 86,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
      "role": "blush"
     },
     {
-     "t": "caret",
-     "cx": 30,
-     "cy": 41,
-     "w": 18,
-     "h": 11,
-     "down": false,
-     "stroke": 7,
-     "color": "#F5F5F0",
+     "t": "arc",
+     "cx": 31,
+     "cy": 46,
+     "w": 22,
+     "depth": -11,
+     "rot": 0,
+     "stroke": 4.0,
+     "color": "#22222A",
      "role": "eye"
     },
     {
-     "t": "caret",
-     "cx": 70,
-     "cy": 41,
-     "w": 18,
-     "h": 11,
-     "down": false,
-     "stroke": 7,
-     "color": "#F5F5F0",
+     "t": "arc",
+     "cx": 69,
+     "cy": 46,
+     "w": 22,
+     "depth": -11,
+     "rot": 0,
+     "stroke": 4.0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "grin",
+     "cx": 50,
+     "cy": 61,
+     "w": 34,
+     "h": 20,
+     "tongue": false,
+     "color": "#22222A",
+     "inner": "#C42B45",
+     "tongue_color": "#FF7D93",
+     "role": "mouth"
+    }
+   ]
+  },
+  "😆": {
+   "name": "laughing_squint",
+   "codepoint": "1f606",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 60,
+    "w": 36
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "arc",
+     "cx": 31,
+     "cy": 47,
+     "w": 24,
+     "depth": -13,
+     "rot": 0,
+     "stroke": 4.0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 47,
+     "w": 24,
+     "depth": -13,
+     "rot": 0,
+     "stroke": 4.0,
+     "color": "#22222A",
      "role": "eye"
     },
     {
      "t": "grin",
      "cx": 50,
      "cy": 60,
-     "w": 34,
-     "h": 20,
+     "w": 36,
+     "h": 22,
      "tongue": false,
-     "color": "#F5F5F0",
-     "inner": "#B32B3E",
-     "tongue_color": "#FF6B81",
+     "color": "#22222A",
+     "inner": "#C42B45",
+     "tongue_color": "#FF7D93",
      "role": "mouth"
     }
    ]
@@ -245,6 +488,93 @@
    "name": "laughing",
    "codepoint": "1f602",
    "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 60,
+    "w": 34
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "arc",
+     "cx": 31,
+     "cy": 47,
+     "w": 23,
+     "depth": -12,
+     "rot": 0,
+     "stroke": 4.0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 47,
+     "w": 23,
+     "depth": -12,
+     "rot": 0,
+     "stroke": 4.0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "grin",
+     "cx": 50,
+     "cy": 60,
+     "w": 34,
+     "h": 21,
+     "tongue": true,
+     "color": "#22222A",
+     "inner": "#C42B45",
+     "tongue_color": "#FF7D93",
+     "role": "mouth"
+    },
+    {
+     "t": "drop",
+     "cx": 12,
+     "cy": 54,
+     "w": 7,
+     "h": 12,
+     "color": "#6FC3F5",
+     "role": "deco"
+    },
+    {
+     "t": "drop",
+     "cx": 88,
+     "cy": 54,
+     "w": 7,
+     "h": 12,
+     "color": "#6FC3F5",
+     "role": "deco"
+    }
+   ]
+  },
+  "🤣": {
+   "name": "rofl",
+   "codepoint": "1f923",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
     "cx": 50,
     "cy": 59,
     "w": 36
@@ -252,40 +582,44 @@
    "elems": [
     {
      "t": "blush",
-     "cx": 18,
-     "cy": 64,
-     "rx": 7.5,
-     "ry": 5.3999999999999995,
-     "color": "#FF7A9C",
-     "opacity": 0.9,
+     "cx": 14,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
      "role": "blush"
     },
     {
      "t": "blush",
-     "cx": 82,
-     "cy": 64,
-     "rx": 7.5,
-     "ry": 5.3999999999999995,
-     "color": "#FF7A9C",
-     "opacity": 0.9,
+     "cx": 86,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
      "role": "blush"
     },
     {
-     "t": "x",
-     "cx": 30,
-     "cy": 41,
-     "size": 17,
-     "stroke": 6,
-     "color": "#F5F5F0",
+     "t": "arc",
+     "cx": 31,
+     "cy": 47,
+     "w": 24,
+     "depth": -13,
+     "rot": 0,
+     "stroke": 4.0,
+     "color": "#22222A",
      "role": "eye"
     },
     {
-     "t": "x",
-     "cx": 70,
-     "cy": 41,
-     "size": 17,
-     "stroke": 6,
-     "color": "#F5F5F0",
+     "t": "arc",
+     "cx": 69,
+     "cy": 47,
+     "w": 24,
+     "depth": -13,
+     "rot": 0,
+     "stroke": 4.0,
+     "color": "#22222A",
      "role": "eye"
     },
     {
@@ -293,967 +627,123 @@
      "cx": 50,
      "cy": 59,
      "w": 36,
-     "h": 22,
+     "h": 23,
      "tongue": true,
-     "color": "#F5F5F0",
-     "inner": "#B32B3E",
-     "tongue_color": "#FF6B81",
+     "color": "#22222A",
+     "inner": "#C42B45",
+     "tongue_color": "#FF7D93",
      "role": "mouth"
     },
     {
      "t": "drop",
-     "cx": 13,
-     "cy": 50,
-     "w": 6,
-     "h": 11,
-     "color": "#4FB8FF",
-     "role": "deco"
-    },
-    {
-     "t": "drop",
-     "cx": 87,
-     "cy": 50,
-     "w": 6,
-     "h": 11,
-     "color": "#4FB8FF",
-     "role": "deco"
-    }
-   ]
-  },
-  "😢": {
-   "name": "sad",
-   "codepoint": "1f622",
-   "mouth_anchor": {
-    "cx": 50,
-    "cy": 74,
-    "w": 27.599999999999998
-   },
-   "elems": [
-    {
-     "t": "blush",
-     "cx": 18,
-     "cy": 64,
-     "rx": 7.5,
-     "ry": 5.3999999999999995,
-     "color": "#FF7A9C",
-     "opacity": 0.9,
-     "role": "blush"
-    },
-    {
-     "t": "blush",
-     "cx": 82,
-     "cy": 64,
-     "rx": 7.5,
-     "ry": 5.3999999999999995,
-     "color": "#FF7A9C",
-     "opacity": 0.9,
-     "role": "blush"
-    },
-    {
-     "t": "pill",
-     "cx": 30,
-     "cy": 46,
-     "w": 13,
-     "h": 24,
-     "rot": -10,
-     "color": "#F5F5F0",
-     "role": "eye"
-    },
-    {
-     "t": "pill",
-     "cx": 70,
-     "cy": 46,
-     "w": 13,
-     "h": 24,
-     "rot": -10,
-     "color": "#F5F5F0",
-     "role": "eye"
-    },
-    {
-     "t": "circle",
-     "cx": 33,
-     "cy": 39,
-     "r": 3.5,
-     "color": "#0A0A0A",
-     "pupil_r": null,
-     "pupil_color": "#0A0A0A",
-     "role": "eye"
-    },
-    {
-     "t": "circle",
-     "cx": 73,
-     "cy": 39,
-     "r": 3.5,
-     "color": "#0A0A0A",
-     "pupil_r": null,
-     "pupil_color": "#0A0A0A",
-     "role": "eye"
-    },
-    {
-     "t": "arc",
-     "cx": 50,
-     "cy": 76,
-     "w": 24,
-     "depth": -9,
-     "rot": 0,
-     "stroke": 6,
-     "color": "#F5F5F0",
-     "role": "mouth"
-    },
-    {
-     "t": "drop",
-     "cx": 30,
-     "cy": 60,
-     "w": 6,
-     "h": 10,
-     "color": "#4FB8FF",
-     "role": "deco"
-    }
-   ]
-  },
-  "😭": {
-   "name": "crying",
-   "codepoint": "1f62d",
-   "mouth_anchor": {
-    "cx": 50,
-    "cy": 66,
-    "w": 26
-   },
-   "elems": [
-    {
-     "t": "blush",
-     "cx": 18,
-     "cy": 66,
-     "rx": 7.5,
-     "ry": 5.3999999999999995,
-     "color": "#FF7A9C",
-     "opacity": 0.9,
-     "role": "blush"
-    },
-    {
-     "t": "blush",
-     "cx": 82,
-     "cy": 66,
-     "rx": 7.5,
-     "ry": 5.3999999999999995,
-     "color": "#FF7A9C",
-     "opacity": 0.9,
-     "role": "blush"
-    },
-    {
-     "t": "caret",
-     "cx": 30,
-     "cy": 42,
-     "w": 17,
-     "h": 9,
-     "down": true,
-     "stroke": 6,
-     "color": "#F5F5F0",
-     "role": "eye"
-    },
-    {
-     "t": "caret",
-     "cx": 70,
-     "cy": 42,
-     "w": 17,
-     "h": 9,
-     "down": true,
-     "stroke": 6,
-     "color": "#F5F5F0",
-     "role": "eye"
-    },
-    {
-     "t": "grin",
-     "cx": 50,
-     "cy": 66,
-     "w": 26,
-     "h": 17,
-     "tongue": false,
-     "color": "#F5F5F0",
-     "inner": "#B32B3E",
-     "tongue_color": "#FF6B81",
-     "role": "mouth"
-    },
-    {
-     "t": "drop",
-     "cx": 23,
-     "cy": 56,
+     "cx": 11,
+     "cy": 52,
      "w": 7,
-     "h": 15,
-     "color": "#4FB8FF",
+     "h": 13,
+     "color": "#6FC3F5",
      "role": "deco"
     },
     {
      "t": "drop",
-     "cx": 77,
-     "cy": 56,
+     "cx": 89,
+     "cy": 52,
      "w": 7,
-     "h": 15,
-     "color": "#4FB8FF",
+     "h": 13,
+     "color": "#6FC3F5",
      "role": "deco"
-    }
-   ]
-  },
-  "😠": {
-   "name": "angry",
-   "codepoint": "1f620",
-   "mouth_anchor": {
-    "cx": 50,
-    "cy": 70,
-    "w": 16.099999999999998
-   },
-   "elems": [
-    {
-     "t": "pill",
-     "cx": 24,
-     "cy": 33,
-     "w": 20,
-     "h": 7,
-     "rot": -18,
-     "color": "#FF3B30",
-     "role": "deco"
-    },
-    {
-     "t": "pill",
-     "cx": 76,
-     "cy": 33,
-     "w": 20,
-     "h": 7,
-     "rot": 18,
-     "color": "#FF3B30",
-     "role": "deco"
-    },
-    {
-     "t": "pill",
-     "cx": 30,
-     "cy": 46,
-     "w": 16,
-     "h": 21,
-     "rot": -14,
-     "color": "#F5F5F0",
-     "role": "eye"
-    },
-    {
-     "t": "pill",
-     "cx": 70,
-     "cy": 46,
-     "w": 16,
-     "h": 21,
-     "rot": 14,
-     "color": "#F5F5F0",
-     "role": "eye"
-    },
-    {
-     "t": "circle",
-     "cx": 32.5,
-     "cy": 49,
-     "r": 4.5,
-     "color": "#FF8C1A",
-     "pupil_r": null,
-     "pupil_color": "#0A0A0A",
-     "role": "eye"
-    },
-    {
-     "t": "circle",
-     "cx": 67.5,
-     "cy": 49,
-     "r": 4.5,
-     "color": "#FF8C1A",
-     "pupil_r": null,
-     "pupil_color": "#0A0A0A",
-     "role": "eye"
-    },
-    {
-     "t": "flat",
-     "cx": 50,
-     "cy": 72,
-     "w": 14,
-     "stroke": 7,
-     "color": "#F5F5F0",
-     "role": "mouth"
-    }
-   ]
-  },
-  "😮": {
-   "name": "surprised",
-   "codepoint": "1f62e",
-   "mouth_anchor": {
-    "cx": 50,
-    "cy": 67,
-    "w": 23.8
-   },
-   "elems": [
-    {
-     "t": "blush",
-     "cx": 18,
-     "cy": 63,
-     "rx": 7.5,
-     "ry": 5.3999999999999995,
-     "color": "#FF7A9C",
-     "opacity": 0.9,
-     "role": "blush"
-    },
-    {
-     "t": "blush",
-     "cx": 82,
-     "cy": 63,
-     "rx": 7.5,
-     "ry": 5.3999999999999995,
-     "color": "#FF7A9C",
-     "opacity": 0.9,
-     "role": "blush"
-    },
-    {
-     "t": "circle",
-     "cx": 30,
-     "cy": 42,
-     "r": 12,
-     "color": "#F5F5F0",
-     "pupil_r": null,
-     "pupil_color": "#0A0A0A",
-     "role": "eye"
-    },
-    {
-     "t": "circle",
-     "cx": 70,
-     "cy": 42,
-     "r": 12,
-     "color": "#F5F5F0",
-     "pupil_r": null,
-     "pupil_color": "#0A0A0A",
-     "role": "eye"
-    },
-    {
-     "t": "circle",
-     "cx": 34,
-     "cy": 37.5,
-     "r": 4.5,
-     "color": "#0A0A0A",
-     "pupil_r": null,
-     "pupil_color": "#0A0A0A",
-     "role": "eye"
-    },
-    {
-     "t": "circle",
-     "cx": 74,
-     "cy": 37.5,
-     "r": 4.5,
-     "color": "#0A0A0A",
-     "pupil_r": null,
-     "pupil_color": "#0A0A0A",
-     "role": "eye"
-    },
-    {
-     "t": "o",
-     "cx": 50,
-     "cy": 74,
-     "r": 7,
-     "stroke": 5,
-     "color": "#F5F5F0",
-     "role": "mouth"
-    }
-   ]
-  },
-  "😍": {
-   "name": "love",
-   "codepoint": "1f60d",
-   "mouth_anchor": {
-    "cx": 50,
-    "cy": 66,
-    "w": 29.9
-   },
-   "elems": [
-    {
-     "t": "blush",
-     "cx": 18,
-     "cy": 62,
-     "rx": 7.5,
-     "ry": 5.3999999999999995,
-     "color": "#FF7A9C",
-     "opacity": 0.9,
-     "role": "blush"
-    },
-    {
-     "t": "blush",
-     "cx": 82,
-     "cy": 62,
-     "rx": 7.5,
-     "ry": 5.3999999999999995,
-     "color": "#FF7A9C",
-     "opacity": 0.9,
-     "role": "blush"
-    },
-    {
-     "t": "heart",
-     "cx": 30,
-     "cy": 42,
-     "size": 19,
-     "color": "#FF4D77",
-     "role": "eye"
-    },
-    {
-     "t": "heart",
-     "cx": 70,
-     "cy": 42,
-     "size": 19,
-     "color": "#FF4D77",
-     "role": "eye"
-    },
-    {
-     "t": "arc",
-     "cx": 50,
-     "cy": 68,
-     "w": 26,
-     "depth": 8,
-     "rot": 0,
-     "stroke": 6,
-     "color": "#F5F5F0",
-     "role": "mouth"
-    }
-   ]
-  },
-  "🤔": {
-   "name": "thinking",
-   "codepoint": "1f914",
-   "mouth_anchor": {
-    "cx": 53,
-    "cy": 70,
-    "w": 17.25
-   },
-   "elems": [
-    {
-     "t": "blush",
-     "cx": 18,
-     "cy": 62,
-     "rx": 7.5,
-     "ry": 5.3999999999999995,
-     "color": "#FF7A9C",
-     "opacity": 0.9,
-     "role": "blush"
-    },
-    {
-     "t": "blush",
-     "cx": 82,
-     "cy": 62,
-     "rx": 7.5,
-     "ry": 5.3999999999999995,
-     "color": "#FF7A9C",
-     "opacity": 0.9,
-     "role": "blush"
-    },
-    {
-     "t": "pill",
-     "cx": 30,
-     "cy": 44,
-     "w": 14,
-     "h": 26,
-     "rot": 0,
-     "color": "#F5F5F0",
-     "role": "eye"
-    },
-    {
-     "t": "circle",
-     "cx": 33,
-     "cy": 37,
-     "r": 3.5,
-     "color": "#0A0A0A",
-     "pupil_r": null,
-     "pupil_color": "#0A0A0A",
-     "role": "eye"
-    },
-    {
-     "t": "circle",
-     "cx": 72,
-     "cy": 38,
-     "r": 6,
-     "color": "#F5F5F0",
-     "pupil_r": null,
-     "pupil_color": "#0A0A0A",
-     "role": "eye"
-    },
-    {
-     "t": "pill",
-     "cx": 72,
-     "cy": 27,
-     "w": 15,
-     "h": 5,
-     "rot": -14,
-     "color": "#F5F5F0",
-     "role": "deco"
-    },
-    {
-     "t": "arc",
-     "cx": 53,
-     "cy": 72,
-     "w": 15,
-     "depth": 3,
-     "rot": 0,
-     "stroke": 6,
-     "color": "#F5F5F0",
-     "role": "mouth"
-    }
-   ]
-  },
-  "😴": {
-   "name": "sleepy",
-   "codepoint": "1f634",
-   "mouth_anchor": {
-    "cx": 50,
-    "cy": 66,
-    "w": 20.4
-   },
-   "elems": [
-    {
-     "t": "blush",
-     "cx": 18,
-     "cy": 58,
-     "rx": 7.5,
-     "ry": 5.3999999999999995,
-     "color": "#FF7A9C",
-     "opacity": 0.9,
-     "role": "blush"
-    },
-    {
-     "t": "blush",
-     "cx": 82,
-     "cy": 58,
-     "rx": 7.5,
-     "ry": 5.3999999999999995,
-     "color": "#FF7A9C",
-     "opacity": 0.9,
-     "role": "blush"
-    },
-    {
-     "t": "arc",
-     "cx": 30,
-     "cy": 45,
-     "w": 16,
-     "depth": 3,
-     "rot": 0,
-     "stroke": 6,
-     "color": "#F5F5F0",
-     "role": "eye"
-    },
-    {
-     "t": "arc",
-     "cx": 70,
-     "cy": 45,
-     "w": 16,
-     "depth": 3,
-     "rot": 0,
-     "stroke": 6,
-     "color": "#F5F5F0",
-     "role": "eye"
-    },
-    {
-     "t": "o",
-     "cx": 50,
-     "cy": 72,
-     "r": 6,
-     "stroke": 5,
-     "color": "#F5F5F0",
-     "role": "mouth"
     },
     {
      "t": "drop",
-     "cx": 50,
-     "cy": 81,
-     "w": 5,
-     "h": 8,
-     "color": "#4FB8FF",
-     "role": "deco"
-    },
-    {
-     "t": "zzz",
-     "cx": 80,
-     "cy": 22,
-     "scale": 1.0,
-     "color": "#F5F5F0",
-     "role": "deco"
-    }
-   ]
-  },
-  "😕": {
-   "name": "confused",
-   "codepoint": "1f615",
-   "mouth_anchor": {
-    "cx": 50,
-    "cy": 70,
-    "w": 25.299999999999997
-   },
-   "elems": [
-    {
-     "t": "blush",
-     "cx": 18,
-     "cy": 62,
-     "rx": 7.5,
-     "ry": 5.3999999999999995,
-     "color": "#FF7A9C",
-     "opacity": 0.9,
-     "role": "blush"
-    },
-    {
-     "t": "blush",
-     "cx": 82,
-     "cy": 62,
-     "rx": 7.5,
-     "ry": 5.3999999999999995,
-     "color": "#FF7A9C",
-     "opacity": 0.9,
-     "role": "blush"
-    },
-    {
-     "t": "pill",
-     "cx": 30,
-     "cy": 43,
-     "w": 14,
-     "h": 26,
-     "rot": 0,
-     "color": "#F5F5F0",
-     "role": "eye"
-    },
-    {
-     "t": "circle",
-     "cx": 33,
-     "cy": 36,
-     "r": 3.5,
-     "color": "#0A0A0A",
-     "pupil_r": null,
-     "pupil_color": "#0A0A0A",
-     "role": "eye"
-    },
-    {
-     "t": "arc",
-     "cx": 72,
-     "cy": 42,
-     "w": 14,
-     "depth": 2,
-     "rot": 18,
-     "stroke": 6,
-     "color": "#F5F5F0",
-     "role": "eye"
-    },
-    {
-     "t": "zigzag",
-     "cx": 50,
-     "cy": 72,
-     "w": 22,
-     "h": 6,
-     "n": 3,
-     "stroke": 5,
-     "color": "#F5F5F0",
-     "role": "mouth"
-    }
-   ]
-  },
-  "🤩": {
-   "name": "excited",
-   "codepoint": "1f929",
-   "mouth_anchor": {
-    "cx": 50,
-    "cy": 61,
-    "w": 32
-   },
-   "elems": [
-    {
-     "t": "blush",
-     "cx": 18,
-     "cy": 64,
-     "rx": 7.5,
-     "ry": 5.3999999999999995,
-     "color": "#FF7A9C",
-     "opacity": 0.9,
-     "role": "blush"
-    },
-    {
-     "t": "blush",
-     "cx": 82,
-     "cy": 64,
-     "rx": 7.5,
-     "ry": 5.3999999999999995,
-     "color": "#FF7A9C",
-     "opacity": 0.9,
-     "role": "blush"
-    },
-    {
-     "t": "star",
-     "cx": 30,
-     "cy": 41,
-     "size": 15,
-     "color": "#F5F5F0",
-     "role": "eye"
-    },
-    {
-     "t": "star",
-     "cx": 70,
-     "cy": 41,
-     "size": 15,
-     "color": "#F5F5F0",
-     "role": "eye"
-    },
-    {
-     "t": "grin",
-     "cx": 50,
-     "cy": 61,
-     "w": 32,
-     "h": 19,
-     "tongue": false,
-     "color": "#F5F5F0",
-     "inner": "#B32B3E",
-     "tongue_color": "#FF6B81",
-     "role": "mouth"
-    }
-   ]
-  },
-  "😳": {
-   "name": "embarrassed",
-   "codepoint": "1f633",
-   "mouth_anchor": {
-    "cx": 50,
-    "cy": 68,
-    "w": 17.0
-   },
-   "elems": [
-    {
-     "t": "blush",
-     "cx": 20,
-     "cy": 58,
-     "rx": 10.5,
-     "ry": 7.56,
-     "color": "#FF7A9C",
-     "opacity": 0.95,
-     "role": "blush"
-    },
-    {
-     "t": "blush",
-     "cx": 80,
-     "cy": 58,
-     "rx": 10.5,
-     "ry": 7.56,
-     "color": "#FF7A9C",
-     "opacity": 0.95,
-     "role": "blush"
-    },
-    {
-     "t": "pill",
-     "cx": 30,
-     "cy": 45,
-     "w": 11,
-     "h": 17,
-     "rot": 0,
-     "color": "#F5F5F0",
-     "role": "eye"
-    },
-    {
-     "t": "pill",
-     "cx": 70,
-     "cy": 45,
-     "w": 11,
-     "h": 17,
-     "rot": 0,
-     "color": "#F5F5F0",
-     "role": "eye"
-    },
-    {
-     "t": "o",
-     "cx": 50,
-     "cy": 73,
-     "r": 5,
-     "stroke": 5,
-     "color": "#F5F5F0",
-     "role": "mouth"
-    }
-   ]
-  },
-  "😟": {
-   "name": "worried",
-   "codepoint": "1f61f",
-   "mouth_anchor": {
-    "cx": 50,
-    "cy": 72,
-    "w": 20.7
-   },
-   "elems": [
-    {
-     "t": "blush",
-     "cx": 18,
-     "cy": 64,
-     "rx": 7.5,
-     "ry": 5.3999999999999995,
-     "color": "#FF7A9C",
-     "opacity": 0.9,
-     "role": "blush"
-    },
-    {
-     "t": "blush",
-     "cx": 82,
-     "cy": 64,
-     "rx": 7.5,
-     "ry": 5.3999999999999995,
-     "color": "#FF7A9C",
-     "opacity": 0.9,
-     "role": "blush"
-    },
-    {
-     "t": "pill",
-     "cx": 33,
-     "cy": 29,
-     "w": 15,
-     "h": 5,
-     "rot": 16,
-     "color": "#F5F5F0",
-     "role": "deco"
-    },
-    {
-     "t": "pill",
-     "cx": 67,
-     "cy": 29,
-     "w": 15,
-     "h": 5,
-     "rot": -16,
-     "color": "#F5F5F0",
-     "role": "deco"
-    },
-    {
-     "t": "pill",
-     "cx": 30,
-     "cy": 45,
-     "w": 12,
-     "h": 20,
-     "rot": 0,
-     "color": "#F5F5F0",
-     "role": "eye"
-    },
-    {
-     "t": "pill",
-     "cx": 70,
-     "cy": 45,
-     "w": 12,
-     "h": 20,
-     "rot": 0,
-     "color": "#F5F5F0",
-     "role": "eye"
-    },
-    {
-     "t": "arc",
-     "cx": 50,
-     "cy": 74,
-     "w": 18,
-     "depth": -4,
-     "rot": 0,
-     "stroke": 6,
-     "color": "#F5F5F0",
-     "role": "mouth"
-    },
-    {
-     "t": "drop",
-     "cx": 88,
-     "cy": 31,
-     "w": 5,
-     "h": 9,
-     "color": "#4FB8FF",
-     "role": "deco"
-    }
-   ]
-  },
-  "😎": {
-   "name": "cool",
-   "codepoint": "1f60e",
-   "mouth_anchor": {
-    "cx": 56,
-    "cy": 68,
-    "w": 23.0
-   },
-   "elems": [
-    {
-     "t": "pill",
-     "cx": 30,
-     "cy": 43,
-     "w": 17,
-     "h": 7,
-     "rot": 0,
-     "color": "#F5F5F0",
-     "role": "eye"
-    },
-    {
-     "t": "pill",
-     "cx": 70,
-     "cy": 43,
-     "w": 17,
-     "h": 7,
-     "rot": 0,
-     "color": "#F5F5F0",
-     "role": "eye"
-    },
-    {
-     "t": "arc",
-     "cx": 56,
+     "cx": 15,
      "cy": 70,
-     "w": 20,
-     "depth": 6,
-     "rot": 0,
-     "stroke": 6,
-     "color": "#F5F5F0",
-     "role": "mouth"
+     "w": 5,
+     "h": 9,
+     "color": "#6FC3F5",
+     "role": "deco"
+    },
+    {
+     "t": "drop",
+     "cx": 85,
+     "cy": 70,
+     "w": 5,
+     "h": 9,
+     "color": "#6FC3F5",
+     "role": "deco"
     }
    ]
   },
-  "😱": {
-   "name": "scared",
-   "codepoint": "1f631",
+  "😅": {
+   "name": "nervous",
+   "codepoint": "1f605",
    "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
     "cx": 50,
-    "cy": 58,
-    "w": 22.0
+    "cy": 62,
+    "w": 28
    },
    "elems": [
     {
-     "t": "circle",
-     "cx": 30,
-     "cy": 40,
-     "r": 13,
-     "color": "#F5F5F0",
-     "pupil_r": 4,
-     "pupil_color": "#0A0A0A",
-     "role": "eye"
-    },
-    {
-     "t": "circle",
-     "cx": 70,
-     "cy": 40,
-     "r": 13,
-     "color": "#F5F5F0",
-     "pupil_r": 4,
-     "pupil_color": "#0A0A0A",
-     "role": "eye"
+     "t": "blush",
+     "cx": 14,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
     },
     {
      "t": "blush",
-     "cx": 50,
-     "cy": 71,
-     "rx": 10,
-     "ry": 13,
-     "color": "#F5F5F0",
+     "cx": 86,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
      "opacity": 1.0,
-     "role": "mouth"
+     "role": "blush"
     },
     {
-     "t": "blush",
+     "t": "arc",
+     "cx": 31,
+     "cy": 46,
+     "w": 22,
+     "depth": -11,
+     "rot": 0,
+     "stroke": 4.0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 46,
+     "w": 22,
+     "depth": -11,
+     "rot": 0,
+     "stroke": 4.0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "grin",
      "cx": 50,
-     "cy": 72,
-     "rx": 7.5,
-     "ry": 10,
-     "color": "#B32B3E",
-     "opacity": 1.0,
+     "cy": 62,
+     "w": 28,
+     "h": 17,
+     "tongue": false,
+     "color": "#22222A",
+     "inner": "#C42B45",
+     "tongue_color": "#FF7D93",
      "role": "mouth"
     },
     {
      "t": "drop",
-     "cx": 86,
-     "cy": 28,
-     "w": 5,
-     "h": 9,
-     "color": "#4FB8FF",
+     "cx": 84,
+     "cy": 27,
+     "w": 7,
+     "h": 12,
+     "color": "#6FC3F5",
      "role": "deco"
     }
    ]
@@ -1262,72 +752,3555 @@
    "name": "wink",
    "codepoint": "1f609",
    "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
     "cx": 50,
     "cy": 66,
-    "w": 27.599999999999998
+    "w": 23.75
    },
    "elems": [
     {
      "t": "blush",
-     "cx": 18,
-     "cy": 62,
-     "rx": 7.5,
-     "ry": 5.3999999999999995,
-     "color": "#FF7A9C",
-     "opacity": 0.9,
+     "cx": 14,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
      "role": "blush"
     },
     {
      "t": "blush",
-     "cx": 82,
-     "cy": 62,
-     "rx": 7.5,
-     "ry": 5.3999999999999995,
-     "color": "#FF7A9C",
-     "opacity": 0.9,
+     "cx": 86,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
      "role": "blush"
     },
     {
-     "t": "circle",
-     "cx": 30,
-     "cy": 42,
-     "r": 12,
-     "color": "#F5F5F0",
-     "pupil_r": null,
-     "pupil_color": "#0A0A0A",
+     "t": "arc",
+     "cx": 31,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 45,
+     "rx": 13,
+     "ry": 15.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
      "role": "eye"
     },
     {
-     "t": "circle",
-     "cx": 33.5,
-     "cy": 38,
-     "r": 4,
-     "color": "#0A0A0A",
-     "pupil_r": null,
-     "pupil_color": "#0A0A0A",
-     "role": "eye"
-    },
-    {
-     "t": "caret",
-     "cx": 70,
-     "cy": 43,
-     "w": 15,
-     "h": 8,
-     "down": false,
-     "stroke": 6,
-     "color": "#F5F5F0",
+     "t": "arc",
+     "cx": 69,
+     "cy": 47,
+     "w": 22,
+     "depth": -11,
+     "rot": 0,
+     "stroke": 4.0,
+     "color": "#22222A",
      "role": "eye"
     },
     {
      "t": "arc",
      "cx": 50,
-     "cy": 68,
-     "w": 24,
+     "cy": 69,
+     "w": 19,
      "depth": 8,
      "rot": 0,
-     "stroke": 6,
-     "color": "#F5F5F0",
+     "stroke": 4.2,
+     "color": "#22222A",
      "role": "mouth"
+    }
+   ]
+  },
+  "😍": {
+   "name": "love",
+   "codepoint": "1f60d",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 64,
+    "w": 26
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "heart",
+     "cx": 31,
+     "cy": 45,
+     "size": 21,
+     "color": "#E8455F",
+     "role": "eye"
+    },
+    {
+     "t": "heart",
+     "cx": 69,
+     "cy": 45,
+     "size": 21,
+     "color": "#E8455F",
+     "role": "eye"
+    },
+    {
+     "t": "grin",
+     "cx": 50,
+     "cy": 64,
+     "w": 26,
+     "h": 15,
+     "tongue": false,
+     "color": "#22222A",
+     "inner": "#C42B45",
+     "tongue_color": "#FF7D93",
+     "role": "mouth"
+    }
+   ]
+  },
+  "🥰": {
+   "name": "adoring",
+   "codepoint": "1f970",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 66,
+    "w": 26.25
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "arc",
+     "cx": 31,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 45,
+     "rx": 13,
+     "ry": 15.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "eye",
+     "cx": 69,
+     "cy": 45,
+     "rx": 13,
+     "ry": 15.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "arc",
+     "cx": 50,
+     "cy": 69,
+     "w": 21,
+     "depth": 9,
+     "rot": 0,
+     "stroke": 4.2,
+     "color": "#22222A",
+     "role": "mouth"
+    },
+    {
+     "t": "heart",
+     "cx": 12,
+     "cy": 30,
+     "size": 13,
+     "color": "#E8455F",
+     "role": null
+    },
+    {
+     "t": "heart",
+     "cx": 88,
+     "cy": 30,
+     "size": 13,
+     "color": "#E8455F",
+     "role": null
+    }
+   ]
+  },
+  "😘": {
+   "name": "kiss",
+   "codepoint": "1f618",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 66.4,
+    "w": 18
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "arc",
+     "cx": 31,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 45,
+     "rx": 13,
+     "ry": 15.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 47,
+     "w": 22,
+     "depth": -11,
+     "rot": 0,
+     "stroke": 4.0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "oval",
+     "cx": 50,
+     "cy": 71,
+     "rx": 6,
+     "ry": 4.6,
+     "color": "#E8455F",
+     "outline": null,
+     "stroke": 2.5,
+     "role": "mouth"
+    },
+    {
+     "t": "heart",
+     "cx": 84,
+     "cy": 66,
+     "size": 14,
+     "color": "#E8455F",
+     "role": null
+    }
+   ]
+  },
+  "😋": {
+   "name": "yum",
+   "codepoint": "1f60b",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 63,
+    "w": 26
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "arc",
+     "cx": 31,
+     "cy": 46,
+     "w": 22,
+     "depth": -11,
+     "rot": 0,
+     "stroke": 4.0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 46,
+     "w": 22,
+     "depth": -11,
+     "rot": 0,
+     "stroke": 4.0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "grin",
+     "cx": 50,
+     "cy": 63,
+     "w": 26,
+     "h": 15,
+     "tongue": true,
+     "color": "#22222A",
+     "inner": "#C42B45",
+     "tongue_color": "#FF7D93",
+     "role": "mouth"
+    }
+   ]
+  },
+  "😜": {
+   "name": "playful",
+   "codepoint": "1f61c",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 64,
+    "w": 26
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "arc",
+     "cx": 31,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 45,
+     "rx": 13,
+     "ry": 15.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 47,
+     "w": 22,
+     "depth": -11,
+     "rot": 0,
+     "stroke": 4.0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "grin",
+     "cx": 50,
+     "cy": 64,
+     "w": 26,
+     "h": 15,
+     "tongue": true,
+     "color": "#22222A",
+     "inner": "#C42B45",
+     "tongue_color": "#FF7D93",
+     "role": "mouth"
+    }
+   ]
+  },
+  "😛": {
+   "name": "tongue",
+   "codepoint": "1f61b",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 66,
+    "w": 24
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "arc",
+     "cx": 31,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 45,
+     "rx": 13,
+     "ry": 15.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "eye",
+     "cx": 69,
+     "cy": 45,
+     "rx": 13,
+     "ry": 15.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "grin",
+     "cx": 50,
+     "cy": 66,
+     "w": 24,
+     "h": 14,
+     "tongue": true,
+     "color": "#22222A",
+     "inner": "#C42B45",
+     "tongue_color": "#FF7D93",
+     "role": "mouth"
+    }
+   ]
+  },
+  "🤩": {
+   "name": "excited",
+   "codepoint": "1f929",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 63,
+    "w": 30
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "star",
+     "cx": 31,
+     "cy": 45,
+     "size": 16,
+     "color": "#FFC93D",
+     "role": "eye"
+    },
+    {
+     "t": "star",
+     "cx": 69,
+     "cy": 45,
+     "size": 16,
+     "color": "#FFC93D",
+     "role": "eye"
+    },
+    {
+     "t": "grin",
+     "cx": 50,
+     "cy": 63,
+     "w": 30,
+     "h": 18,
+     "tongue": false,
+     "color": "#22222A",
+     "inner": "#C42B45",
+     "tongue_color": "#FF7D93",
+     "role": "mouth"
+    }
+   ]
+  },
+  "😎": {
+   "name": "cool",
+   "codepoint": "1f60e",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 54,
+    "cy": 67,
+    "w": 23.75
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "pill",
+     "cx": 50,
+     "cy": 43,
+     "w": 62,
+     "h": 19,
+     "rot": 0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "pill",
+     "cx": 50,
+     "cy": 43,
+     "w": 6,
+     "h": 21,
+     "rot": 0,
+     "color": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "oval",
+     "cx": 38,
+     "cy": 43,
+     "rx": 12,
+     "ry": 7,
+     "color": "#4A5568",
+     "outline": null,
+     "stroke": 2.5,
+     "role": "eye"
+    },
+    {
+     "t": "oval",
+     "cx": 62,
+     "cy": 43,
+     "rx": 12,
+     "ry": 7,
+     "color": "#4A5568",
+     "outline": null,
+     "stroke": 2.5,
+     "role": "eye"
+    },
+    {
+     "t": "arc",
+     "cx": 54,
+     "cy": 70,
+     "w": 19,
+     "depth": 8,
+     "rot": 0,
+     "stroke": 4.2,
+     "color": "#22222A",
+     "role": "mouth"
+    }
+   ]
+  },
+  "😏": {
+   "name": "smirk",
+   "codepoint": "1f60f",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 56,
+    "cy": 66,
+    "w": 25.0
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 45,
+     "rx": 13,
+     "ry": 15.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.45,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "eye",
+     "cx": 69,
+     "cy": 45,
+     "rx": 13,
+     "ry": 15.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.45,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "arc",
+     "cx": 56,
+     "cy": 69,
+     "w": 20,
+     "depth": 8,
+     "rot": -8,
+     "stroke": 3.4,
+     "color": "#22222A",
+     "role": "mouth"
+    }
+   ]
+  },
+  "😌": {
+   "name": "content",
+   "codepoint": "1f60c",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 67,
+    "w": 18.75
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "arc",
+     "cx": 31,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "arc",
+     "cx": 31,
+     "cy": 46,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 4.0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 46,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 4.0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "arc",
+     "cx": 50,
+     "cy": 70,
+     "w": 15,
+     "depth": 6,
+     "rot": 0,
+     "stroke": 4.2,
+     "color": "#22222A",
+     "role": "mouth"
+    }
+   ]
+  },
+  "🤔": {
+   "name": "thinking",
+   "codepoint": "1f914",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 54,
+    "cy": 68,
+    "w": 18.75
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "arc",
+     "cx": 31,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "pill",
+     "cx": 69,
+     "cy": 22,
+     "w": 18,
+     "h": 3.4,
+     "rot": -18,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 45,
+     "rx": 13,
+     "ry": 15.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "eye",
+     "cx": 69,
+     "cy": 43,
+     "rx": 11,
+     "ry": 12.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "arc",
+     "cx": 54,
+     "cy": 71,
+     "w": 15,
+     "depth": 5,
+     "rot": -10,
+     "stroke": 3.2,
+     "color": "#22222A",
+     "role": "mouth"
+    }
+   ]
+  },
+  "😑": {
+   "name": "expressionless",
+   "codepoint": "1f611",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 69,
+    "w": 15.0
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 62,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 62,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "arc",
+     "cx": 31,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "flat",
+     "cx": 31,
+     "cy": 46,
+     "w": 22,
+     "stroke": 4.0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "flat",
+     "cx": 69,
+     "cy": 46,
+     "w": 22,
+     "stroke": 4.0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "flat",
+     "cx": 50,
+     "cy": 72,
+     "w": 12,
+     "stroke": 4.2,
+     "color": "#22222A",
+     "role": "mouth"
+    }
+   ]
+  },
+  "😶": {
+   "name": "no_mouth",
+   "codepoint": "1f636",
+   "mouth_anchor": {
+    "cx": 50,
+    "cy": 68,
+    "w": 24,
+    "color": "#22222A",
+    "inner": "#C42B45"
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "arc",
+     "cx": 31,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 45,
+     "rx": 13,
+     "ry": 15.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "eye",
+     "cx": 69,
+     "cy": 45,
+     "rx": 13,
+     "ry": 15.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    }
+   ]
+  },
+  "😬": {
+   "name": "grimace",
+   "codepoint": "1f62c",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 65.5,
+    "w": 39.0
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "arc",
+     "cx": 31,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 45,
+     "rx": 13,
+     "ry": 13,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "eye",
+     "cx": 69,
+     "cy": 45,
+     "rx": 13,
+     "ry": 13,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "oval",
+     "cx": 50,
+     "cy": 72,
+     "rx": 15,
+     "ry": 6.5,
+     "color": "#FFFDF8",
+     "outline": "#22222A",
+     "stroke": 3.0,
+     "role": "mouth"
+    },
+    {
+     "t": "flat",
+     "cx": 50,
+     "cy": 72,
+     "w": 26,
+     "stroke": 2.6,
+     "color": "#22222A",
+     "role": "deco"
+    }
+   ]
+  },
+  "😕": {
+   "name": "confused",
+   "codepoint": "1f615",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 69,
+    "w": 23.75
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "arc",
+     "cx": 31,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 45,
+     "rx": 13,
+     "ry": 15.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "eye",
+     "cx": 69,
+     "cy": 43,
+     "rx": 11,
+     "ry": 12.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "zigzag",
+     "cx": 50,
+     "cy": 72,
+     "w": 19,
+     "h": 5,
+     "n": 3,
+     "stroke": 3.6,
+     "color": "#22222A",
+     "role": "mouth"
+    }
+   ]
+  },
+  "😟": {
+   "name": "worried",
+   "codepoint": "1f61f",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 71,
+    "w": 20.0
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "pill",
+     "cx": 30,
+     "cy": 24,
+     "w": 19,
+     "h": 3.6,
+     "rot": 15,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "pill",
+     "cx": 70,
+     "cy": 24,
+     "w": 19,
+     "h": 3.6,
+     "rot": -15,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 45,
+     "rx": 13,
+     "ry": 14,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "eye",
+     "cx": 69,
+     "cy": 45,
+     "rx": 13,
+     "ry": 14,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "arc",
+     "cx": 50,
+     "cy": 74,
+     "w": 16,
+     "depth": -7,
+     "rot": 0,
+     "stroke": 4.2,
+     "color": "#22222A",
+     "role": "mouth"
+    }
+   ]
+  },
+  "🙁": {
+   "name": "slight_frown",
+   "codepoint": "1f641",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 71,
+    "w": 21.25
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "arc",
+     "cx": 31,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 45,
+     "rx": 13,
+     "ry": 15.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "eye",
+     "cx": 69,
+     "cy": 45,
+     "rx": 13,
+     "ry": 15.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "arc",
+     "cx": 50,
+     "cy": 74,
+     "w": 17,
+     "depth": -7,
+     "rot": 0,
+     "stroke": 4.2,
+     "color": "#22222A",
+     "role": "mouth"
+    }
+   ]
+  },
+  "😔": {
+   "name": "dejected",
+   "codepoint": "1f614",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 71,
+    "w": 18.75
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 62,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 62,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "pill",
+     "cx": 30,
+     "cy": 25,
+     "w": 19,
+     "h": 3.6,
+     "rot": 13,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "pill",
+     "cx": 70,
+     "cy": 25,
+     "w": 19,
+     "h": 3.6,
+     "rot": -13,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 47,
+     "rx": 13,
+     "ry": 11,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.5,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "eye",
+     "cx": 69,
+     "cy": 47,
+     "rx": 13,
+     "ry": 11,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.5,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "arc",
+     "cx": 50,
+     "cy": 74,
+     "w": 15,
+     "depth": -6,
+     "rot": 0,
+     "stroke": 4.2,
+     "color": "#22222A",
+     "role": "mouth"
+    }
+   ]
+  },
+  "😢": {
+   "name": "sad",
+   "codepoint": "1f622",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 71,
+    "w": 20.0
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "pill",
+     "cx": 30,
+     "cy": 24,
+     "w": 19,
+     "h": 3.6,
+     "rot": 15,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "pill",
+     "cx": 70,
+     "cy": 24,
+     "w": 19,
+     "h": 3.6,
+     "rot": -15,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 45,
+     "rx": 13,
+     "ry": 15.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "eye",
+     "cx": 69,
+     "cy": 45,
+     "rx": 13,
+     "ry": 15.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "arc",
+     "cx": 50,
+     "cy": 74,
+     "w": 16,
+     "depth": -7,
+     "rot": 0,
+     "stroke": 4.2,
+     "color": "#22222A",
+     "role": "mouth"
+    },
+    {
+     "t": "drop",
+     "cx": 20,
+     "cy": 62,
+     "w": 7,
+     "h": 12,
+     "color": "#6FC3F5",
+     "role": "deco"
+    }
+   ]
+  },
+  "😭": {
+   "name": "crying",
+   "codepoint": "1f62d",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 66,
+    "w": 26
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 68,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 68,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "pill",
+     "cx": 30,
+     "cy": 24,
+     "w": 19,
+     "h": 3.6,
+     "rot": 15,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "pill",
+     "cx": 70,
+     "cy": 24,
+     "w": 19,
+     "h": 3.6,
+     "rot": -15,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "arc",
+     "cx": 31,
+     "cy": 52,
+     "w": 22,
+     "depth": 11,
+     "rot": 0,
+     "stroke": 4.0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 52,
+     "w": 22,
+     "depth": 11,
+     "rot": 0,
+     "stroke": 4.0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "grin",
+     "cx": 50,
+     "cy": 66,
+     "w": 26,
+     "h": 16,
+     "tongue": false,
+     "color": "#22222A",
+     "inner": "#C42B45",
+     "tongue_color": "#FF7D93",
+     "role": "mouth"
+    },
+    {
+     "t": "oval",
+     "cx": 20,
+     "cy": 66,
+     "rx": 5.5,
+     "ry": 12,
+     "color": "#6FC3F5",
+     "outline": null,
+     "stroke": 2.5,
+     "role": null
+    },
+    {
+     "t": "oval",
+     "cx": 80,
+     "cy": 66,
+     "rx": 5.5,
+     "ry": 12,
+     "color": "#6FC3F5",
+     "outline": null,
+     "stroke": 2.5,
+     "role": null
+    }
+   ]
+  },
+  "🥺": {
+   "name": "pleading",
+   "codepoint": "1f97a",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 72,
+    "w": 16.25
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "pill",
+     "cx": 30,
+     "cy": 22,
+     "w": 19,
+     "h": 3.6,
+     "rot": 14,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "pill",
+     "cx": 70,
+     "cy": 22,
+     "w": 19,
+     "h": 3.6,
+     "rot": -14,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 46,
+     "rx": 14.5,
+     "ry": 17,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "eye",
+     "cx": 69,
+     "cy": 46,
+     "rx": 14.5,
+     "ry": 17,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "arc",
+     "cx": 50,
+     "cy": 75,
+     "w": 13,
+     "depth": -5,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "mouth"
+    }
+   ]
+  },
+  "😳": {
+   "name": "flushed",
+   "codepoint": "1f633",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 68.8,
+    "w": 18
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 15,
+     "cy": 62,
+     "rx": 11.5,
+     "ry": 7.36,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 85,
+     "cy": 62,
+     "rx": 11.5,
+     "ry": 7.36,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "arc",
+     "cx": 31,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 45,
+     "rx": 14,
+     "ry": 16.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "eye",
+     "cx": 69,
+     "cy": 45,
+     "rx": 14,
+     "ry": 16.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "oval",
+     "cx": 50,
+     "cy": 73,
+     "rx": 5.5,
+     "ry": 4.2,
+     "color": "#E8455F",
+     "outline": null,
+     "stroke": 2.5,
+     "role": "mouth"
+    }
+   ]
+  },
+  "😮": {
+   "name": "surprised",
+   "codepoint": "1f62e",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 65,
+    "w": 18
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "arc",
+     "cx": 31,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 45,
+     "rx": 13,
+     "ry": 15.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "eye",
+     "cx": 69,
+     "cy": 45,
+     "rx": 13,
+     "ry": 15.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "oval",
+     "cx": 50,
+     "cy": 73,
+     "rx": 6.5,
+     "ry": 8,
+     "color": "#C42B45",
+     "outline": null,
+     "stroke": 2.5,
+     "role": "mouth"
+    }
+   ]
+  },
+  "😲": {
+   "name": "astonished",
+   "codepoint": "1f632",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 62,
+    "w": 22.1
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 68,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 68,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "arc",
+     "cx": 31,
+     "cy": 24,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 24,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 43,
+     "rx": 14,
+     "ry": 16.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "eye",
+     "cx": 69,
+     "cy": 43,
+     "rx": 14,
+     "ry": 16.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "oval",
+     "cx": 50,
+     "cy": 73,
+     "rx": 8.5,
+     "ry": 11,
+     "color": "#C42B45",
+     "outline": null,
+     "stroke": 2.5,
+     "role": "mouth"
+    }
+   ]
+  },
+  "😱": {
+   "name": "scared",
+   "codepoint": "1f631",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 62,
+    "w": 23.400000000000002
+   },
+   "elems": [
+    {
+     "t": "pill",
+     "cx": 30,
+     "cy": 22,
+     "w": 19,
+     "h": 3.6,
+     "rot": 16,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "pill",
+     "cx": 70,
+     "cy": 22,
+     "w": 19,
+     "h": 3.6,
+     "rot": -16,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 43,
+     "rx": 14.5,
+     "ry": 17,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "eye",
+     "cx": 69,
+     "cy": 43,
+     "rx": 14.5,
+     "ry": 17,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "oval",
+     "cx": 50,
+     "cy": 74,
+     "rx": 9,
+     "ry": 12,
+     "color": "#C42B45",
+     "outline": null,
+     "stroke": 2.5,
+     "role": "mouth"
+    },
+    {
+     "t": "drop",
+     "cx": 86,
+     "cy": 30,
+     "w": 6,
+     "h": 11,
+     "color": "#6FC3F5",
+     "role": "deco"
+    }
+   ]
+  },
+  "😨": {
+   "name": "fearful",
+   "codepoint": "1f628",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 65.5,
+    "w": 18.2
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 68,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 68,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "pill",
+     "cx": 30,
+     "cy": 23,
+     "w": 19,
+     "h": 3.6,
+     "rot": 15,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "pill",
+     "cx": 70,
+     "cy": 23,
+     "w": 19,
+     "h": 3.6,
+     "rot": -15,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 45,
+     "rx": 13.5,
+     "ry": 16,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "eye",
+     "cx": 69,
+     "cy": 45,
+     "rx": 13.5,
+     "ry": 16,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "oval",
+     "cx": 50,
+     "cy": 74,
+     "rx": 7,
+     "ry": 8.5,
+     "color": "#C42B45",
+     "outline": null,
+     "stroke": 2.5,
+     "role": "mouth"
+    },
+    {
+     "t": "drop",
+     "cx": 85,
+     "cy": 28,
+     "w": 6,
+     "h": 11,
+     "color": "#6FC3F5",
+     "role": "deco"
+    }
+   ]
+  },
+  "😰": {
+   "name": "anxious",
+   "codepoint": "1f630",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 71,
+    "w": 18.75
+   },
+   "elems": [
+    {
+     "t": "hatch",
+     "cx": 14,
+     "cy": 64,
+     "w": 13,
+     "h": 9,
+     "n": 3,
+     "stroke": 2.6,
+     "color": "#FF9DB4",
+     "role": "blush"
+    },
+    {
+     "t": "hatch",
+     "cx": 86,
+     "cy": 64,
+     "w": 13,
+     "h": 9,
+     "n": 3,
+     "stroke": 2.6,
+     "color": "#FF9DB4",
+     "role": "blush"
+    },
+    {
+     "t": "pill",
+     "cx": 30,
+     "cy": 23,
+     "w": 19,
+     "h": 3.6,
+     "rot": 15,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "pill",
+     "cx": 70,
+     "cy": 23,
+     "w": 19,
+     "h": 3.6,
+     "rot": -15,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 45,
+     "rx": 13,
+     "ry": 15,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "eye",
+     "cx": 69,
+     "cy": 45,
+     "rx": 13,
+     "ry": 15,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "arc",
+     "cx": 50,
+     "cy": 74,
+     "w": 15,
+     "depth": -6,
+     "rot": 0,
+     "stroke": 4.2,
+     "color": "#22222A",
+     "role": "mouth"
+    },
+    {
+     "t": "drop",
+     "cx": 85,
+     "cy": 28,
+     "w": 6,
+     "h": 11,
+     "color": "#6FC3F5",
+     "role": "deco"
+    },
+    {
+     "t": "drop",
+     "cx": 14,
+     "cy": 30,
+     "w": 5,
+     "h": 9,
+     "color": "#6FC3F5",
+     "role": "deco"
+    }
+   ]
+  },
+  "😠": {
+   "name": "angry",
+   "codepoint": "1f620",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 70,
+    "w": 16.25
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "pill",
+     "cx": 30,
+     "cy": 25,
+     "w": 19,
+     "h": 3.6,
+     "rot": -18,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "pill",
+     "cx": 70,
+     "cy": 25,
+     "w": 19,
+     "h": 3.6,
+     "rot": 18,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 47,
+     "rx": 13,
+     "ry": 14,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "eye",
+     "cx": 69,
+     "cy": 47,
+     "rx": 13,
+     "ry": 14,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "flat",
+     "cx": 50,
+     "cy": 73,
+     "w": 13,
+     "stroke": 3.6,
+     "color": "#22222A",
+     "role": "mouth"
+    },
+    {
+     "t": "anger",
+     "cx": 80,
+     "cy": 24,
+     "size": 13,
+     "color": "#FF3B5C",
+     "role": "deco"
+    }
+   ]
+  },
+  "😡": {
+   "name": "rage",
+   "codepoint": "1f621",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 68,
+    "w": 22
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "pill",
+     "cx": 30,
+     "cy": 25,
+     "w": 19,
+     "h": 3.6,
+     "rot": -18,
+     "color": "#FF3B5C",
+     "role": "deco"
+    },
+    {
+     "t": "pill",
+     "cx": 70,
+     "cy": 25,
+     "w": 19,
+     "h": 3.6,
+     "rot": 18,
+     "color": "#FF3B5C",
+     "role": "deco"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 47,
+     "rx": 13,
+     "ry": 14,
+     "color": "#FF3B5C",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "eye",
+     "cx": 69,
+     "cy": 47,
+     "rx": 13,
+     "ry": 14,
+     "color": "#FF3B5C",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "grin",
+     "cx": 50,
+     "cy": 68,
+     "w": 22,
+     "h": 13,
+     "tongue": false,
+     "color": "#FF3B5C",
+     "inner": "#C42B45",
+     "tongue_color": "#FF7D93",
+     "role": "mouth"
+    },
+    {
+     "t": "anger",
+     "cx": 80,
+     "cy": 23,
+     "size": 14,
+     "color": "#FF3B5C",
+     "role": "deco"
+    },
+    {
+     "t": "anger",
+     "cx": 20,
+     "cy": 23,
+     "size": 12,
+     "color": "#FF3B5C",
+     "role": "deco"
+    }
+   ]
+  },
+  "😤": {
+   "name": "huffing",
+   "codepoint": "1f624",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 70,
+    "w": 17.5
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "pill",
+     "cx": 30,
+     "cy": 25,
+     "w": 19,
+     "h": 3.6,
+     "rot": -16,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "pill",
+     "cx": 70,
+     "cy": 25,
+     "w": 19,
+     "h": 3.6,
+     "rot": 16,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 47,
+     "rx": 13,
+     "ry": 13,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.35,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "eye",
+     "cx": 69,
+     "cy": 47,
+     "rx": 13,
+     "ry": 13,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.35,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "flat",
+     "cx": 50,
+     "cy": 73,
+     "w": 14,
+     "stroke": 3.6,
+     "color": "#22222A",
+     "role": "mouth"
+    },
+    {
+     "t": "arc",
+     "cx": 34,
+     "cy": 84,
+     "w": 13,
+     "depth": 7,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#9FB3C8",
+     "role": "deco"
+    },
+    {
+     "t": "arc",
+     "cx": 66,
+     "cy": 84,
+     "w": 13,
+     "depth": 7,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#9FB3C8",
+     "role": "deco"
+    }
+   ]
+  },
+  "😴": {
+   "name": "sleepy",
+   "codepoint": "1f634",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 67.5,
+    "w": 18
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 62,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 62,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "arc",
+     "cx": 31,
+     "cy": 47,
+     "w": 21,
+     "depth": 9,
+     "rot": 0,
+     "stroke": 4.0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 47,
+     "w": 21,
+     "depth": 9,
+     "rot": 0,
+     "stroke": 4.0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "oval",
+     "cx": 50,
+     "cy": 74,
+     "rx": 5.5,
+     "ry": 6.5,
+     "color": "#C42B45",
+     "outline": null,
+     "stroke": 2.5,
+     "role": "mouth"
+    },
+    {
+     "t": "zzz",
+     "cx": 80,
+     "cy": 20,
+     "scale": 1.0,
+     "color": "#22222A",
+     "role": "deco"
+    }
+   ]
+  },
+  "😪": {
+   "name": "drowsy",
+   "codepoint": "1f62a",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 70,
+    "w": 16.25
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 62,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 62,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "arc",
+     "cx": 31,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 47,
+     "rx": 13,
+     "ry": 10,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.55,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "eye",
+     "cx": 69,
+     "cy": 47,
+     "rx": 13,
+     "ry": 10,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.55,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "arc",
+     "cx": 50,
+     "cy": 73,
+     "w": 13,
+     "depth": -5,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "mouth"
+    },
+    {
+     "t": "oval",
+     "cx": 78,
+     "cy": 60,
+     "rx": 6,
+     "ry": 8,
+     "color": "#6FC3F5",
+     "outline": null,
+     "stroke": 2.5,
+     "role": null
+    }
+   ]
+  },
+  "🤤": {
+   "name": "drooling",
+   "codepoint": "1f924",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 67,
+    "w": 22.5
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "arc",
+     "cx": 31,
+     "cy": 46,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 4.0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 46,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 4.0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "arc",
+     "cx": 50,
+     "cy": 70,
+     "w": 18,
+     "depth": 8,
+     "rot": 0,
+     "stroke": 4.2,
+     "color": "#22222A",
+     "role": "mouth"
+    },
+    {
+     "t": "oval",
+     "cx": 60,
+     "cy": 80,
+     "rx": 3.6,
+     "ry": 6,
+     "color": "#6FC3F5",
+     "outline": null,
+     "stroke": 2.5,
+     "role": null
+    }
+   ]
+  },
+  "🤢": {
+   "name": "nauseated",
+   "codepoint": "1f922",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 66,
+    "w": 28.6
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#9BD94E",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#9BD94E",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "pill",
+     "cx": 30,
+     "cy": 24,
+     "w": 19,
+     "h": 3.6,
+     "rot": 14,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "pill",
+     "cx": 70,
+     "cy": 24,
+     "w": 19,
+     "h": 3.6,
+     "rot": -14,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "arc",
+     "cx": 31,
+     "cy": 47,
+     "w": 21,
+     "depth": 9,
+     "rot": 0,
+     "stroke": 4.0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 47,
+     "w": 21,
+     "depth": 9,
+     "rot": 0,
+     "stroke": 4.0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "oval",
+     "cx": 50,
+     "cy": 74,
+     "rx": 11,
+     "ry": 8,
+     "color": "#9BD94E",
+     "outline": null,
+     "stroke": 2.5,
+     "role": "mouth"
+    },
+    {
+     "t": "oval",
+     "cx": 50,
+     "cy": 82,
+     "rx": 7,
+     "ry": 6,
+     "color": "#9BD94E",
+     "outline": null,
+     "stroke": 2.5,
+     "role": "deco"
+    }
+   ]
+  },
+  "🤒": {
+   "name": "sick",
+   "codepoint": "1f912",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 71,
+    "w": 17.5
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 66,
+     "rx": 9.5,
+     "ry": 6.08,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 66,
+     "rx": 9.5,
+     "ry": 6.08,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "pill",
+     "cx": 30,
+     "cy": 24,
+     "w": 19,
+     "h": 3.6,
+     "rot": 13,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "pill",
+     "cx": 70,
+     "cy": 24,
+     "w": 19,
+     "h": 3.6,
+     "rot": -13,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 47,
+     "rx": 13,
+     "ry": 12,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.4,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "eye",
+     "cx": 69,
+     "cy": 47,
+     "rx": 13,
+     "ry": 12,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.4,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "arc",
+     "cx": 50,
+     "cy": 74,
+     "w": 14,
+     "depth": -6,
+     "rot": 0,
+     "stroke": 4.2,
+     "color": "#22222A",
+     "role": "mouth"
+    },
+    {
+     "t": "pill",
+     "cx": 50,
+     "cy": 22,
+     "w": 42,
+     "h": 7,
+     "rot": 0,
+     "color": "#DCE7F2",
+     "role": "deco"
+    },
+    {
+     "t": "oval",
+     "cx": 31,
+     "cy": 22,
+     "rx": 4.2,
+     "ry": 4.2,
+     "color": "#E8455F",
+     "outline": null,
+     "stroke": 2.5,
+     "role": "deco"
+    }
+   ]
+  },
+  "😵": {
+   "name": "dizzy",
+   "codepoint": "1f635",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 69,
+    "w": 26.25
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "arc",
+     "cx": 31,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "x",
+     "cx": 31,
+     "cy": 46,
+     "size": 18,
+     "stroke": 4.0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "x",
+     "cx": 69,
+     "cy": 46,
+     "size": 18,
+     "stroke": 4.0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "zigzag",
+     "cx": 50,
+     "cy": 72,
+     "w": 21,
+     "h": 5,
+     "n": 4,
+     "stroke": 3.6,
+     "color": "#22222A",
+     "role": "mouth"
+    }
+   ]
+  },
+  "🤗": {
+   "name": "hug",
+   "codepoint": "1f917",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 63,
+    "w": 28
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 66,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "arc",
+     "cx": 31,
+     "cy": 46,
+     "w": 22,
+     "depth": -11,
+     "rot": 0,
+     "stroke": 4.0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 46,
+     "w": 22,
+     "depth": -11,
+     "rot": 0,
+     "stroke": 4.0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "grin",
+     "cx": 50,
+     "cy": 63,
+     "w": 28,
+     "h": 17,
+     "tongue": false,
+     "color": "#22222A",
+     "inner": "#C42B45",
+     "tongue_color": "#FF7D93",
+     "role": "mouth"
+    },
+    {
+     "t": "arc",
+     "cx": 13,
+     "cy": 68,
+     "w": 15,
+     "depth": -9,
+     "rot": 0,
+     "stroke": 3.4,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "arc",
+     "cx": 87,
+     "cy": 68,
+     "w": 15,
+     "depth": -9,
+     "rot": 0,
+     "stroke": 3.4,
+     "color": "#22222A",
+     "role": "deco"
+    }
+   ]
+  },
+  "😺": {
+   "name": "cat_smile",
+   "codepoint": "1f63a",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 67,
+    "w": 25.0
+   },
+   "elems": [
+    {
+     "t": "blush",
+     "cx": 14,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "blush",
+     "cx": 86,
+     "cy": 64,
+     "rx": 8.6,
+     "ry": 5.504,
+     "color": "#FF9DB4",
+     "opacity": 1.0,
+     "role": "blush"
+    },
+    {
+     "t": "arc",
+     "cx": 31,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "arc",
+     "cx": 69,
+     "cy": 26,
+     "w": 20,
+     "depth": -8,
+     "rot": 0,
+     "stroke": 3.0,
+     "color": "#22222A",
+     "role": "deco"
+    },
+    {
+     "t": "eye",
+     "cx": 31,
+     "cy": 45,
+     "rx": 13,
+     "ry": 15.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "eye",
+     "cx": 69,
+     "cy": 45,
+     "rx": 13,
+     "ry": 15.5,
+     "color": "#22222A",
+     "glint": true,
+     "lid": 0.0,
+     "panel": "#FFFDF8",
+     "role": "eye"
+    },
+    {
+     "t": "cat",
+     "cx": 50,
+     "cy": 70,
+     "w": 20,
+     "h": 7,
+     "stroke": 4.0,
+     "color": "#22222A",
+     "role": "mouth"
+    }
+   ]
+  },
+  "🤖": {
+   "name": "robot",
+   "codepoint": "1f916",
+   "mouth_anchor": {
+    "color": "#22222A",
+    "inner": "#C42B45",
+    "cx": 50,
+    "cy": 69,
+    "w": 25.0
+   },
+   "elems": [
+    {
+     "t": "pill",
+     "cx": 31,
+     "cy": 45,
+     "w": 20,
+     "h": 12,
+     "rot": 0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "pill",
+     "cx": 69,
+     "cy": 45,
+     "w": 20,
+     "h": 12,
+     "rot": 0,
+     "color": "#22222A",
+     "role": "eye"
+    },
+    {
+     "t": "oval",
+     "cx": 31,
+     "cy": 45,
+     "rx": 4,
+     "ry": 4,
+     "color": "#6FE3FF",
+     "outline": null,
+     "stroke": 2.5,
+     "role": "eye"
+    },
+    {
+     "t": "oval",
+     "cx": 69,
+     "cy": 45,
+     "rx": 4,
+     "ry": 4,
+     "color": "#6FE3FF",
+     "outline": null,
+     "stroke": 2.5,
+     "role": "eye"
+    },
+    {
+     "t": "flat",
+     "cx": 50,
+     "cy": 72,
+     "w": 20,
+     "stroke": 3.6,
+     "color": "#22222A",
+     "role": "mouth"
+    },
+    {
+     "t": "pill",
+     "cx": 50,
+     "cy": 16,
+     "w": 4,
+     "h": 10,
+     "rot": 0,
+     "color": "#22222A",
+     "role": "deco"
     }
    ]
   }
