@@ -622,13 +622,17 @@ cheeks(f, cy=66)
 # Proper sunglasses rather than one visor bar: two lenses on the eye centres,
 # a bridge between them and a stubby arm on each side. Lenses are role="eye" so
 # they squash on a blink like everything else; the frame parts stay put.
-f.pill(EYE_X, 45, 32, 22, 0, color=INK, role="eye")
-f.pill(100 - EYE_X, 45, 32, 22, 0, color=INK, role="eye")
-f.pill(50, 43, 16, 4.0, 0, color=INK, role="deco")           # bridge
-f.pill(7, 41, 12, 3.6, -14, color=INK, role="deco")          # left arm
-f.pill(93, 41, 12, 3.6, 14, color=INK, role="deco")          # right arm
-f.pill(EYE_X - 6, 40, 12, 3.4, -20, color="#B9C0C8", role="deco")   # lens shine
-f.pill(94 - EYE_X, 40, 12, 3.4, -20, color="#B9C0C8", role="deco")
+# A pill's w and h pass through the refit unscaled -- only rx/ry/r do -- so
+# these are authored at the size they should finish at. Left as card-sized,
+# the lenses stayed 2.5x too big when the eyes shrank, covering most of the
+# face and reaching down into the whiskers.
+f.pill(EYE_X, 45, 22, 14, 0, color=INK, role="eye")
+f.pill(100 - EYE_X, 45, 22, 14, 0, color=INK, role="eye")
+f.pill(50, 43, 34, 3.4, 0, color=INK, role="deco")           # bridge
+f.pill(7, 41, 10, 3.0, -14, color=INK, role="deco")          # left arm
+f.pill(93, 41, 10, 3.0, 14, color=INK, role="deco")          # right arm
+f.pill(EYE_X - 6, 40, 8, 2.6, -20, color="#B9C0C8", role="deco")   # lens shine
+f.pill(94 - EYE_X, 40, 8, 2.6, -20, color="#B9C0C8", role="deco")
 f.curve(54, MOUTH_Y - 2, 19, 8, role="mouth", stroke=4.2)
 
 f = emo("smirk", "1f60f", "😏")
@@ -823,15 +827,29 @@ EYE_COLOUR = "#555555"
 MOUTH_COLOUR = "#666666"
 NOSE = "#777777"
 WHISKER = "#777777"
-WHISK_ORIGIN_DX, WHISK_LEN = 30.0, 20.0
-WHISK_GAP = 6.0   # vertical gap at the inner ends, so the pair is
-                  # two separate strokes rather than a < chevron
-WHISK_ANGLES = (-14.0, 14.0)   # two per cheek, one up one down
-# The reference draws whiskers 6 units wide against a 7-unit outline, so they
-# read as part of the same line work rather than as stray hairs. Taking the
-# width from the same fit as the frame keeps that relationship at any scale.
-WHISK_REF_W = 6.0
+# Whiskers used to hang off each face's mouth, so an expression that lifts the
+# mouth lifted them into the eyes -- 30 of the 49 faces had one cutting across
+# an eye. They now sit at a fixed height, and their width, length and reach all
+# come from the reference drawing.
+WHISK_REF_W = 6.0      # whisker stroke, against the reference's 7-unit outline
+WHISK_REF_LEN = 26.0   # whisker length, in reference units
+WHISK_REF_Y = 194.5    # centre of the reference's lower whisker pair
+# Drawn at the same ratio to the frame as the reference's, so they read as part
+# of the same line work rather than as stray hairs beside it.
 WHISK_W = round(WHISK_REF_W * _fit()[0], 3)
+WHISK_LEN = round(WHISK_REF_LEN * _fit()[0], 3)
+WHISK_ORIGIN_DX = 36.0
+WHISK_GAP = 5.0   # vertical gap at the inner ends, so the pair is
+                  # two separate strokes rather than a < chevron
+WHISK_ANGLES = (-6.0, 18.0)    # two per cheek, splayed as the reference's are
+# The reference's band centres on y=194.5, which maps to 72.45 here. But the
+# reference has one small fixed eye and these faces do not: pleading's reach
+# down to EYE_FLOOR, and a whisker at 69.95 cut across them. Taking whichever
+# is lower puts the pair clear of every expression's eyes, whatever its gain,
+# while keeping the reference's height wherever that already clears them.
+EYE_FLOOR = 70.26      # lowest point any eye reaches, measured across all 49
+WHISK_Y = round(max(_to_face((155.0, WHISK_REF_Y))[1],
+                    EYE_FLOOR + 1.0 + WHISK_W / 2.0 + WHISK_GAP / 2.0), 3)
 INNER_EAR = "#FF9DB4"
 CLOSED_MOUTHS = {"flat", "arc", "zigzag"}
 
@@ -842,8 +860,10 @@ CLOSED_MOUTHS = {"flat", "arc", "zigzag"}
 # These four are solved rather than guessed: they are whatever places the eyes
 # and mouth exactly where the reference cat puts its own, once the head has
 # been mapped onto this canvas. Change the head and they need re-solving.
+# FIT_SPREAD multiplies an element's offset from the centre line, so it is
+# solved against EYE_X's distance from 50, not against EYE_X itself.
 SRC_CENTRE, FIT_CENTRE, FIT_YSCALE = 52.0, 61.50, 0.375
-FIT_SPREAD, FIT_EYE_GAIN = 1.086, 0.498
+FIT_SPREAD, FIT_EYE_GAIN = 1.177, 0.498
 
 # Eyes are not one size. A person's eyes widen when startled and narrow when
 # cross, and the face reads flat if they never change, so each expression scales
@@ -884,7 +904,7 @@ def _nose_and_whiskers(elems):
     # level and down. Three parallel horizontal lines read as a stave, not a cat.
     for side in (-1, 1):
         ox = 50.0 + side * WHISK_ORIGIN_DX
-        oy = mouth_y - 2.0
+        oy = WHISK_Y
         for ang in WHISK_ANGLES:
             a = math.radians(ang)
             dx = math.cos(a) * WHISK_LEN * side
@@ -1295,6 +1315,11 @@ def main():
 
     print(f"wrote {len(FACES)} SVGs to {args.svg_dir}")
     print(f"wrote {args.json}")
+    clashes = check_whisker_clearance(spec["faces"])
+    if clashes:
+        print(f"[warn] whisker crosses an eye on: {', '.join(clashes)}")
+    else:
+        print(f"whisker/eye clearance ok on all {len(spec['faces'])} faces")
 
     if args.preview:
         write_preview(spec, args.preview)
@@ -1323,6 +1348,37 @@ def write_preview(spec, path):
         draw.text((x, y + cell + 3), face["name"], fill=(235, 235, 235), font=font)
     sheet.save(path)
     print(f"wrote preview {path}")
+
+
+def check_whisker_clearance(faces):
+    """Whiskers must not cut across any eye, on any expression.
+
+    They used to hang off the mouth, which drifts with the expression, and 30
+    of the 49 faces ended up with one crossing an eye. The placement is fixed
+    now, but eye sizes still vary per expression, so this keeps the guarantee
+    honest rather than leaving it to the constants staying in step.
+    """
+    bad = []
+    for face in faces.values():
+        whiskers = [e for e in face["elems"]
+                    if e.get("role") == "overlay" and e["t"] == "pill"]
+        eyes = [e for e in face["elems"] if e.get("role") == "eye"]
+        for w in whiskers:
+            a = math.radians(w["rot"])
+            hx, hy = math.cos(a) * w["w"] / 2, math.sin(a) * w["w"] / 2
+            for e in eyes:
+                rx = e["rx"] if e.get("rx") is not None else e.get("w", 0) / 2
+                ry = e["ry"] if e.get("ry") is not None else e.get("h", 0) / 2
+                for i in range(41):
+                    t = i / 40.0
+                    px = w["cx"] - hx + 2 * hx * t
+                    py = w["cy"] - hy + 2 * hy * t
+                    d = math.hypot(max(0.0, abs(px - e["cx"]) - rx),
+                                   max(0.0, abs(py - e["cy"]) - ry))
+                    if d - w["h"] / 2 < 0:
+                        bad.append(face["name"])
+                        break
+    return sorted(set(bad))
 
 
 if __name__ == "__main__":
