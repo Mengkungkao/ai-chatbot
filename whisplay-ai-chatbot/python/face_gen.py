@@ -430,8 +430,8 @@ class Face:
 
     # -- shared primitives -------------------------------------------------
 
-    def pill(self, cx, cy, w, h, rot=0, color=INK, role=None):
-        self._add(t="pill", cx=cx, cy=cy, w=w, h=h, rot=rot, color=color, role=role)
+    def pill(self, cx, cy, w, h, rot=0, color=INK, role=None, r=None):
+        self._add(t="pill", cx=cx, cy=cy, w=w, h=h, rot=rot, color=color, role=role, r=r)
 
     def circle(self, cx, cy, r, color=INK, pupil_r=None, pupil_color=PANEL, role=None):
         self._add(t="circle", cx=cx, cy=cy, r=r, color=color,
@@ -646,15 +646,13 @@ cheeks(f, cy=66)
 # these are authored at the size they should finish at. Left as card-sized,
 # the lenses stayed 2.5x too big when the eyes shrank, covering most of the
 # face and reaching down into the whiskers.
-f.pill(EYE_X, 45, 26, 16, 0, color=INK, role="eye")
-f.pill(100 - EYE_X, 45, 26, 16, 0, color=INK, role="eye")
-# An arched bridge over the nose. A straight pill joined the lenses into one
-# continuous band, which read as a visor rather than as a pair of glasses.
-f.arc(50, 44, 33, -4, stroke=2.6, role="deco")   # wide enough to meet both lenses
-f.pill(7, 41, 10, 3.0, -14, color=INK, role="deco")          # left arm
-f.pill(93, 41, 10, 3.0, 14, color=INK, role="deco")          # right arm
-f.pill(EYE_X - 6, 40, 8, 2.6, -20, color="#B9C0C8", role="deco")   # lens shine
-f.pill(94 - EYE_X, 40, 8, 2.6, -20, color="#B9C0C8", role="deco")
+# Deal-with-it glasses: one solid bar across the top with two blocky lenses
+# hanging off it. They are opaque by design -- no eyes behind them -- so they
+# are deco rather than eyes, and they do not blink or squash.
+f.pill(50, 40, 86, 4.0, 0, color=INK, role="deco", r=0)        # top rail
+f.pill(EYE_X, 47, 30, 16, 0, color=INK, role="deco", r=0)      # left lens
+f.pill(100 - EYE_X, 47, 30, 16, 0, color=INK, role="deco", r=0)
+f.pill(50, 45, 28, 4, 0, color=INK, role="deco", r=0)          # bridge
 f.curve(54, MOUTH_Y - 2, 19, 8, role="mouth", stroke=4.2)
 
 f = emo("smirk", "1f60f", "😏")
@@ -686,8 +684,9 @@ cheeks(f); lashes(f); eyes(f)
 f = emo("grimace", "1f62c", "😬")
 cheeks(f, cy=64); lashes(f); eyes(f, ry=13)
 # Wide and shallow, so it reads as gritted teeth rather than a grey lozenge.
-f.oval(50, MOUTH_Y, 16, 5.0, color=PANEL, outline=INK, stroke=2.6, role="mouth")
-f.flat(50, MOUTH_Y, 26, stroke=2.4, role="deco")
+# Gritted teeth. The outlined ellipse this replaces read as a floating ring.
+f.pill(50, MOUTH_Y, 28, 9, 0, color=INK, role="mouth", r=0)
+f.pill(50, MOUTH_Y, 28, 2.2, 0, color=PANEL, role="mouth", r=0)
 
 f = emo("confused", "1f615", "😕")
 cheeks(f); lashes(f)
@@ -800,17 +799,16 @@ f = emo("nauseated", "1f922", "🤢")
 f.blush(BLUSH_X, BLUSH_Y, 8.6, color=GREEN); f.blush(100 - BLUSH_X, BLUSH_Y, 8.6, color=GREEN)
 brows(f, cy=24, tilt=-14)
 happy_eyes(f, cy=47, w=21, depth=9)
-f.oval(50, 75, 7.5, 5.5, color=GREEN, role="mouth")   # a queasy mouth, not a blob
-f.oval(50, 82, 7, 6, color=GREEN, role="deco")
+f.zigzag(50, 74, 20, 5, 3, stroke=3.4, color=GREEN, role="mouth")
 
 f = emo("sick", "1f912", "🤒")
 cheeks(f, cy=66, rx=9.5)
 brows(f, cy=24, tilt=-13)
-eyes(f, cy=47, ry=12, lid=0.4)
+eyes(f, cy=47, ry=12)
 f.curve(50, MOUTH_Y + 2, 14, -6, role="mouth", stroke=4.2)
 # Across the forehead, above the brows rather than through them.
-f.pill(50, 5, 42, 6, 0, color="#DCE7F2", role="deco")
-f.oval(31, 5, 4.0, 4.0, color=MOUTH, role="deco")
+f.pill(50, 5, 42, 6, 0, color="#AFC6DE", role="deco")
+f.oval(31, 5, 4.4, 4.4, color=MOUTH, role="deco")
 
 f = emo("dizzy", "1f635", "😵")
 cheeks(f, cy=66); lashes(f)
@@ -913,7 +911,8 @@ def _muzzle(elems):
     """Swap a closed line mouth for an omega muzzle; leave open mouths alone."""
     out, swapped = [], False
     for e in elems:
-        if not swapped and e.get("role") == "mouth" and e["t"] in CLOSED_MOUTHS:
+        if (not swapped and e.get("role") == "mouth" and e["t"] in CLOSED_MOUTHS
+                and e.get("color") in (None, INK)):
             swapped = True
             out.append({"t": "cat", "cx": e.get("cx", 50), "cy": e.get("cy", 70) - 1,
                         "w": max(e.get("w", 16) * 0.85, 12.5), "h": 4.8,
@@ -942,6 +941,8 @@ def _mouth_top(e):
         return e["cy"] - e.get("h", 0.0) / 2.0 - e.get("stroke", 0.0) / 2.0
     if t == "arc":
         return e["cy"] + min(0.0, e.get("depth", 0.0)) - e.get("stroke", 0.0) / 2.0
+    if t in ("pill", "zigzag"):
+        return e["cy"] - e.get("h", 0.0) / 2.0
     return e["cy"] - e.get("stroke", 4.0) / 2.0
 
 
@@ -958,8 +959,11 @@ def _nose_and_whiskers(elems):
     nose_cy = mouth_y - 7.5
     if mouth is not None:
         nose_cy = min(nose_cy, _mouth_top(mouth) - NOSE_GAP - NOSE_H / 2.0)
-    eye_line = max((e["cy"] for e in elems if e.get("role") == "eye"), default=0.0)
-    if nose_cy >= eye_line - NOSE_RISE:
+    eye_cys = [e["cy"] for e in elems if e.get("role") == "eye"]
+    # A face with no eyes is covering them with something -- cool's glasses --
+    # and there is no gap left between that and the mouth for a nose.
+    eye_line = max(eye_cys) if eye_cys else None
+    if eye_line is not None and nose_cy >= eye_line - NOSE_RISE:
         out.append({"t": "tri", "cx": 50.0, "cy": round(nose_cy, 3), "w": 7.0,
                     "h": NOSE_H, "color": NOSE, "down": True, "role": "deco"})
     # Three short whiskers fanning from one point on each cheek, angled up,
@@ -1088,10 +1092,11 @@ def _minimal(elems):
             e["glint"] = False                         # no highlight
             if e.get("color") not in (None,):
                 e["color"] = EYE_COLOUR
-        elif e.get("role") == "mouth" and e.get("color") and e["t"] != "oval":
-            # Open mouths keep their own colour. Flattened to the same grey as
-            # the line work they read as a second nose rather than an opening,
-            # and the grin mouths beside them were already coloured.
+        elif e.get("role") == "mouth" and e.get("color") == INK:
+            # Only a mouth drawn in the default line colour is flattened. A
+            # mouth given a colour of its own was given it on purpose -- an
+            # open mouth's red, nausea's green, the panel-coloured gap between
+            # gritted teeth -- and greying those made them read as blobs.
             e["color"] = MOUTH_COLOUR
         out.append(e)
     return out

@@ -2950,76 +2950,47 @@
    "elems": [
     {
      "t": "pill",
+     "cx": 50.0,
+     "cy": 57.0,
+     "w": 86,
+     "h": 4.0,
+     "rot": 0,
+     "color": "#22222A",
+     "role": "deco",
+     "r": 0
+    },
+    {
+     "t": "pill",
      "cx": 21.752,
-     "cy": 58.875,
-     "w": 26,
+     "cy": 59.625,
+     "w": 30,
      "h": 16,
      "rot": 0,
-     "color": "#555555",
-     "role": "eye",
-     "glint": false
+     "color": "#22222A",
+     "role": "deco",
+     "r": 0
     },
     {
      "t": "pill",
      "cx": 78.248,
-     "cy": 58.875,
-     "w": 26,
+     "cy": 59.625,
+     "w": 30,
      "h": 16,
      "rot": 0,
-     "color": "#555555",
-     "role": "eye",
-     "glint": false
+     "color": "#22222A",
+     "role": "deco",
+     "r": 0
     },
     {
-     "t": "arc",
+     "t": "pill",
      "cx": 50.0,
-     "cy": 58.5,
-     "w": 33,
-     "depth": -4,
+     "cy": 58.875,
+     "w": 28,
+     "h": 4,
      "rot": 0,
-     "stroke": 2.6,
      "color": "#22222A",
-     "role": "deco"
-    },
-    {
-     "t": "pill",
-     "cx": 12.38,
-     "cy": 57.375,
-     "w": 10,
-     "h": 3.0,
-     "rot": -14,
-     "color": "#22222A",
-     "role": "deco"
-    },
-    {
-     "t": "pill",
-     "cx": 87.62,
-     "cy": 57.375,
-     "w": 10,
-     "h": 3.0,
-     "rot": 14,
-     "color": "#22222A",
-     "role": "deco"
-    },
-    {
-     "t": "pill",
-     "cx": 14.69,
-     "cy": 57.0,
-     "w": 8,
-     "h": 2.6,
-     "rot": -20,
-     "color": "#B9C0C8",
-     "role": "deco"
-    },
-    {
-     "t": "pill",
-     "cx": 71.186,
-     "cy": 57.0,
-     "w": 8,
-     "h": 2.6,
-     "rot": -20,
-     "color": "#B9C0C8",
-     "role": "deco"
+     "role": "deco",
+     "r": 0
     },
     {
      "t": "cat",
@@ -3030,16 +3001,6 @@
      "stroke": 3.8,
      "color": "#666666",
      "role": "mouth"
-    },
-    {
-     "t": "tri",
-     "cx": 50.0,
-     "cy": 59.275,
-     "w": 7.0,
-     "h": 5.0,
-     "color": "#777777",
-     "down": true,
-     "role": "deco"
     },
     {
      "t": "pill",
@@ -3307,7 +3268,8 @@
      "h": 3.4,
      "rot": -18,
      "color": "#22222A",
-     "role": "deco"
+     "role": "deco",
+     "r": null
     },
     {
      "t": "eye",
@@ -3582,8 +3544,8 @@
     "color": "#22222A",
     "inner": "#C42B45",
     "cx": 50.0,
-    "cy": 64.0,
-    "w": 41.6
+    "cy": 66.0,
+    "w": 22
    },
    "elems": [
     {
@@ -3611,29 +3573,31 @@
      "role": "eye"
     },
     {
-     "t": "oval",
+     "t": "pill",
      "cx": 50.0,
      "cy": 69.0,
-     "rx": 16,
-     "ry": 5.0,
-     "color": "#F2F2F2",
-     "outline": "#22222A",
-     "stroke": 2.6,
-     "role": "mouth"
+     "w": 28,
+     "h": 9,
+     "rot": 0,
+     "color": "#666666",
+     "role": "mouth",
+     "r": 0
     },
     {
-     "t": "flat",
+     "t": "pill",
      "cx": 50.0,
      "cy": 69.0,
-     "w": 26,
-     "stroke": 2.4,
-     "color": "#22222A",
-     "role": "deco"
+     "w": 28,
+     "h": 2.2,
+     "rot": 0,
+     "color": "#F2F2F2",
+     "role": "mouth",
+     "r": 0
     },
     {
      "t": "tri",
      "cx": 50.0,
-     "cy": 59.7,
+     "cy": 60.2,
      "w": 7.0,
      "h": 5.0,
      "color": "#777777",
@@ -3798,7 +3762,8 @@
      "h": 3.0,
      "rot": 15,
      "color": "#22222A",
-     "role": "brow"
+     "role": "brow",
+     "r": null
     },
     {
      "t": "pill",
@@ -3808,7 +3773,8 @@
      "h": 3.0,
      "rot": -15,
      "color": "#22222A",
-     "role": "brow"
+     "role": "brow",
+     "r": null
     },
     {
      "t": "eye",
@@ -4012,7 +3978,8 @@
      "h": 3.0,
      "rot": 13,
      "color": "#22222A",
-     "role": "brow"
+     "role": "brow",
+     "r": null
     },
     {
      "t": "pill",
@@ -4022,7 +3989,8 @@
      "h": 3.0,
      "rot": -13,
      "color": "#22222A",
-     "role": "brow"
+     "role": "brow",
+     "r": null
     },
     {
      "t": "eye",
@@ -4129,7 +4097,8 @@
      "h": 3.0,
      "rot": 15,
      "color": "#22222A",
-     "role": "brow"
+     "role": "brow",
+     "r": null
     },
     {
      "t": "pill",
@@ -4139,7 +4108,8 @@
      "h": 3.0,
      "rot": -15,
      "color": "#22222A",
-     "role": "brow"
+     "role": "brow",
+     "r": null
     },
     {
      "t": "eye",
@@ -4255,7 +4225,8 @@
      "h": 3.0,
      "rot": 15,
      "color": "#22222A",
-     "role": "brow"
+     "role": "brow",
+     "r": null
     },
     {
      "t": "pill",
@@ -4265,7 +4236,8 @@
      "h": 3.0,
      "rot": -15,
      "color": "#22222A",
-     "role": "brow"
+     "role": "brow",
+     "r": null
     },
     {
      "t": "arc",
@@ -4386,7 +4358,8 @@
      "h": 3.0,
      "rot": 14,
      "color": "#22222A",
-     "role": "brow"
+     "role": "brow",
+     "r": null
     },
     {
      "t": "pill",
@@ -4396,7 +4369,8 @@
      "h": 3.0,
      "rot": -14,
      "color": "#22222A",
-     "role": "brow"
+     "role": "brow",
+     "r": null
     },
     {
      "t": "eye",
@@ -4787,7 +4761,8 @@
      "h": 3.0,
      "rot": 16,
      "color": "#22222A",
-     "role": "brow"
+     "role": "brow",
+     "r": null
     },
     {
      "t": "pill",
@@ -4797,7 +4772,8 @@
      "h": 3.0,
      "rot": -16,
      "color": "#22222A",
-     "role": "brow"
+     "role": "brow",
+     "r": null
     },
     {
      "t": "eye",
@@ -4904,7 +4880,8 @@
      "h": 3.0,
      "rot": 15,
      "color": "#22222A",
-     "role": "brow"
+     "role": "brow",
+     "r": null
     },
     {
      "t": "pill",
@@ -4914,7 +4891,8 @@
      "h": 3.0,
      "rot": -15,
      "color": "#22222A",
-     "role": "brow"
+     "role": "brow",
+     "r": null
     },
     {
      "t": "eye",
@@ -5031,7 +5009,8 @@
      "h": 3.0,
      "rot": 15,
      "color": "#22222A",
-     "role": "brow"
+     "role": "brow",
+     "r": null
     },
     {
      "t": "pill",
@@ -5041,7 +5020,8 @@
      "h": 3.0,
      "rot": -15,
      "color": "#22222A",
-     "role": "brow"
+     "role": "brow",
+     "r": null
     },
     {
      "t": "eye",
@@ -5166,7 +5146,8 @@
      "h": 3.0,
      "rot": -18,
      "color": "#22222A",
-     "role": "brow"
+     "role": "brow",
+     "r": null
     },
     {
      "t": "pill",
@@ -5176,7 +5157,8 @@
      "h": 3.0,
      "rot": 18,
      "color": "#22222A",
-     "role": "brow"
+     "role": "brow",
+     "r": null
     },
     {
      "t": "eye",
@@ -5291,7 +5273,8 @@
      "h": 3.0,
      "rot": -18,
      "color": "#FF3B5C",
-     "role": "brow"
+     "role": "brow",
+     "r": null
     },
     {
      "t": "pill",
@@ -5301,7 +5284,8 @@
      "h": 3.0,
      "rot": 18,
      "color": "#FF3B5C",
-     "role": "brow"
+     "role": "brow",
+     "r": null
     },
     {
      "t": "eye",
@@ -5334,7 +5318,7 @@
      "w": 22,
      "h": 13,
      "tongue": false,
-     "color": "#666666",
+     "color": "#FF3B5C",
      "inner": "#C42B45",
      "tongue_color": "#FF7D93",
      "role": "mouth"
@@ -5416,7 +5400,8 @@
      "h": 3.0,
      "rot": -16,
      "color": "#22222A",
-     "role": "brow"
+     "role": "brow",
+     "r": null
     },
     {
      "t": "pill",
@@ -5426,7 +5411,8 @@
      "h": 3.0,
      "rot": 16,
      "color": "#22222A",
-     "role": "brow"
+     "role": "brow",
+     "r": null
     },
     {
      "t": "eye",
@@ -5865,8 +5851,8 @@
     "color": "#22222A",
     "inner": "#C42B45",
     "cx": 50.0,
-    "cy": 64.625,
-    "w": 19.5
+    "cy": 66.75,
+    "w": 25.0
    },
    "elems": [
     {
@@ -5877,7 +5863,8 @@
      "h": 3.0,
      "rot": 14,
      "color": "#22222A",
-     "role": "brow"
+     "role": "brow",
+     "r": null
     },
     {
      "t": "pill",
@@ -5887,7 +5874,8 @@
      "h": 3.0,
      "rot": -14,
      "color": "#22222A",
-     "role": "brow"
+     "role": "brow",
+     "r": null
     },
     {
      "t": "arc",
@@ -5914,31 +5902,20 @@
      "glint": false
     },
     {
-     "t": "oval",
+     "t": "zigzag",
      "cx": 50.0,
-     "cy": 70.125,
-     "rx": 7.5,
-     "ry": 5.5,
+     "cy": 69.75,
+     "w": 20,
+     "h": 5,
+     "n": 3,
+     "stroke": 3.4,
      "color": "#9BD94E",
-     "outline": null,
-     "stroke": 2.5,
      "role": "mouth"
-    },
-    {
-     "t": "oval",
-     "cx": 50.0,
-     "cy": 72.75,
-     "rx": 7,
-     "ry": 6,
-     "color": "#9BD94E",
-     "outline": null,
-     "stroke": 2.5,
-     "role": "deco"
     },
     {
      "t": "tri",
      "cx": 50.0,
-     "cy": 60.325,
+     "cy": 62.25,
      "w": 7.0,
      "h": 5.0,
      "color": "#777777",
@@ -6006,7 +5983,8 @@
      "h": 3.0,
      "rot": 13,
      "color": "#22222A",
-     "role": "brow"
+     "role": "brow",
+     "r": null
     },
     {
      "t": "pill",
@@ -6016,7 +5994,8 @@
      "h": 3.0,
      "rot": -13,
      "color": "#22222A",
-     "role": "brow"
+     "role": "brow",
+     "r": null
     },
     {
      "t": "eye",
@@ -6026,7 +6005,7 @@
      "ry": 5.259,
      "color": "#555555",
      "glint": false,
-     "lid": 0.4,
+     "lid": 0.0,
      "panel": "#F2F2F2",
      "role": "eye"
     },
@@ -6038,7 +6017,7 @@
      "ry": 5.259,
      "color": "#555555",
      "glint": false,
-     "lid": 0.4,
+     "lid": 0.0,
      "panel": "#F2F2F2",
      "role": "eye"
     },
@@ -6059,15 +6038,16 @@
      "w": 42,
      "h": 6,
      "rot": 0,
-     "color": "#DCE7F2",
-     "role": "deco"
+     "color": "#AFC6DE",
+     "role": "deco",
+     "r": null
     },
     {
      "t": "oval",
      "cx": 27.637,
      "cy": 43.875,
-     "rx": 4.0,
-     "ry": 4.0,
+     "rx": 4.4,
+     "ry": 4.4,
      "color": "#E8455F",
      "outline": null,
      "stroke": 2.5,
@@ -6446,6 +6426,7 @@
      "rot": 0,
      "color": "#555555",
      "role": "eye",
+     "r": null,
      "glint": false
     },
     {
@@ -6457,6 +6438,7 @@
      "rot": 0,
      "color": "#555555",
      "role": "eye",
+     "r": null,
      "glint": false
     },
     {
@@ -6501,7 +6483,8 @@
      "h": 10,
      "rot": 0,
      "color": "#22222A",
-     "role": "deco"
+     "role": "deco",
+     "r": null
     },
     {
      "t": "tri",

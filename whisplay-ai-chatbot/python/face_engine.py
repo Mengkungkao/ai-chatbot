@@ -178,7 +178,10 @@ class FaceRenderer:
         w, h = max(e["w"] * k, 1), max(e["h"] * k, 1)
         layer = Image.new("RGBA", (int(w) + 4, int(h) + 4), (0, 0, 0, 0))
         d = ImageDraw.Draw(layer)
-        d.rounded_rectangle([2, 2, w + 1, h + 1], radius=min(w, h) / 2,
+        # A pill is a stadium unless it names its own corner radius. r=0 gives
+        # a hard rectangle, which is what blocky pixel-art shapes need.
+        radius = e["r"] * k if e.get("r") is not None else min(w, h) / 2
+        d.rounded_rectangle([2, 2, w + 1, h + 1], radius=max(0, min(radius, min(w, h) / 2)),
                             fill=_rgb(e["color"]) + (255,))
         rot = e.get("rot", 0)
         if rot:
