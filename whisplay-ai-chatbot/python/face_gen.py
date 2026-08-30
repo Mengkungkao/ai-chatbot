@@ -405,9 +405,10 @@ class Face:
         self._add(t="eye", cx=cx, cy=cy, rx=rx, ry=ry, color=color,
                   glint=glint, lid=lid, panel=PANEL, role=role)
 
-    def oval(self, cx, cy, rx, ry, color=MOUTH, outline=None, stroke=2.5, role=None):
+    def oval(self, cx, cy, rx, ry, color=MOUTH, outline=None, stroke=2.5, role=None,
+             absolute=False):
         self._add(t="oval", cx=cx, cy=cy, rx=rx, ry=ry, color=color,
-                  outline=outline, stroke=stroke, role=role)
+                  outline=outline, stroke=stroke, role=role, absolute=absolute)
 
     def hatch(self, cx, cy, w, h, n=3, stroke=2.6, color=BLUSH, role="blush"):
         self._add(t="hatch", cx=cx, cy=cy, w=w, h=h, n=n, stroke=stroke,
@@ -663,12 +664,25 @@ cheeks(f); lashes(f); happy_eyes(f, cy=46, w=20, depth=-8)
 f.curve(50, MOUTH_Y - 2, 15, 6, role="mouth", stroke=4.2)
 
 f = emo("thinking", "1f914", "🤔")
-f.blush(BLUSH_X, BLUSH_Y, 8.6); f.blush(100 - BLUSH_X, BLUSH_Y, 8.6)
-f.arc(EYE_X, LASH_Y, 20, -8, stroke=3.0, role="deco")
-f.pill(100 - EYE_X, 22, 18, 3.4, -18, color=INK, role="deco")
-f.eye(EYE_X, EYE_Y, EYE_RX, EYE_RY)
-f.eye(100 - EYE_X, 43, 11, 12.5)
-f.arc(54, MOUTH_Y - 1, 15, 5, rot=-10, stroke=3.2, role="mouth")
+cheeks(f)
+# The expression is the asymmetry: one brow settled, one hoisted. Both are
+# brows now, so the clearance pass keeps them off the eyes as the eyes resize.
+f.pill(EYE_X - 1, 30, 17, 3.0, -6, color=INK, role="brow")
+f.pill(101 - EYE_X, 15, 18, 3.2, -22, color=INK, role="brow")
+f.eye(EYE_X, EYE_Y - 1, EYE_RX, EYE_RY)
+f.eye(100 - EYE_X, EYE_Y - 1, EYE_RX, EYE_RY)
+# A small mouth pushed off to one side, the way a mouth goes when someone is
+# chewing something over.
+f.arc(43, MOUTH_Y + 1, 11, 4, rot=12, stroke=3.2, role="mouth")   # pushed the
+# other way from the raised brow, so the face is not all weighted to one side
+# Thought dots climbing away from the head. This is what actually says
+# "thinking" at panel size -- a brow tilt alone reads as confused, which is
+# the face sitting next to it in the set.
+# Placed in the clear forehead above the raised brow, which sits at y 38-48
+# spanning x 70-88, and below the ear valley at y 28. They had been landing
+# across the other brow and clipping on the head's edge.
+for _tx, _ty, _tr in ((65.0, 38.0, 1.7), (73.0, 33.0, 2.3), (81.0, 28.5, 3.0)):
+    f.oval(_tx, _ty, _tr, _tr, color=INK, role="deco", absolute=True)
 
 f = emo("expressionless", "1f611", "😑")
 cheeks(f, cy=62); lashes(f)
@@ -1046,6 +1060,13 @@ def _refit(elems, eye_gain):
     out = []
     for e in elems:
         e = dict(e)
+        # Some things are easier to say in final coordinates. The refit squashes
+        # the vertical by 0.375, so anything up on the forehead needs a card
+        # value far outside 0..100 to land where you meant -- unreadable in the
+        # source and impossible to adjust by eye.
+        if e.pop("absolute", False):
+            out.append(e)
+            continue
         if "cx" in e:
             dx = (e["cx"] - 50) * FIT_SPREAD
             # Cap the offset at the head's usable half-width, or spreading flings
