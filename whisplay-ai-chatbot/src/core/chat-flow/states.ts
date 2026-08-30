@@ -225,6 +225,12 @@ export const flowStates: Record<FlowName, FlowStateHandler> = {
         console.log("[listening] Button released too quickly, returning to sleep");
         shouldIgnoreRecordingResult = true;
         stop();
+        // Invite the second click. Sleep only rewrites the text when it is
+        // blank or left over from listening, so this survives long enough to
+        // be read, and the gesture stops being something you have to know.
+        if (!ctx.enableCamera) {
+          display({ text: "Click again to turn auto-talk on or off." });
+        }
         ctx.transitionTo("sleep");
         return;
       }

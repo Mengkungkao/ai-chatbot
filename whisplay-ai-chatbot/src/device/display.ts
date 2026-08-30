@@ -18,8 +18,12 @@ dotEnv.config();
 // under this is usable speech anyway.
 export const CLICK_MAX_PRESS_MS = 650;
 // Two clicks of full length plus the gap between them have to fit.
-const DOUBLE_CLICK_WINDOW_MS = 1600;
-const TRIPLE_CLICK_WINDOW_MS = 2200;
+// Deliberately generous. This is not a mouse: the button is on a small device
+// held in one hand, and the measured gesture ran 2560ms end to end. A single
+// click does nothing on its own -- it bounces straight back to idle -- so
+// there is no other gesture for a wide window to steal.
+const DOUBLE_CLICK_WINDOW_MS = 3000;
+const TRIPLE_CLICK_WINDOW_MS = 3500;
 // Only for reporting: how far back to look when explaining why a gesture was
 // not recognised, so a near miss is visible instead of silently dropped.
 const CLICK_DIAGNOSTIC_WINDOW_MS = 3000;
