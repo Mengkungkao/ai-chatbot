@@ -673,8 +673,9 @@ f.eye(EYE_X, EYE_Y - 1, EYE_RX, EYE_RY)
 f.eye(100 - EYE_X, EYE_Y - 1, EYE_RX, EYE_RY)
 # A small mouth pushed off to one side, the way a mouth goes when someone is
 # chewing something over.
-f.arc(43, MOUTH_Y + 1, 11, 4, rot=12, stroke=3.2, role="mouth")   # pushed the
-# other way from the raised brow, so the face is not all weighted to one side
+# Leans away from the raised brow. Authored above the muzzle's 12.5 floor, or
+# it comes out the same width as every other mouth in the set.
+f.arc(46, MOUTH_Y + 1, 17, 4, rot=12, stroke=3.2, role="mouth")
 # Thought dots climbing away from the head. This is what actually says
 # "thinking" at panel size -- a brow tilt alone reads as confused, which is
 # the face sitting next to it in the set.
@@ -974,6 +975,10 @@ def _nose_and_whiskers(elems):
     # Place it off the mouth's top instead, and where that would push it above
     # the eyes there is simply no room for a nose -- the reference cat has none
     # at all, and a wide open mouth reads perfectly well without one.
+    # The nose belongs to the mouth below it. Pinned at 50 it was orphaned on
+    # the two faces whose mouth deliberately skews -- thinking's sat 8 units
+    # off, reading as a mistake rather than an expression.
+    nose_cx = mouth.get("cx", 50.0) if mouth else 50.0
     nose_cy = mouth_y - 7.5
     if mouth is not None:
         nose_cy = min(nose_cy, _mouth_top(mouth) - NOSE_GAP - NOSE_H / 2.0)
@@ -982,8 +987,9 @@ def _nose_and_whiskers(elems):
     # and there is no gap left between that and the mouth for a nose.
     eye_line = max(eye_cys) if eye_cys else None
     if eye_line is not None and nose_cy >= eye_line - NOSE_RISE:
-        out.append({"t": "tri", "cx": 50.0, "cy": round(nose_cy, 3), "w": 7.0,
-                    "h": NOSE_H, "color": NOSE, "down": True, "role": "deco"})
+        out.append({"t": "tri", "cx": round(nose_cx, 3), "cy": round(nose_cy, 3),
+                    "w": 7.0, "h": NOSE_H, "color": NOSE, "down": True,
+                    "role": "deco"})
     # Three short whiskers fanning from one point on each cheek, angled up,
     # level and down. Three parallel horizontal lines read as a stave, not a cat.
     for side in (-1, 1):
