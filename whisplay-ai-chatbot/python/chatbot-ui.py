@@ -839,7 +839,12 @@ class RenderThread(threading.Thread):
     def render_status_icons(self, draw, icons, image_width):
         if not icons:
             return
-        right_margin = 10
+        # The panel's corners are rounded, and the icons sit in the top rows
+        # where the curve bites deepest, so a flat 10px margin left the
+        # right-most one clipped. The status text on the other side already
+        # insets by the corner's own height; matching it keeps the strip
+        # symmetric and clear of the curve.
+        right_margin = self.whisplay.CornerHeight
         icon_gap = 8
         cursor_x = image_width - right_margin
         for icon in icons:
