@@ -533,7 +533,11 @@ export const flowStates: Record<FlowName, FlowStateHandler> = {
         }
       });
     llmDonePromise.then(() => getPlayEndPromise()).then(() => {
-      if (ctx.currentFlowName === "answer") {
+      // isCurrentAnswer, not just the flow name: an interrupted answer's chain
+      // completes while the next one is running, and the flow name is "answer"
+      // again by then. Without the id it saved the wrong exchange and
+      // transitioned the flow out from under the reply being spoken.
+      if (isCurrentAnswer()) {
         autoSaveExchange(ctx.asrText, llmResponseText, summaryTextWithLLM);
         clearPendingCapturedImgForChat();
         display({ image_icon_visible: false });

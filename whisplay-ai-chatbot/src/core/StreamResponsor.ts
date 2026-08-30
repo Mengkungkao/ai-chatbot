@@ -34,6 +34,9 @@ export class StreamResponser {
   private hasStartedTTS: boolean = false;
   private firstTTSPromise: Promise<TTSResult> | null = null;
   private activeTTSCount = 0;
+  // Bumped by stop(). A playback loop parked on an await cannot be killed, so
+  // it checks this on every resumption and retires itself if it is stale.
+  private generation = 0;
   private pendingTTSQueue: {
     text: string;
     resolve: (result: TTSResult) => void;
@@ -119,13 +122,22 @@ export class StreamResponser {
       );
       return;
     }
+    // isPlaying alone is not enough to keep this loop unique. stop() clears it
+    // while the loop is parked on an await, so the next answer walks straight
+    // past the guard and starts a second loop over the same queue: both then
+    // play from it, and the reply is heard twice with its sentences
+    // interleaved. The generation is what the parked loop checks to retire.
+    const gen = this.generation;
+    const superseded = () => gen !== this.generation;
     let currentIndex = 0;
     const playNext = async () => {
+      if (superseded()) return;
       if (currentIndex < this.speakQueue.length) {
         this.isPlaying = true;
         try {
           const item = this.speakQueue[currentIndex];
           const playParams = await item.ttsPromise;
+          if (superseded()) return;
           console.log(
             `Playing audio ${currentIndex + 1}/${this.speakQueue.length}`
           );
@@ -139,10 +151,12 @@ export class StreamResponser {
         } catch (error) {
           console.error("Audio playback error:", error);
         }
+        if (superseded()) return;
         currentIndex++;
         playNext();
       } else if (this.partialContent) {
         await new Promise((resolve) => setTimeout(resolve, 1000));
+        if (superseded()) return;
         playNext();
       } else {
         console.log(
@@ -282,6 +296,7 @@ export class StreamResponser {
   };
 
   stop = (): void => {
+    this.generation += 1;   // retires any loop parked on an await
     this.speakQueue = [];
     this.speakQueue.length = 0;
     this.partialContent = "";
