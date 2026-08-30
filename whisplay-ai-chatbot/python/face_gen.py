@@ -374,6 +374,7 @@ def scaled(pts, inset):
 PANEL = "#F2F2F2"      # flat off-white head fill, no gradient
 INK = "#22222A"        # eyes, lashes, line work
 BLUSH = "#FF9DB4"
+BANDAGE = "#DCC08A"    # the sticking plaster on the sick face
 MOUTH = "#E8455F"
 MOUTH_IN = "#C42B45"
 TONGUE = "#FF7D93"
@@ -649,10 +650,9 @@ cheeks(f, cy=66)
 # Deal-with-it glasses: one solid bar across the top with two blocky lenses
 # hanging off it. They are opaque by design -- no eyes behind them -- so they
 # are deco rather than eyes, and they do not blink or squash.
-f.pill(50, 40, 86, 4.0, 0, color=INK, role="deco", r=0)        # top rail
-f.pill(EYE_X, 47, 30, 16, 0, color=INK, role="deco", r=0)      # left lens
-f.pill(100 - EYE_X, 47, 30, 16, 0, color=INK, role="deco", r=0)
-f.pill(50, 45, 28, 4, 0, color=INK, role="deco", r=0)          # bridge
+f.pill(50, 46, 76, 14, 0, color=INK, role="deco", r=0)         # the glasses
+f.pill(50, 59, 16, 5, 0, color=PANEL, role="deco", r=0)        # notch for the
+                                                               # nose bridge
 f.curve(54, MOUTH_Y - 2, 19, 8, role="mouth", stroke=4.2)
 
 f = emo("smirk", "1f60f", "😏")
@@ -685,8 +685,10 @@ f = emo("grimace", "1f62c", "😬")
 cheeks(f, cy=64); lashes(f); eyes(f, ry=13)
 # Wide and shallow, so it reads as gritted teeth rather than a grey lozenge.
 # Gritted teeth. The outlined ellipse this replaces read as a floating ring.
-f.pill(50, MOUTH_Y, 28, 9, 0, color=INK, role="mouth", r=0)
-f.pill(50, MOUTH_Y, 28, 2.2, 0, color=PANEL, role="mouth", r=0)
+f.pill(50, MOUTH_Y, 30, 11, 0, color=INK, role="mouth", r=0)          # lips
+f.pill(50, MOUTH_Y, 26, 7, 0, color=PANEL, role="mouth", r=0)         # teeth
+for _gx in (44, 50, 56):
+    f.pill(_gx, MOUTH_Y, 1.8, 7, 0, color=INK, role="mouth", r=0)     # gaps
 
 f = emo("confused", "1f615", "😕")
 cheeks(f); lashes(f)
@@ -737,12 +739,14 @@ f.oval(50, MOUTH_Y + 1, 6.5, 8, color=MOUTH_IN, role="mouth")
 
 f = emo("astonished", "1f632", "😲")
 cheeks(f, cy=68); lashes(f, cy=24)
-eyes(f, cy=43, rx=14, ry=16.5)
+f.circle(EYE_X, 44, 15, color=INK, pupil_r=11, pupil_color=PANEL, role="eye")
+f.circle(100 - EYE_X, 44, 15, color=INK, pupil_r=11, pupil_color=PANEL, role="eye")
 f.oval(50, 73, 8.5, 11, color=MOUTH_IN, role="mouth")
 
 f = emo("scared", "1f631", "😱")
 brows(f, cy=22, tilt=-16)
-eyes(f, cy=43, rx=14.5, ry=17)
+f.circle(EYE_X, 44, 15.5, color=INK, pupil_r=11.5, pupil_color=PANEL, role="eye")
+f.circle(100 - EYE_X, 44, 15.5, color=INK, pupil_r=11.5, pupil_color=PANEL, role="eye")
 f.oval(50, 74, 9, 12, color=MOUTH_IN, role="mouth")
 f.drop(86, 30, 6, 11)
 
@@ -798,17 +802,20 @@ f.oval(60, 80, 3.6, 6, color=TEAR)
 f = emo("nauseated", "1f922", "🤢")
 f.blush(BLUSH_X, BLUSH_Y, 8.6, color=GREEN); f.blush(100 - BLUSH_X, BLUSH_Y, 8.6, color=GREEN)
 brows(f, cy=24, tilt=-14)
-happy_eyes(f, cy=47, w=21, depth=9)
+eyes(f, cy=47, ry=11)
 f.zigzag(50, 74, 20, 5, 3, stroke=3.4, color=GREEN, role="mouth")
+f.drop(70, 78, 4.5, 7, color=GREEN)
 
 f = emo("sick", "1f912", "🤒")
 cheeks(f, cy=66, rx=9.5)
-brows(f, cy=24, tilt=-13)
+# A plaster across the brow. The thermometer it replaces was a pale bar the
+# width of the whole head, which read as a blank strip rather than an object.
+f.pill(50, 16, 18, 5, -22, color=BANDAGE, role="deco", r=2)
+f.pill(50, 16, 18, 5, 22, color=BANDAGE, role="deco", r=2)
 eyes(f, cy=47, ry=12)
 f.curve(50, MOUTH_Y + 2, 14, -6, role="mouth", stroke=4.2)
 # Across the forehead, above the brows rather than through them.
-f.pill(50, 5, 42, 6, 0, color="#AFC6DE", role="deco")
-f.oval(31, 5, 4.4, 4.4, color=MOUTH, role="deco")
+
 
 f = emo("dizzy", "1f635", "😵")
 cheeks(f, cy=66); lashes(f)
@@ -1018,7 +1025,8 @@ def _lift_brows(elems):
     def eye_top(e):
         if e["t"] == "arc":
             return e["cy"] + min(0.0, e.get("depth", 0.0)) - e.get("stroke", 0.0) / 2
-        r = e.get("ry") or e.get("rx") or e.get("h", 0.0) / 2 or e.get("size", 0.0) / 2
+        r = (e.get("ry") or e.get("rx") or e.get("r")
+             or e.get("h", 0.0) / 2 or e.get("size", 0.0) / 2)
         return e["cy"] - r
 
     def brow_bottom(b):
@@ -1049,7 +1057,7 @@ def _refit(elems, eye_gain):
         if "cy" in e:
             e["cy"] = round(FIT_CENTRE + (e["cy"] - SRC_CENTRE) * FIT_YSCALE, 3)
         if e.get("role") == "eye":
-            for f in ("rx", "ry", "r", "size"):
+            for f in ("rx", "ry", "r", "size", "pupil_r"):
                 if isinstance(e.get(f), (int, float)):
                     e[f] = round(e[f] * eye_gain, 3)
             if e["t"] in ("arc", "flat", "caret", "x") and "w" in e:
@@ -1488,8 +1496,10 @@ def check_whisker_clearance(faces):
             a = math.radians(w["rot"])
             hx, hy = math.cos(a) * w["w"] / 2, math.sin(a) * w["w"] / 2
             for e in eyes:
-                rx = e["rx"] if e.get("rx") is not None else e.get("w", 0) / 2
-                ry = e["ry"] if e.get("ry") is not None else e.get("h", 0) / 2
+                rx = (e.get("rx") if e.get("rx") is not None
+                      else e.get("r") if e.get("r") is not None else e.get("w", 0) / 2)
+                ry = (e.get("ry") if e.get("ry") is not None
+                      else e.get("r") if e.get("r") is not None else e.get("h", 0) / 2)
                 for i in range(41):
                     t = i / 40.0
                     px = w["cx"] - hx + 2 * hx * t

@@ -2951,31 +2951,9 @@
     {
      "t": "pill",
      "cx": 50.0,
-     "cy": 57.0,
-     "w": 86,
-     "h": 4.0,
-     "rot": 0,
-     "color": "#22222A",
-     "role": "deco",
-     "r": 0
-    },
-    {
-     "t": "pill",
-     "cx": 21.752,
-     "cy": 59.625,
-     "w": 30,
-     "h": 16,
-     "rot": 0,
-     "color": "#22222A",
-     "role": "deco",
-     "r": 0
-    },
-    {
-     "t": "pill",
-     "cx": 78.248,
-     "cy": 59.625,
-     "w": 30,
-     "h": 16,
+     "cy": 59.25,
+     "w": 76,
+     "h": 14,
      "rot": 0,
      "color": "#22222A",
      "role": "deco",
@@ -2984,11 +2962,11 @@
     {
      "t": "pill",
      "cx": 50.0,
-     "cy": 58.875,
-     "w": 28,
-     "h": 4,
+     "cy": 64.125,
+     "w": 16,
+     "h": 5,
      "rot": 0,
-     "color": "#22222A",
+     "color": "#F2F2F2",
      "role": "deco",
      "r": 0
     },
@@ -3576,8 +3554,8 @@
      "t": "pill",
      "cx": 50.0,
      "cy": 69.0,
-     "w": 28,
-     "h": 9,
+     "w": 30,
+     "h": 11,
      "rot": 0,
      "color": "#666666",
      "role": "mouth",
@@ -3587,17 +3565,50 @@
      "t": "pill",
      "cx": 50.0,
      "cy": 69.0,
-     "w": 28,
-     "h": 2.2,
+     "w": 26,
+     "h": 7,
      "rot": 0,
      "color": "#F2F2F2",
      "role": "mouth",
      "r": 0
     },
     {
+     "t": "pill",
+     "cx": 42.938,
+     "cy": 69.0,
+     "w": 1.8,
+     "h": 7,
+     "rot": 0,
+     "color": "#666666",
+     "role": "mouth",
+     "r": 0
+    },
+    {
+     "t": "pill",
+     "cx": 50.0,
+     "cy": 69.0,
+     "w": 1.8,
+     "h": 7,
+     "rot": 0,
+     "color": "#666666",
+     "role": "mouth",
+     "r": 0
+    },
+    {
+     "t": "pill",
+     "cx": 57.062,
+     "cy": 69.0,
+     "w": 1.8,
+     "h": 7,
+     "rot": 0,
+     "color": "#666666",
+     "role": "mouth",
+     "r": 0
+    },
+    {
      "t": "tri",
      "cx": 50.0,
-     "cy": 60.2,
+     "cy": 59.2,
      "w": 7.0,
      "h": 5.0,
      "color": "#777777",
@@ -4666,28 +4677,26 @@
    },
    "elems": [
     {
-     "t": "eye",
+     "t": "circle",
      "cx": 21.752,
-     "cy": 58.125,
-     "rx": 9.342,
-     "ry": 11.011,
+     "cy": 58.5,
+     "r": 10.01,
      "color": "#555555",
-     "glint": false,
-     "lid": 0.0,
-     "panel": "#F2F2F2",
-     "role": "eye"
+     "pupil_r": 7.341,
+     "pupil_color": "#F2F2F2",
+     "role": "eye",
+     "glint": false
     },
     {
-     "t": "eye",
+     "t": "circle",
      "cx": 78.248,
-     "cy": 58.125,
-     "rx": 9.342,
-     "ry": 11.011,
+     "cy": 58.5,
+     "r": 10.01,
      "color": "#555555",
-     "glint": false,
-     "lid": 0.0,
-     "panel": "#F2F2F2",
-     "role": "eye"
+     "pupil_r": 7.341,
+     "pupil_color": "#F2F2F2",
+     "role": "eye",
+     "glint": false
     },
     {
      "t": "oval",
@@ -4756,7 +4765,7 @@
     {
      "t": "pill",
      "cx": 20.575,
-     "cy": 41.965,
+     "cy": 43.326,
      "w": 17,
      "h": 3.0,
      "rot": 16,
@@ -4767,7 +4776,7 @@
     {
      "t": "pill",
      "cx": 79.425,
-     "cy": 41.965,
+     "cy": 43.326,
      "w": 17,
      "h": 3.0,
      "rot": -16,
@@ -4776,28 +4785,26 @@
      "r": null
     },
     {
-     "t": "eye",
+     "t": "circle",
      "cx": 21.752,
-     "cy": 58.125,
-     "rx": 9.532,
-     "ry": 11.175,
+     "cy": 58.5,
+     "r": 10.189,
      "color": "#555555",
-     "glint": false,
-     "lid": 0.0,
-     "panel": "#F2F2F2",
-     "role": "eye"
+     "pupil_r": 7.56,
+     "pupil_color": "#F2F2F2",
+     "role": "eye",
+     "glint": false
     },
     {
-     "t": "eye",
+     "t": "circle",
      "cx": 78.248,
-     "cy": 58.125,
-     "rx": 9.532,
-     "ry": 11.175,
+     "cy": 58.5,
+     "r": 10.189,
      "color": "#555555",
-     "glint": false,
-     "lid": 0.0,
-     "panel": "#F2F2F2",
-     "role": "eye"
+     "pupil_r": 7.56,
+     "pupil_color": "#F2F2F2",
+     "role": "eye",
+     "glint": false
     },
     {
      "t": "oval",
@@ -5858,7 +5865,7 @@
     {
      "t": "pill",
      "cx": 20.575,
-     "cy": 51.0,
+     "cy": 49.983,
      "w": 17,
      "h": 3.0,
      "rot": 14,
@@ -5869,7 +5876,7 @@
     {
      "t": "pill",
      "cx": 79.425,
-     "cy": 51.0,
+     "cy": 49.983,
      "w": 17,
      "h": 3.0,
      "rot": -14,
@@ -5878,28 +5885,28 @@
      "r": null
     },
     {
-     "t": "arc",
+     "t": "eye",
      "cx": 21.752,
      "cy": 59.625,
-     "w": 9.412,
-     "depth": 4.034,
-     "rot": 0,
-     "stroke": 4.0,
+     "rx": 5.827,
+     "ry": 4.93,
      "color": "#555555",
-     "role": "eye",
-     "glint": false
+     "glint": false,
+     "lid": 0.0,
+     "panel": "#F2F2F2",
+     "role": "eye"
     },
     {
-     "t": "arc",
+     "t": "eye",
      "cx": 78.248,
      "cy": 59.625,
-     "w": 9.412,
-     "depth": 4.034,
-     "rot": 0,
-     "stroke": 4.0,
+     "rx": 5.827,
+     "ry": 4.93,
      "color": "#555555",
-     "role": "eye",
-     "glint": false
+     "glint": false,
+     "lid": 0.0,
+     "panel": "#F2F2F2",
+     "role": "eye"
     },
     {
      "t": "zigzag",
@@ -5911,6 +5918,15 @@
      "stroke": 3.4,
      "color": "#9BD94E",
      "role": "mouth"
+    },
+    {
+     "t": "drop",
+     "cx": 73.54,
+     "cy": 71.25,
+     "w": 4.5,
+     "h": 7,
+     "color": "#9BD94E",
+     "role": "deco"
     },
     {
      "t": "tri",
@@ -5977,25 +5993,25 @@
    "elems": [
     {
      "t": "pill",
-     "cx": 20.575,
-     "cy": 49.792,
-     "w": 17,
-     "h": 3.0,
-     "rot": 13,
-     "color": "#22222A",
-     "role": "brow",
-     "r": null
+     "cx": 50.0,
+     "cy": 48.0,
+     "w": 18,
+     "h": 5,
+     "rot": -22,
+     "color": "#DCC08A",
+     "role": "deco",
+     "r": 2
     },
     {
      "t": "pill",
-     "cx": 79.425,
-     "cy": 49.792,
-     "w": 17,
-     "h": 3.0,
-     "rot": -13,
-     "color": "#22222A",
-     "role": "brow",
-     "r": null
+     "cx": 50.0,
+     "cy": 48.0,
+     "w": 18,
+     "h": 5,
+     "rot": 22,
+     "color": "#DCC08A",
+     "role": "deco",
+     "r": 2
     },
     {
      "t": "eye",
@@ -6030,28 +6046,6 @@
      "stroke": 3.8,
      "color": "#666666",
      "role": "mouth"
-    },
-    {
-     "t": "pill",
-     "cx": 50.0,
-     "cy": 43.875,
-     "w": 42,
-     "h": 6,
-     "rot": 0,
-     "color": "#AFC6DE",
-     "role": "deco",
-     "r": null
-    },
-    {
-     "t": "oval",
-     "cx": 27.637,
-     "cy": 43.875,
-     "rx": 4.4,
-     "ry": 4.4,
-     "color": "#E8455F",
-     "outline": null,
-     "stroke": 2.5,
-     "role": "deco"
     },
     {
      "t": "tri",
