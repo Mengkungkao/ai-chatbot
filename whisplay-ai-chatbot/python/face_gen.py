@@ -510,14 +510,14 @@ def happy_eyes(f, cy=46, w=22, depth=-11, stroke=4.0):
 
 
 def lashes(f, cy=LASH_Y, w=20, depth=-8, stroke=3.0):
-    f.arc(EYE_X, cy, w, depth, stroke=stroke, role="deco")
-    f.arc(100 - EYE_X, cy, w, depth, stroke=stroke, role="deco")
+    f.arc(EYE_X, cy, w, depth, stroke=stroke, role="brow")
+    f.arc(100 - EYE_X, cy, w, depth, stroke=stroke, role="brow")
 
 
 def brows(f, cy=25, w=19, tilt=16, stroke=3.6, color=INK):
     """Angled brows; positive tilt slants inward (angry)."""
-    f.pill(EYE_X - 1, cy, w, stroke, -tilt, color=color, role="deco")
-    f.pill(101 - EYE_X, cy, w, stroke, tilt, color=color, role="deco")
+    f.pill(EYE_X - 1, cy, w, stroke, -tilt, color=color, role="brow")
+    f.pill(101 - EYE_X, cy, w, stroke, tilt, color=color, role="brow")
 
 
 def cheeks(f, cy=BLUSH_Y, cx=BLUSH_X, rx=8.6):
@@ -589,14 +589,15 @@ f.grin(50, 64, 26, 15)
 f = emo("adoring", "1f970", "🥰")
 cheeks(f); lashes(f); eyes(f)
 f.curve(50, MOUTH_Y - 3, 21, 9, role="mouth", stroke=4.2)
-f.heart(12, 30, 13, color=MOUTH); f.heart(88, 30, 13, color=MOUTH)
+# Small and up by the brow line: at card size they were drawn over the eyes.
+f.heart(15, 13, 8.5, color=MOUTH); f.heart(85, 13, 8.5, color=MOUTH)
 
 f = emo("kiss", "1f618", "😘")
 cheeks(f); lashes(f)
 f.eye(EYE_X, EYE_Y, EYE_RX, EYE_RY)
 f.arc(100 - EYE_X, 47, 22, -11, stroke=4.0, role="eye")
-f.oval(50, MOUTH_Y - 1, 6, 4.6, role="mouth")
-f.heart(84, 66, 14, color=MOUTH)
+f.oval(50, MOUTH_Y - 1, 6, 4.6, color=MOUTH, role="mouth")   # the pucker
+f.heart(88, 40, 9, color=MOUTH)   # clear of the winking eye, not across it
 
 f = emo("yum", "1f60b", "😋")
 cheeks(f, cy=66); happy_eyes(f)
@@ -628,7 +629,10 @@ cheeks(f, cy=66)
 # face and reaching down into the whiskers.
 f.pill(EYE_X, 45, 22, 14, 0, color=INK, role="eye")
 f.pill(100 - EYE_X, 45, 22, 14, 0, color=INK, role="eye")
-f.pill(50, 43, 34, 3.4, 0, color=INK, role="deco")           # bridge
+f.pill(50, 43, 34, 2.0, 0, color=INK, role="deco")           # bridge, kept
+                                                             # thin so the pair
+                                                             # reads as glasses
+                                                             # and not a visor
 f.pill(7, 41, 10, 3.0, -14, color=INK, role="deco")          # left arm
 f.pill(93, 41, 10, 3.0, 14, color=INK, role="deco")          # right arm
 f.pill(EYE_X - 6, 40, 8, 2.6, -20, color="#B9C0C8", role="deco")   # lens shine
@@ -636,7 +640,7 @@ f.pill(94 - EYE_X, 40, 8, 2.6, -20, color="#B9C0C8", role="deco")
 f.curve(54, MOUTH_Y - 2, 19, 8, role="mouth", stroke=4.2)
 
 f = emo("smirk", "1f60f", "😏")
-cheeks(f); eyes(f, lid=0.45)
+cheeks(f); eyes(f, lid=0.22)   # 0.45 closed them to a slit that read as a brow
 f.arc(56, MOUTH_Y - 3, 20, 8, rot=-8, stroke=3.4, role="mouth")
 
 f = emo("content", "1f60c", "😌")
@@ -662,8 +666,9 @@ cheeks(f); lashes(f); eyes(f)
 
 f = emo("grimace", "1f62c", "😬")
 cheeks(f, cy=64); lashes(f); eyes(f, ry=13)
-f.oval(50, MOUTH_Y, 15, 6.5, color=PANEL, outline=INK, stroke=3.0, role="mouth")
-f.flat(50, MOUTH_Y, 26, stroke=2.6, role="deco")
+# Wide and shallow, so it reads as gritted teeth rather than a grey lozenge.
+f.oval(50, MOUTH_Y, 21, 5.0, color=PANEL, outline=INK, stroke=2.6, role="mouth")
+f.flat(50, MOUTH_Y, 34, stroke=2.4, role="deco")
 
 f = emo("confused", "1f615", "😕")
 cheeks(f); lashes(f)
@@ -706,7 +711,7 @@ f = emo("flushed", "1f633", "😳")
 f.blush(BLUSH_X + 1, 62, 11.5); f.blush(99 - BLUSH_X, 62, 11.5)
 lashes(f)
 eyes(f, rx=14, ry=16.5)
-f.oval(50, MOUTH_Y + 1, 5.5, 4.2, role="mouth")
+f.oval(50, MOUTH_Y + 1, 5.5, 4.2, color=MOUTH_IN, role="mouth")
 
 f = emo("surprised", "1f62e", "😮")
 cheeks(f, cy=66); lashes(f); eyes(f)
@@ -759,7 +764,7 @@ f = emo("sleepy", "1f634", "😴")
 cheeks(f, cy=62)
 happy_eyes(f, cy=47, w=21, depth=9)
 f.oval(50, MOUTH_Y + 2, 5.5, 6.5, color=MOUTH_IN, role="mouth")
-f.zzz(80, 20, scale=1.0)
+f.zzz(90, 3, scale=0.55)   # small, up in the corner, clear of the right eye
 
 f = emo("drowsy", "1f62a", "😪")
 cheeks(f, cy=62); lashes(f)
@@ -776,7 +781,7 @@ f = emo("nauseated", "1f922", "🤢")
 f.blush(BLUSH_X, BLUSH_Y, 8.6, color=GREEN); f.blush(100 - BLUSH_X, BLUSH_Y, 8.6, color=GREEN)
 brows(f, cy=24, tilt=-14)
 happy_eyes(f, cy=47, w=21, depth=9)
-f.oval(50, 74, 11, 8, color=GREEN, role="mouth")
+f.oval(50, 75, 7.5, 5.5, color=GREEN, role="mouth")   # a queasy mouth, not a blob
 f.oval(50, 82, 7, 6, color=GREEN, role="deco")
 
 f = emo("sick", "1f912", "🤒")
@@ -784,8 +789,9 @@ cheeks(f, cy=66, rx=9.5)
 brows(f, cy=24, tilt=-13)
 eyes(f, cy=47, ry=12, lid=0.4)
 f.curve(50, MOUTH_Y + 2, 14, -6, role="mouth", stroke=4.2)
-f.pill(50, 22, 42, 7, 0, color="#DCE7F2", role="deco")
-f.oval(31, 22, 4.2, 4.2, color=MOUTH, role="deco")
+# Across the forehead, above the brows rather than through them.
+f.pill(50, 12, 42, 6, 0, color="#DCE7F2", role="deco")
+f.oval(31, 12, 4.0, 4.0, color=MOUTH, role="deco")
 
 f = emo("dizzy", "1f635", "😵")
 cheeks(f, cy=66); lashes(f)
@@ -839,6 +845,8 @@ WHISK_REF_Y = 194.5    # centre of the reference's lower whisker pair
 WHISK_W = round(WHISK_REF_W * _fit()[0], 3)
 WHISK_LEN = round(WHISK_REF_LEN * _fit()[0], 3)
 WHISK_ORIGIN_DX = 36.0
+WHISK_TOP_OUT = 3.0    # the upper whisker starts further out than the lower
+                       # one, so the pair reads as staggered rather than stacked
 WHISK_GAP = 5.0   # vertical gap at the inner ends, so the pair is
                   # two separate strokes rather than a < chevron
 WHISK_ANGLES = (-6.0, 18.0)    # two per cheek, splayed as the reference's are
@@ -903,24 +911,71 @@ def _nose_and_whiskers(elems):
     # Three short whiskers fanning from one point on each cheek, angled up,
     # level and down. Three parallel horizontal lines read as a stave, not a cat.
     for side in (-1, 1):
-        ox = 50.0 + side * WHISK_ORIGIN_DX
         oy = WHISK_Y
         for ang in WHISK_ANGLES:
             a = math.radians(ang)
-            dx = math.cos(a) * WHISK_LEN * side
-            dy = math.sin(a) * WHISK_LEN
+            # The upper whisker sits where the cheek is still wide, so it can
+            # start further out; shorten it if that would run it off the tile.
+            ox = 50.0 + side * (WHISK_ORIGIN_DX + (WHISK_TOP_OUT if ang < 0 else 0.0))
+            length = WHISK_LEN
+            end = ox + math.cos(a) * length * side
+            if side < 0 and end < 1.0:
+                length = (ox - 1.0) / math.cos(a)
+            elif side > 0 and end > 99.0:
+                length = (99.0 - ox) / math.cos(a)
+            dx = math.cos(a) * length * side
+            dy = math.sin(a) * length
             # Each whisker starts from its own point, offset above or below the
             # cheek line. Sharing one origin made the pair meet in a point and
             # read as a < rather than as two whiskers.
             oy_i = oy + (WHISK_GAP / 2.0) * (1 if ang > 0 else -1)
             out.append({"t": "pill", "cx": round(ox + dx / 2, 3),
-                        "cy": round(oy_i + dy / 2, 3), "w": WHISK_LEN, "h": WHISK_W,
+                        "cy": round(oy_i + dy / 2, 3), "w": round(length, 3),
+                        "h": WHISK_W,
                         "rot": round(ang * side, 3), "color": WHISKER,
                         # "overlay" survives the silhouette clip and is painted
                         # over the outline, so whiskers cross the head edge the
                         # way a cat's do instead of stopping at the cheek.
                         "role": "overlay"})
     return elems + out
+
+
+BROW_GAP = 1.2   # clear space kept between a brow and the eye beneath it
+
+
+def _lift_brows(elems):
+    """Keep brows and lashes clear of the eyes.
+
+    Brows sit at a fixed height on the card, but eye size varies per
+    expression -- pleading's are 30% above the base -- and the refit
+    compresses everything vertically, so a brow that cleared its eye on the
+    card ended up drawn across it on 9 of the 49 faces. Measure both and lift
+    the pair only when they actually meet, so faces that were fine don't move.
+    """
+    eyes = [e for e in elems if e.get("role") == "eye"]
+    brows = [e for e in elems if e.get("role") == "brow"]
+    if not eyes or not brows:
+        return elems
+
+    def eye_top(e):
+        if e["t"] == "arc":
+            return e["cy"] + min(0.0, e.get("depth", 0.0)) - e.get("stroke", 0.0) / 2
+        r = e.get("ry") or e.get("rx") or e.get("h", 0.0) / 2 or e.get("size", 0.0) / 2
+        return e["cy"] - r
+
+    def brow_bottom(b):
+        if b["t"] == "arc":
+            return b["cy"] + max(0.0, b.get("depth", 0.0)) + b.get("stroke", 0.0) / 2
+        tilt = math.radians(abs(b.get("rot", 0.0)))
+        return (b["cy"] + b.get("h", 0.0) / 2 * math.cos(tilt)
+                + b.get("w", 0.0) / 2 * math.sin(tilt))
+
+    slack = min(eye_top(e) for e in eyes) - max(brow_bottom(b) for b in brows)
+    if slack >= BROW_GAP:
+        return elems
+    lift = BROW_GAP - slack
+    return [dict(e, cy=round(e["cy"] - lift, 3)) if e.get("role") == "brow" else e
+            for e in elems]
 
 
 def _refit(elems, eye_gain):
@@ -941,6 +996,10 @@ def _refit(elems, eye_gain):
                     e[f] = round(e[f] * eye_gain, 3)
             if e["t"] in ("arc", "flat", "caret", "x") and "w" in e:
                 e["w"] = round(e["w"] * eye_gain, 3)
+            # An arc's depth is its height. Scaling only the width turned every
+            # curved eye into a narrow caret as the eyes shrank.
+            if e["t"] == "arc" and "depth" in e:
+                e["depth"] = round(e["depth"] * eye_gain, 3)
         out.append(e)
     return out
 
@@ -975,7 +1034,10 @@ def _minimal(elems):
             e["glint"] = False                         # no highlight
             if e.get("color") not in (None,):
                 e["color"] = EYE_COLOUR
-        elif e.get("role") == "mouth" and e.get("color"):
+        elif e.get("role") == "mouth" and e.get("color") and e["t"] != "oval":
+            # Open mouths keep their own colour. Flattened to the same grey as
+            # the line work they read as a second nose rather than an opening,
+            # and the grin mouths beside them were already coloured.
             e["color"] = MOUTH_COLOUR
         out.append(e)
     return out
@@ -989,7 +1051,7 @@ def catify(elems, face_name=""):
     # before it, the refit squashed their centres vertically while leaving their
     # rotation alone, which pinched the pair together until the two whiskers on
     # a cheek crossed over each other.
-    built = _nose_and_whiskers(_refit(_muzzle(elems), gain))
+    built = _nose_and_whiskers(_lift_brows(_refit(_muzzle(elems), gain)))
     if not MINIMAL_STYLE:
         return built + _inner_ears()
     return _minimal(built)
