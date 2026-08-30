@@ -76,6 +76,12 @@ EAR_LIFT = 2.5      # raises the tips to pay for what the fillet cuts away,
 EAR_BOW = 5.0       # bows both edges of each ear outward from its own
                     # centreline, so they swell rather than run straight
 
+# Ear motion is off. Rotating an ear resamples its outline, and at the sizes
+# the panel uses that lands the frame's pixels differently from one variant to
+# the next, so the flick showed as the outline breaking up rather than as the
+# ear moving. The runtime skips flicks entirely when no variants are published,
+# so this is the only switch: set EAR_MOTION back to True to restore them.
+EAR_MOTION = False
 TWITCH_DEG = 13.0   # how far one ear swings on a flick
 PERK_DEG = 6.0      # both ears, pricked up
 SHAPE_STEPS = 26    # samples per Bezier segment
@@ -526,7 +532,7 @@ def lashes(f, cy=LASH_Y, w=20, depth=-8, stroke=3.0):
     f.arc(100 - EYE_X, cy, w, depth, stroke=stroke, role="brow")
 
 
-def brows(f, cy=25, w=19, tilt=16, stroke=3.6, color=INK):
+def brows(f, cy=25, w=17, tilt=16, stroke=3.0, color=INK):
     """Angled brows; positive tilt slants inward (angry)."""
     f.pill(EYE_X - 1, cy, w, stroke, -tilt, color=color, role="brow")
     f.pill(101 - EYE_X, cy, w, stroke, tilt, color=color, role="brow")
@@ -602,14 +608,15 @@ f = emo("adoring", "1f970", "🥰")
 cheeks(f); lashes(f); eyes(f)
 f.curve(50, MOUTH_Y - 3, 21, 9, role="mouth", stroke=4.2)
 # Small and up by the brow line: at card size they were drawn over the eyes.
-f.heart(15, 13, 8.5, color=MOUTH); f.heart(85, 13, 8.5, color=MOUTH)
+f.heart(15, 8, 8, color=MOUTH); f.heart(85, 8, 8, color=MOUTH)
 
 f = emo("kiss", "1f618", "😘")
 cheeks(f); lashes(f)
 f.eye(EYE_X, EYE_Y, EYE_RX, EYE_RY)
-f.arc(100 - EYE_X, 47, 22, -11, stroke=4.0, role="eye")
+# Wide and shallow so the wink reads as a closed eye, not as a dark blob.
+f.arc(100 - EYE_X, 47, 32, -7, stroke=3.4, role="eye")
 f.oval(50, MOUTH_Y - 1, 6, 4.6, color=MOUTH, role="mouth")   # the pucker
-f.heart(88, 40, 9, color=MOUTH)   # clear of the winking eye, not across it
+f.heart(88, 20, 8, color=MOUTH)   # above the wink, not across it
 
 f = emo("yum", "1f60b", "😋")
 cheeks(f, cy=66); happy_eyes(f)
@@ -639,12 +646,11 @@ cheeks(f, cy=66)
 # these are authored at the size they should finish at. Left as card-sized,
 # the lenses stayed 2.5x too big when the eyes shrank, covering most of the
 # face and reaching down into the whiskers.
-f.pill(EYE_X, 45, 22, 14, 0, color=INK, role="eye")
-f.pill(100 - EYE_X, 45, 22, 14, 0, color=INK, role="eye")
-f.pill(50, 43, 34, 2.0, 0, color=INK, role="deco")           # bridge, kept
-                                                             # thin so the pair
-                                                             # reads as glasses
-                                                             # and not a visor
+f.pill(EYE_X, 45, 26, 16, 0, color=INK, role="eye")
+f.pill(100 - EYE_X, 45, 26, 16, 0, color=INK, role="eye")
+# An arched bridge over the nose. A straight pill joined the lenses into one
+# continuous band, which read as a visor rather than as a pair of glasses.
+f.arc(50, 44, 33, -4, stroke=2.6, role="deco")   # wide enough to meet both lenses
 f.pill(7, 41, 10, 3.0, -14, color=INK, role="deco")          # left arm
 f.pill(93, 41, 10, 3.0, 14, color=INK, role="deco")          # right arm
 f.pill(EYE_X - 6, 40, 8, 2.6, -20, color="#B9C0C8", role="deco")   # lens shine
@@ -652,7 +658,8 @@ f.pill(94 - EYE_X, 40, 8, 2.6, -20, color="#B9C0C8", role="deco")
 f.curve(54, MOUTH_Y - 2, 19, 8, role="mouth", stroke=4.2)
 
 f = emo("smirk", "1f60f", "😏")
-cheeks(f); eyes(f, lid=0.22)   # 0.45 closed them to a slit that read as a brow
+cheeks(f); eyes(f)   # any lid at this eye size reads as a heavy brow, not a
+                     # half-shut eye; the offset mouth carries the smirk
 f.arc(56, MOUTH_Y - 3, 20, 8, rot=-8, stroke=3.4, role="mouth")
 
 f = emo("content", "1f60c", "😌")
@@ -679,8 +686,8 @@ cheeks(f); lashes(f); eyes(f)
 f = emo("grimace", "1f62c", "😬")
 cheeks(f, cy=64); lashes(f); eyes(f, ry=13)
 # Wide and shallow, so it reads as gritted teeth rather than a grey lozenge.
-f.oval(50, MOUTH_Y, 21, 5.0, color=PANEL, outline=INK, stroke=2.6, role="mouth")
-f.flat(50, MOUTH_Y, 34, stroke=2.4, role="deco")
+f.oval(50, MOUTH_Y, 16, 5.0, color=PANEL, outline=INK, stroke=2.6, role="mouth")
+f.flat(50, MOUTH_Y, 26, stroke=2.4, role="deco")
 
 f = emo("confused", "1f615", "😕")
 cheeks(f); lashes(f)
@@ -763,7 +770,7 @@ f = emo("rage", "1f621", "😡")
 cheeks(f, cy=66); brows(f, cy=25, tilt=18, color=ANGER)
 eyes(f, cy=47, ry=14, color=ANGER)
 f.grin(50, 68, 22, 13, color=ANGER, inner=MOUTH_IN)
-f.anger(80, 23, 14); f.anger(20, 23, 12)
+f.anger(82, 20, 10); f.anger(18, 20, 10)   # up on the temples, off the eyes
 
 f = emo("huffing", "1f624", "😤")
 cheeks(f, cy=66); brows(f, cy=25, tilt=16)
@@ -802,8 +809,8 @@ brows(f, cy=24, tilt=-13)
 eyes(f, cy=47, ry=12, lid=0.4)
 f.curve(50, MOUTH_Y + 2, 14, -6, role="mouth", stroke=4.2)
 # Across the forehead, above the brows rather than through them.
-f.pill(50, 12, 42, 6, 0, color="#DCE7F2", role="deco")
-f.oval(31, 12, 4.0, 4.0, color=MOUTH, role="deco")
+f.pill(50, 5, 42, 6, 0, color="#DCE7F2", role="deco")
+f.oval(31, 5, 4.0, 4.0, color=MOUTH, role="deco")
 
 f = emo("dizzy", "1f635", "😵")
 cheeks(f, cy=66); lashes(f)
@@ -814,8 +821,8 @@ f.zigzag(50, MOUTH_Y, 21, 5, 4, role="mouth")
 f = emo("hug", "1f917", "🤗")
 cheeks(f, cy=66); happy_eyes(f)
 f.grin(50, 63, 28, 17)
-f.arc(13, 68, 15, -9, stroke=3.4, role="deco")
-f.arc(87, 68, 15, -9, stroke=3.4, role="deco")
+f.arc(13, 64, 15, -9, stroke=3.4, role="deco")
+f.arc(87, 64, 15, -9, stroke=3.4, role="deco")
 
 f = emo("cat_smile", "1f63a", "😺")
 cheeks(f); lashes(f); eyes(f)
@@ -916,10 +923,45 @@ def _muzzle(elems):
     return out
 
 
+NOSE_GAP = 1.8   # clear space kept between the nose and the mouth below it
+NOSE_H = 5.0
+# How far above the eye centres the nose may sit before it is dropped. It sits
+# at x=50, between the eyes rather than beside them, so a little above their
+# centre line still reads fine; a lot does not.
+NOSE_RISE = 2.0
+
+
+def _mouth_top(e):
+    """Highest point of a mouth, whatever shape it is."""
+    t = e["t"]
+    if t == "oval":
+        return e["cy"] - (e.get("ry") or 0.0)
+    if t == "grin":
+        return e["cy"] - e.get("h", 0.0) / 2.0
+    if t == "cat":
+        return e["cy"] - e.get("h", 0.0) / 2.0 - e.get("stroke", 0.0) / 2.0
+    if t == "arc":
+        return e["cy"] + min(0.0, e.get("depth", 0.0)) - e.get("stroke", 0.0) / 2.0
+    return e["cy"] - e.get("stroke", 4.0) / 2.0
+
+
 def _nose_and_whiskers(elems):
-    mouth_y = next((e.get("cy", 70) for e in elems if e.get("role") == "mouth"), 70.0)
-    out = [{"t": "tri", "cx": 50.0, "cy": round(mouth_y - 7.5, 3), "w": 7.0, "h": 5.0,
-            "color": NOSE, "down": True, "role": "deco"}]
+    mouth = next((e for e in elems if e.get("role") == "mouth"), None)
+    mouth_y = mouth.get("cy", 70.0) if mouth else 70.0
+    out = []
+    # The nose used to sit a fixed distance above the mouth's centre, which is
+    # fine for a line mouth and wrong for a tall one: astonished's open mouth
+    # reaches 11 units above its own centre, so the nose was drawn inside it.
+    # Place it off the mouth's top instead, and where that would push it above
+    # the eyes there is simply no room for a nose -- the reference cat has none
+    # at all, and a wide open mouth reads perfectly well without one.
+    nose_cy = mouth_y - 7.5
+    if mouth is not None:
+        nose_cy = min(nose_cy, _mouth_top(mouth) - NOSE_GAP - NOSE_H / 2.0)
+    eye_line = max((e["cy"] for e in elems if e.get("role") == "eye"), default=0.0)
+    if nose_cy >= eye_line - NOSE_RISE:
+        out.append({"t": "tri", "cx": 50.0, "cy": round(nose_cy, 3), "w": 7.0,
+                    "h": NOSE_H, "color": NOSE, "down": True, "role": "deco"})
     # Three short whiskers fanning from one point on each cheek, angled up,
     # level and down. Three parallel horizontal lines read as a stave, not a cat.
     for side in (-1, 1):
@@ -1364,7 +1406,7 @@ def main():
                                round(max(p[1] for p in SHAPE), 3)]},
             "talk_shapes": TALK_SHAPES,
             # Alternate silhouettes the runtime swaps to for an ear flick.
-            "shape_variants": {
+            "shape_variants": {} if not EAR_MOTION else {
                 "flick_left": shape_points(twitch=(TWITCH_DEG, 0.0)),
                 "flick_right": shape_points(twitch=(0.0, -TWITCH_DEG)),
                 "perk": shape_points(twitch=(-PERK_DEG, PERK_DEG)),
