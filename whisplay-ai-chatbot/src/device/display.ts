@@ -13,10 +13,16 @@ dotEnv.config();
 // than this is not a recording attempt, so it counts toward a click gesture.
 // These used to be three different numbers - 350 here, 500 in listening - and a
 // press of 400ms was a click to one of them and not the other.
-export const CLICK_MAX_PRESS_MS = 500;
+// 500 was too tight to hit by hand: the log showed presses of 545 and 490ms,
+// so the same gesture worked or became a recording depending on 50ms. Nothing
+// under this is usable speech anyway.
+export const CLICK_MAX_PRESS_MS = 650;
 // Two clicks of full length plus the gap between them have to fit.
-const DOUBLE_CLICK_WINDOW_MS = 1200;
-const TRIPLE_CLICK_WINDOW_MS = 1800;
+const DOUBLE_CLICK_WINDOW_MS = 1600;
+const TRIPLE_CLICK_WINDOW_MS = 2200;
+// Only for reporting: how far back to look when explaining why a gesture was
+// not recognised, so a near miss is visible instead of silently dropped.
+const CLICK_DIAGNOSTIC_WINDOW_MS = 3000;
 
 // Held back long enough to tell a triple-click apart from the daemon's
 // four-click exit gesture.
@@ -208,6 +214,21 @@ export class WhisplayDisplay {
       (time) => now - time <= DOUBLE_CLICK_WINDOW_MS,
     );
     if (presses.length < 2 || releases.length < 2) {
+      // Say why. Falling out here silently is what made this look dead: the
+      // clicks were real, they just landed outside the window.
+      const seen = this.buttonPressTimeArray.filter(
+        (time) => now - time <= CLICK_DIAGNOSTIC_WINDOW_MS,
+      );
+      const seenReleases = this.buttonReleaseTimeArray.filter(
+        (time) => now - time <= CLICK_DIAGNOSTIC_WINDOW_MS,
+      );
+      if (seen.length >= 2 && seenReleases.length >= 2) {
+        console.log(
+          `[Button] two clicks seen but too far apart: ` +
+          `${seenReleases[seenReleases.length - 1] - seen[seen.length - 2]}ms ` +
+          `from first press to second release (max ${DOUBLE_CLICK_WINDOW_MS})`,
+        );
+      }
       return;
     }
 
