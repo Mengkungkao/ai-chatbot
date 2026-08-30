@@ -9,14 +9,15 @@ import dotEnv from "dotenv";
 
 dotEnv.config();
 
-const DOUBLE_CLICK_WINDOW_MS = 800;
-const DOUBLE_CLICK_MAX_PRESS_MS = 350;
-const TRIPLE_CLICK_WINDOW_MS = 1500;
-// A triple-click gets its own press budget. Sharing the double-click's 350ms
-// made the gesture near-impossible by hand: a click in sleep also bounces the
-// flow through listening, which allows up to 500ms before it counts as a real
-// recording, so anything under that is plainly a click and should count here.
-const TRIPLE_CLICK_MAX_PRESS_MS = 500;
+// One definition of a click, shared with the listening state: a press shorter
+// than this is not a recording attempt, so it counts toward a click gesture.
+// These used to be three different numbers - 350 here, 500 in listening - and a
+// press of 400ms was a click to one of them and not the other.
+export const CLICK_MAX_PRESS_MS = 500;
+// Two clicks of full length plus the gap between them have to fit.
+const DOUBLE_CLICK_WINDOW_MS = 1200;
+const TRIPLE_CLICK_WINDOW_MS = 1800;
+
 // Held back long enough to tell a triple-click apart from the daemon's
 // four-click exit gesture.
 const TRIPLE_CLICK_SETTLE_MS = 450;
@@ -162,7 +163,7 @@ export class WhisplayDisplay {
     const allShort = lastPresses.every(
       (press, index) =>
         lastReleases[index] >= press &&
-        lastReleases[index] - press <= TRIPLE_CLICK_MAX_PRESS_MS,
+        lastReleases[index] - press <= CLICK_MAX_PRESS_MS,
     );
     const withinWindow =
       lastReleases[2] - lastPresses[0] <= TRIPLE_CLICK_WINDOW_MS;
@@ -170,7 +171,7 @@ export class WhisplayDisplay {
       const held = lastPresses.map((p, i) => lastReleases[i] - p).join("/");
       console.log(
         `[Button] three clicks seen but not a triple-click: held ${held}ms ` +
-        `(max ${TRIPLE_CLICK_MAX_PRESS_MS}), span ` +
+        `(max ${CLICK_MAX_PRESS_MS}), span ` +
         `${lastReleases[2] - lastPresses[0]}ms (max ${TRIPLE_CLICK_WINDOW_MS})`,
       );
       return;
@@ -221,10 +222,20 @@ export class WhisplayDisplay {
       firstRelease <= secondPress &&
       secondPress <= secondRelease &&
       secondRelease - firstPress <= DOUBLE_CLICK_WINDOW_MS &&
-      firstPressDuration <= DOUBLE_CLICK_MAX_PRESS_MS &&
-      secondPressDuration <= DOUBLE_CLICK_MAX_PRESS_MS;
+      firstPressDuration <= CLICK_MAX_PRESS_MS &&
+      secondPressDuration <= CLICK_MAX_PRESS_MS;
 
-    if (!doubleClickDetected) return;
+    if (!doubleClickDetected) {
+      if (presses.length >= 2) {
+        console.log(
+          `[Button] two clicks seen but not a double-click: held ` +
+          `${firstPressDuration}/${secondPressDuration}ms (max ${CLICK_MAX_PRESS_MS}), ` +
+          `span ${secondRelease - firstPress}ms (max ${DOUBLE_CLICK_WINDOW_MS})`,
+        );
+      }
+      return;
+    }
+    console.log("[Button] double-click");
     const emit = () => {
       this.buttonPressTimeArray = [];
       this.buttonReleaseTimeArray = [];

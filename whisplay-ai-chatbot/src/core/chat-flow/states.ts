@@ -5,6 +5,7 @@ import {
   onButtonReleased,
   onButtonDoubleClick,
   onButtonTripleClick,
+  CLICK_MAX_PRESS_MS,
   display,
   getCurrentStatus,
   onCameraCapture,
@@ -75,25 +76,16 @@ export const flowStates: Record<FlowName, FlowStateHandler> = {
       display({ status: "recognizing", text, text_input_enabled: false });
       ctx.transitionTo("answer");
     });
-    if (ctx.enableCamera) {
-      const captureImgPath = `${cameraDir}/capture-${moment().format(
-        "YYYYMMDD-HHmmss",
-      )}.jpg`;
-      onButtonDoubleClick(() => {
-        enterCameraMode(captureImgPath);
-        ctx.transitionTo("camera");
-      });
-    }
-    // Triple-click toggles auto-talk. The daemon quits this app on a fourth
-    // click, so display.ts holds the callback back until it is sure no fourth
-    // click is coming.
-    onButtonTripleClick(() => {
-      // Only act while idle, so a stray triple-click cannot clobber the screen
+    // Auto-talk toggle. Double-click, because a triple asked for three clicks
+    // inside one window and a single press a hair over the click budget lost
+    // the whole gesture silently -- the log had it failing on 545ms.
+    const toggleAutoTalk = () => {
+      // Only act while idle, so a stray click cannot clobber the screen
       // mid-answer. Say so rather than dropping it silently -- this guard is
       // invisible from the outside and looks exactly like a dead gesture.
       if (ctx.currentFlowName !== "sleep") {
         console.log(
-          `[Button] triple-click ignored: flow is "${ctx.currentFlowName}", not idle`,
+          `[Button] toggle ignored: flow is "${ctx.currentFlowName}", not idle`,
         );
         return;
       }
@@ -104,7 +96,24 @@ export const flowStates: Record<FlowName, FlowStateHandler> = {
         text: on ? "Auto-talk on." : "Auto-talk off.",
         auto_talk_enabled: on,
       });
-    });
+    };
+
+    if (ctx.enableCamera) {
+      const captureImgPath = `${cameraDir}/capture-${moment().format(
+        "YYYYMMDD-HHmmss",
+      )}.jpg`;
+      onButtonDoubleClick(() => {
+        enterCameraMode(captureImgPath);
+        ctx.transitionTo("camera");
+      });
+      // The camera owns the double-click here, so auto-talk keeps the triple.
+      // display.ts holds that callback back until it is sure no fourth click
+      // is coming, since four is the daemon's exit gesture.
+      onButtonTripleClick(toggleAutoTalk);
+    } else {
+      onButtonDoubleClick(toggleAutoTalk);
+      onButtonTripleClick(null);
+    }
     display({
       status: "idle",
       emoji: IDLE_EMOJI,
@@ -211,7 +220,7 @@ export const flowStates: Record<FlowName, FlowStateHandler> = {
     const { result, stop } = recordAudioManually(ctx.currentRecordFilePath);
     let shouldIgnoreRecordingResult = false;
     const handleRelease = () => {
-      if (Date.now() - listeningStartedAt < 500) {
+      if (Date.now() - listeningStartedAt < CLICK_MAX_PRESS_MS) {
         // Too short to be meaningful — stop recording and return to sleep
         console.log("[listening] Button released too quickly, returning to sleep");
         shouldIgnoreRecordingResult = true;
