@@ -650,15 +650,15 @@ cheeks(f, cy=66)
 # Deal-with-it glasses: one solid bar across the top with two blocky lenses
 # hanging off it. They are opaque by design -- no eyes behind them -- so they
 # are deco rather than eyes, and they do not blink or squash.
-f.pill(50, 44, 70, 12, 0, color=INK, role="deco", r=0)         # the glasses
-f.pill(50, 56, 11, 5, 0, color=PANEL, role="deco", r=0)         # notch for the
+f.pill(50, 42, 80, 15, 0, color=INK, role="deco", r=0)         # the glasses
+f.pill(50, 58, 12, 5, 0, color=PANEL, role="deco", r=0)         # notch for the
                                                                 # nose bridge
 # The two diagonal streaks are what make sunglasses read as cool rather than
 # as a bar: light catching the lens. Panel-coloured so they cut through the
 # black the way a highlight does.
-f.pill(34, 44, 3.2, 10, -28, color=PANEL, role="deco", r=0)
-f.pill(40, 44, 1.6, 10, -28, color=PANEL, role="deco", r=0)
-f.curve(54, MOUTH_Y + 4, 19, 8, role="mouth", stroke=4.2)   # clear of the frame
+f.pill(33, 42, 3.6, 13, -28, color=PANEL, role="deco", r=0)
+f.pill(40, 42, 1.8, 13, -28, color=PANEL, role="deco", r=0)
+f.curve(54, MOUTH_Y + 6, 19, 8, role="mouth", stroke=4.2)   # clear of the frame
 
 f = emo("smirk", "1f60f", "😏")
 cheeks(f); eyes(f)   # any lid at this eye size reads as a heavy brow, not a
@@ -805,11 +805,13 @@ f.curve(50, MOUTH_Y - 2, 18, 8, role="mouth", stroke=4.2)
 f.oval(60, 80, 3.6, 6, color=TEAR)
 
 f = emo("nauseated", "1f922", "🤢")
-f.blush(BLUSH_X, BLUSH_Y, 8.6, color=GREEN); f.blush(100 - BLUSH_X, BLUSH_Y, 8.6, color=GREEN)
+f.blush(BLUSH_X - 2, 60, 11, color=GREEN, opacity=0.55)
+f.blush(102 - BLUSH_X, 60, 11, color=GREEN, opacity=0.55)
+f.blush(50, 76, 15, 9, color=GREEN, opacity=0.45)   # the green round the muzzle
 brows(f, cy=24, tilt=-14)
-eyes(f, cy=47, ry=11)
-f.zigzag(50, 74, 20, 5, 3, stroke=3.4, color=GREEN, role="mouth")
-f.drop(70, 78, 4.5, 7, color=GREEN)
+eyes(f, cy=47, ry=9, lid=0.3)                        # heavy-lidded, unwell
+f.zigzag(50, 74, 26, 6, 4, stroke=3.8, color=GREEN, role="mouth")
+f.drop(72, 80, 5, 8, color=GREEN)
 
 f = emo("sick", "1f912", "🤒")
 cheeks(f, cy=66, rx=9.5)
@@ -1098,8 +1100,9 @@ def _minimal(elems):
     """Flatten to the spec: solid dark-grey eyes, no highlights, no blush."""
     out = []
     for e in elems:
-        if e.get("role") == "blush":
-            continue                                   # no cheek colour
+        if e.get("role") == "blush" and e.get("color", BLUSH) == BLUSH:
+            continue        # no pink cheeks -- but a deliberate colour stays,
+                            # since nausea's green is the whole expression
         e = dict(e)
         if e.get("role") == "eye":
             e["glint"] = False                         # no highlight
