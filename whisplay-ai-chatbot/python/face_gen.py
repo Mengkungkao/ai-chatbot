@@ -650,10 +650,15 @@ cheeks(f, cy=66)
 # Deal-with-it glasses: one solid bar across the top with two blocky lenses
 # hanging off it. They are opaque by design -- no eyes behind them -- so they
 # are deco rather than eyes, and they do not blink or squash.
-f.pill(50, 46, 76, 14, 0, color=INK, role="deco", r=0)         # the glasses
-f.pill(50, 59, 16, 5, 0, color=PANEL, role="deco", r=0)        # notch for the
-                                                               # nose bridge
-f.curve(54, MOUTH_Y - 2, 19, 8, role="mouth", stroke=4.2)
+f.pill(50, 44, 70, 12, 0, color=INK, role="deco", r=0)         # the glasses
+f.pill(50, 56, 11, 5, 0, color=PANEL, role="deco", r=0)         # notch for the
+                                                                # nose bridge
+# The two diagonal streaks are what make sunglasses read as cool rather than
+# as a bar: light catching the lens. Panel-coloured so they cut through the
+# black the way a highlight does.
+f.pill(34, 44, 3.2, 10, -28, color=PANEL, role="deco", r=0)
+f.pill(40, 44, 1.6, 10, -28, color=PANEL, role="deco", r=0)
+f.curve(54, MOUTH_Y + 4, 19, 8, role="mouth", stroke=4.2)   # clear of the frame
 
 f = emo("smirk", "1f60f", "😏")
 cheeks(f); eyes(f)   # any lid at this eye size reads as a heavy brow, not a
