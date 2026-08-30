@@ -15,6 +15,10 @@ import {
 // Idle face. Defaults to a neutral face so the renderer animates blinking eyes
 // rather than showing the static sleeping glyph.
 const IDLE_EMOJI = (process.env.IDLE_EMOJI || "😐").trim() || "😐";
+// The HAT's RGB LED and the face's bezel both take this, so the ring on the
+// panel and the light on the board say the same thing: the mic is live.
+// Override with RECORDING_RGB in the environment.
+const RECORDING_RGB = (process.env.RECORDING_RGB || "#ff2020").trim() || "#ff2020";
 
 // How long after waking she waits for speech to begin before asking whether
 // anyone is actually there.
@@ -228,7 +232,9 @@ export const flowStates: Record<FlowName, FlowStateHandler> = {
     display({
       status: "listening",
       emoji: DEFAULT_EMOJI,
-      RGB: "#00ff00",
+      // Red while the mic is live, the way a record light is. "detecting"
+      // stays green, so armed and recording stay tellable apart at a glance.
+      RGB: RECORDING_RGB,
       text: "Listening...",
       rag_icon_visible: false,
     });
@@ -262,7 +268,7 @@ export const flowStates: Record<FlowName, FlowStateHandler> = {
       display({
         status: "listening",
         emoji: DEFAULT_EMOJI,
-        RGB: "#00ff00",
+        RGB: RECORDING_RGB,
         text: prompt,
         rag_icon_visible: false,
       });
