@@ -123,6 +123,21 @@ def _offset_polygon(pts, dist):
     return a if abs(_polygon_area(a)) < abs(_polygon_area(b)) else b
 
 
+def shape_height_ratio(default=1.0):
+    """Painted height of the head as a fraction of its width.
+
+    The face canvas is square but the head is not, so a caller that reserves a
+    square of screen for it wastes a band top and bottom. Reading the real
+    bounding box lets the layout follow the head instead.
+    """
+    try:
+        with open(DEFAULT_FACES_PATH, "r", encoding="utf-8") as fh:
+            x0, y0, x1, y1 = json.load(fh)["meta"]["shape"]["bbox"]
+        return (y1 - y0) / (x1 - x0)
+    except (OSError, ValueError, KeyError, TypeError, ZeroDivisionError):
+        return default
+
+
 def _ease_in_out(t):
     t = max(0.0, min(1.0, t))
     return t * t * (3.0 - 2.0 * t)

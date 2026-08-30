@@ -32,8 +32,14 @@ PANEL_RX = 26
 
 # Bezel drawn around the panel: a rounded outline living in the canvas margin,
 # clear of the panel edge so the face reads as something mounted in a frame.
-FRAME_WIDTH = 3.0   # ~7px at the reference scale
-FRAME_INSET = 1.2
+# The reference strokes its outline centred on the path, 7 units wide on its
+# own canvas. The runtime instead fills the polygon and lays the ring inside
+# it, so the polygon has to be the stroke's OUTER edge for the painted head to
+# come out the same size and the fill boundary to land in the same place.
+# FRAME_WIDTH is set from the mapped stroke once the fit is known.
+STROKE_REF = 7.0
+FRAME_WIDTH = 3.0   # replaced below with STROKE_REF at face scale
+FRAME_INSET = 0.0
 FRAME_RX = PANEL_RX + (PANEL_MARGIN - (FRAME_INSET + FRAME_WIDTH / 2))
 
 # No ornaments on the bezel: at this size a delicate outline flatters the face,
@@ -92,6 +98,52 @@ def _rotate(pts, cx, cy, deg):
         dx, dy = x - cx, y - cy
         out.append((cx + dx * ca - dy * sa, cy + dx * sa + dy * ca))
     return out
+
+
+def _polygon_area(pts):
+    a = 0.0
+    for i in range(len(pts)):
+        x0, y0 = pts[i - 1]
+        x1, y1 = pts[i]
+        a += x0 * y1 - x1 * y0
+    return a / 2.0
+
+
+def _outset_polygon(pts, dist):
+    """Move every vertex outward along its own normal by ``dist``.
+
+    The mirror of the runtime's inset: scaling about the centre would displace
+    the ears rather than thicken their outline. Used to turn the reference's
+    centred stroke into the outer boundary the runtime fills to.
+    """
+    n = len(pts)
+    if n < 3:
+        return list(pts)
+
+    def edge_normal(a, b):
+        dx, dy = b[0] - a[0], b[1] - a[1]
+        L = math.hypot(dx, dy) or 1.0
+        return (dy / L, -dx / L)
+
+    def build(sign):
+        out = []
+        for i in range(n):
+            p0, p1, p2 = pts[i - 1], pts[i], pts[(i + 1) % n]
+            n1, n2 = edge_normal(p0, p1), edge_normal(p1, p2)
+            nx, ny = n1[0] + n2[0], n1[1] + n2[1]
+            L = math.hypot(nx, ny)
+            if L < 1e-9:
+                nx, ny, L = n1[0], n1[1], 1.0
+            nx, ny = nx / L, ny / L
+            cosang = max(-0.999, min(1.0, n1[0] * n2[0] + n1[1] * n2[1]))
+            miter = math.sqrt(max(0.15, (1.0 + cosang) / 2.0))
+            step = sign * dist / miter
+            out.append([p1[0] + nx * step, p1[1] + ny * step])
+        return out
+
+    a, b = build(1.0), build(-1.0)
+    # outward is whichever encloses more area
+    return a if abs(_polygon_area(a)) > abs(_polygon_area(b)) else b
 
 
 def _m(p):
@@ -246,8 +298,9 @@ def _fit():
     global _FIT
     if _FIT is None:
         segs, _ = _head_segments()
-        pts = [_cubic(*s, k / SHAPE_STEPS)
-               for s in segs for k in range(SHAPE_STEPS)]
+        pts = _outset_polygon([_cubic(*s, k / SHAPE_STEPS)
+                               for s in segs for k in range(SHAPE_STEPS)],
+                              STROKE_REF / 2.0)
         xs = [p[0] for p in pts]
         ys = [p[1] for p in pts]
         s = (100.0 - 2 * FACE_MARGIN) / (max(xs) - min(xs))
@@ -280,7 +333,10 @@ def shape_points(twitch=(0.0, 0.0)):
         for i, q in zip(idx, moved):
             pts[i] = (q, ear)
 
-    out = [[round(v, 3) for v in _to_face(p)] for p, _ in pts]
+    # The polygon the runtime fills is the stroke's outer edge, so the painted
+    # head matches the reference's rather than coming out a stroke smaller.
+    ref = _outset_polygon([p for p, _ in pts], STROKE_REF / 2.0)
+    out = [[round(v, 3) for v in _to_face(p)] for p in ref]
     # Points closer than this are invisible at any size the display uses, and
     # they make corner measurements meaningless by turning one bend into several.
     dedup = [out[0]]
@@ -299,6 +355,8 @@ EAR_SPAN = (_to_face(_m(REF_EAR_INNER_BASE))[0], _to_face(_m(REF_EAR_OUTER_BASE)
 HEAD_HALF_W = 50.0 - FACE_MARGIN
 
 SHAPE = shape_points()
+FRAME_WIDTH = round(STROKE_REF * _fit()[0], 3)
+FRAME_RX = PANEL_RX + (PANEL_MARGIN - (FRAME_INSET + FRAME_WIDTH / 2))
 
 
 def scaled(pts, inset):
@@ -779,8 +837,8 @@ CLOSED_MOUTHS = {"flat", "arc", "zigzag"}
 # These four are solved rather than guessed: they are whatever places the eyes
 # and mouth exactly where the reference cat puts its own, once the head has
 # been mapped onto this canvas. Change the head and they need re-solving.
-SRC_CENTRE, FIT_CENTRE, FIT_YSCALE = 52.0, 61.86, 0.387
-FIT_SPREAD, FIT_EYE_GAIN = 1.120, 0.513
+SRC_CENTRE, FIT_CENTRE, FIT_YSCALE = 52.0, 61.50, 0.375
+FIT_SPREAD, FIT_EYE_GAIN = 1.086, 0.498
 
 # Eyes are not one size. A person's eyes widen when startled and narrow when
 # cross, and the face reads flat if they never change, so each expression scales
@@ -1197,7 +1255,14 @@ def main():
                       "color": FRAME, "inner_color": FRAME_INNER, "ears": EARS,
                       "gradient": {"from": FRAME_FROM, "to": FRAME_TO}},
             "ink": INK,
-            "shape": {"name": SHAPE_NAME, "points": SHAPE},
+            "shape": {"name": SHAPE_NAME, "points": SHAPE,
+                      # The painted head does not fill the square canvas: it
+                      # keeps the reference's proportions. Callers size their
+                      # layout from this rather than assuming a square.
+                      "bbox": [round(min(p[0] for p in SHAPE), 3),
+                               round(min(p[1] for p in SHAPE), 3),
+                               round(max(p[0] for p in SHAPE), 3),
+                               round(max(p[1] for p in SHAPE), 3)]},
             "talk_shapes": TALK_SHAPES,
             # Alternate silhouettes the runtime swaps to for an ear flick.
             "shape_variants": {

@@ -38,9 +38,19 @@ tool_tag_font_size=13
 # Body text alignment on the panel. Set TEXT_ALIGN=left to restore the old
 # left-aligned layout.
 TEXT_ALIGN = (os.environ.get("TEXT_ALIGN") or "center").strip().lower()
-# Header strip height. Derived from the font sizes it has to hold so that
-# resizing the face reflows the layout instead of clipping it.
-HEADER_HEIGHT = status_font_size + emoji_font_size + 38
+# The face is drawn into a square tile but the cat does not fill it: it keeps
+# the reference drawing's proportions, so a square reservation wastes a band
+# above and below. FACE_TILE is the cat's painted width in pixels; its height
+# follows from the silhouette itself, and the header is sized to that rather
+# than to the tile, so none of the strip is spent on empty canvas.
+FACE_TILE = 150
+FACE_HEIGHT = int(round(FACE_TILE * face_engine.shape_height_ratio()))
+FACE_PAD_Y = (FACE_TILE - FACE_HEIGHT) // 2   # blank band inside the tile
+FACE_TOP = status_font_size + 8               # where the cat's crown sits
+FACE_SLOT_Y = FACE_TOP - FACE_PAD_Y           # where the tile sits
+# Header strip height. Derived from what it has to hold so that resizing the
+# face reflows the layout instead of clipping it.
+HEADER_HEIGHT = FACE_TOP + FACE_HEIGHT + 20
 IDLE_RENDER_INTERVAL = 0.5
 MAX_MAIN_TEXT_CHARS = 2200
 TRUNCATION_PREFIX = "... "
@@ -200,7 +210,7 @@ class RenderThread(threading.Thread):
         # Animated face. Falls back to the plain emoji glyph if the spec is
         # missing or the current emoji has no face defined for it.
         face_renderer = face_engine.load_renderer()
-        self.face = (face_engine.FaceAnimator(face_renderer, size=emoji_font_size,
+        self.face = (face_engine.FaceAnimator(face_renderer, size=FACE_TILE,
                                               idle_motion=FACE_IDLE_MOTION)
                      if face_renderer else None)
         self.face_active = False
@@ -623,7 +633,7 @@ class RenderThread(threading.Thread):
         x = (self.whisplay.LCD_WIDTH - size) // 2
         if current_terminal_text:
             x = self.whisplay.CornerHeight
-        return x, status_font_size + 8
+        return x, FACE_SLOT_Y if self.face else FACE_TOP
 
     def text_line_x(self, line, font):
         """Left edge for a body-text line. Centred unless TEXT_ALIGN=left.
@@ -651,8 +661,11 @@ class RenderThread(threading.Thread):
             return False
         size = self.face.size
         slot_x, slot_y = self.face_slot()
-        y = max(0, slot_y - FACE_TILE_PAD)
-        h = min(HEADER_HEIGHT - y, size + FACE_TILE_PAD * 2)
+        # Hug the cat, not the tile. The tile carries a blank band top and
+        # bottom, and pushing those rows over SPI every idle frame is the one
+        # cost that scales with making the face bigger.
+        y = max(0, slot_y + FACE_PAD_Y - FACE_TILE_PAD)
+        h = min(HEADER_HEIGHT - y, FACE_HEIGHT + FACE_TILE_PAD * 2)
         paste_y = (slot_y - y) + int(round(offset)) + (size - img.height) // 2
 
         # The breathing bob is under two pixels and lands on the same rounded
@@ -711,7 +724,7 @@ class RenderThread(threading.Thread):
         ascent_status, _ = status_font.getmetrics()
         ascent_emoji, _ = emoji_font.getmetrics()
 
-        top_height = status_font_size + emoji_font_size + 20
+        top_height = HEADER_HEIGHT
 
         # Draw status as a compact glyph rather than a word.
         status_label = status_glyph(current_status)
@@ -730,7 +743,7 @@ class RenderThread(threading.Thread):
         emoji_x = (image_width - emoji_w) // 2
         if current_terminal_text:
             emoji_x = self.whisplay.CornerHeight
-        emoji_y = status_font_size + 8
+        emoji_y = FACE_SLOT_Y if face_img is not None else FACE_TOP
         if face_img is not None:
             # The frame is squashed during blinks and transitions, so keep it
             # anchored on its centre line rather than its top edge.
