@@ -44,8 +44,6 @@ FRAME_RX = PANEL_RX + (PANEL_MARGIN - (FRAME_INSET + FRAME_WIDTH / 2))
 
 # No ornaments on the bezel: at this size a delicate outline flatters the face,
 # where anything perched on the corners just crowds it.
-EARS = []
-
 # The face card is a barrel-curved CRT outline rather than a rounded square:
 # a superellipse, wider than it is tall. Both the panel and the bezel ring take
 # this silhouette, and the face art is clipped to it, so the three always agree.
@@ -354,10 +352,6 @@ def shape_points(twitch=(0.0, 0.0)):
     return dedup
 
 
-# The right ear in face coordinates, for the inner-ear triangles and anything
-# else that needs to know where the ears sit.
-EAR_TIP = _to_face(_m(REF_EAR_TIP))
-EAR_SPAN = (_to_face(_m(REF_EAR_INNER_BASE))[0], _to_face(_m(REF_EAR_OUTER_BASE))[0])
 HEAD_HALF_W = 50.0 - FACE_MARGIN
 
 SHAPE = shape_points()
@@ -388,7 +382,6 @@ GOLD = "#FFC93D"
 FRAME = "#777777"        # head outline, medium grey
 FRAME_FROM = "#777777"   # flat: the spec calls for one outline colour
 FRAME_TO = "#777777"
-FRAME_INNER = "#FFE3EA"
 
 # Shared geometry so every face sits on the same grid.
 EYE_X, EYE_Y = 26, 45   # further from centre; lashes and brows follow
@@ -855,11 +848,9 @@ f.pill(50, 16, 4, 10, 0, color=INK, role="deco")
 # a muzzle, nose and whiskers go on, and the whole layout is refitted to the new
 # head. Set CAT_STYLE = False to ship the plain kawaii faces again.
 
-CAT_STYLE = True
 # The written spec asks for a minimal kawaii cat: flat fill, one grey outline,
 # solid eyes with no highlight, and nothing else. These strip the decoration the
 # earlier kawaii set carried. Set False to get the blush and glossy eyes back.
-MINIMAL_STYLE = True
 EYE_COLOUR = "#555555"
 MOUTH_COLOUR = "#666666"
 NOSE = "#777777"
@@ -889,7 +880,6 @@ WHISK_ANGLES = (-6.0, 18.0)    # two per cheek, splayed as the reference's are
 EYE_FLOOR = 70.26      # lowest point any eye reaches, measured across all 49
 WHISK_Y = round(max(_to_face((155.0, WHISK_REF_Y))[1],
                     EYE_FLOOR + 1.0 + WHISK_W / 2.0 + WHISK_GAP / 2.0), 3)
-INNER_EAR = "#FF9DB4"
 CLOSED_MOUTHS = {"flat", "arc", "zigzag"}
 
 # The card layout spans roughly y=20 (lashes) to y=84 (huffing's steam). The cat
@@ -1077,24 +1067,6 @@ def _refit(elems, eye_gain):
     return out
 
 
-def _inner_ears():
-    """A smaller triangle inside each ear, set in from the ear's own outline."""
-    inner = _to_face(_m(REF_EAR_INNER_BASE))
-    outer = _to_face(_m(REF_EAR_OUTER_BASE))
-    tip = _to_face(_m(REF_EAR_TIP))
-    base_cx = (inner[0] + outer[0]) / 2.0
-    base_y = (inner[1] + outer[1]) / 2.0
-    h = (base_y - tip[1]) * 0.52
-    out = []
-    for side in (1, -1):
-        cx = base_cx if side == 1 else 100.0 - base_cx
-        tx = tip[0] if side == 1 else 100.0 - tip[0]
-        out.append({"t": "tri", "cx": round((cx + tx) / 2, 3),
-                    "cy": round(tip[1] + h * 0.62, 3),
-                    "w": round(abs(outer[0] - inner[0]) * 0.42, 3), "h": round(h, 3),
-                    "color": INNER_EAR, "down": False, "role": "deco"})
-    return out
-
 
 def _minimal(elems):
     """Flatten to the spec: solid dark-grey eyes, no highlights, no blush."""
@@ -1119,17 +1091,12 @@ def _minimal(elems):
 
 
 def catify(elems, face_name=""):
-    if not CAT_STYLE:
-        return elems
     gain = FIT_EYE_GAIN * EYE_GAIN_BY_FACE.get(face_name, 1.0)
     # Nose and whiskers are added AFTER the refit, in final coordinates. Built
     # before it, the refit squashed their centres vertically while leaving their
     # rotation alone, which pinched the pair together until the two whiskers on
     # a cheek crossed over each other.
-    built = _nose_and_whiskers(_lift_brows(_refit(_muzzle(elems), gain)))
-    if not MINIMAL_STYLE:
-        return built + _inner_ears()
-    return _minimal(built)
+    return _minimal(_nose_and_whiskers(_lift_brows(_refit(_muzzle(elems), gain))))
 
 
 # Talking mouth shapes, taken from the sixteen faces on the reference sheet.
@@ -1414,7 +1381,7 @@ def main():
             "canvas": W,
             "panel": {"margin": PANEL_MARGIN, "rx": PANEL_RX, "fill": PANEL},
             "frame": {"width": FRAME_WIDTH, "inset": FRAME_INSET, "rx": FRAME_RX,
-                      "color": FRAME, "inner_color": FRAME_INNER, "ears": EARS,
+                      "color": FRAME,
                       "gradient": {"from": FRAME_FROM, "to": FRAME_TO}},
             "ink": INK,
             "shape": {"name": SHAPE_NAME, "points": SHAPE,

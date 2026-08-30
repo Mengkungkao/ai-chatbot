@@ -489,14 +489,6 @@ class FaceRenderer:
             outline=255, width=max(int(round(width)), 1))
         # Painting a solid colour through the shrunken mask keeps the ring free
         # of the dark fringe a downscaled RGBA layer would leave behind.
-        # Ears ride on top of the bezel, so they join the same mask and read as
-        # sitting on the ring rather than being sliced by it.
-        ears = self.frame.get("ears") or []
-        md = ImageDraw.Draw(mask)
-        for ear in ears:
-            r = ear["r"] * k * s
-            ex, ey = ear["cx"] * k * s, ear["cy"] * k * s
-            md.ellipse([ex - r, ey - r, ex + r, ey + r], fill=255)
         grad = self.frame.get("gradient")
         if grad and not color:
             # Vertical wash down the bezel. Painted as a full tile and then cut
@@ -514,18 +506,6 @@ class FaceRenderer:
                              _as_rgb(color or self.frame.get("color", "#3A4657")) + (255,))
         ring.putalpha(mask.resize((size, size), Image.LANCZOS))
         img.alpha_composite(ring)
-
-        if ears:
-            inner = Image.new("L", (big, big), 0)
-            idr = ImageDraw.Draw(inner)
-            for ear in ears:
-                r = ear.get("ir", ear["r"] * 0.5) * k * s
-                ex, ey = ear["cx"] * k * s, ear["cy"] * k * s
-                idr.ellipse([ex - r, ey - r, ex + r, ey + r], fill=255)
-            fill = Image.new("RGBA", (size, size),
-                             _as_rgb(self.frame.get("inner_color", "#FFE3EA")) + (255,))
-            fill.putalpha(inner.resize((size, size), Image.LANCZOS))
-            img.alpha_composite(fill)
 
     def draw(self, char, size, blink=0.0, mouth_open=0.0, frame_color=None,
              shape_variant=None, talk_shape=0):

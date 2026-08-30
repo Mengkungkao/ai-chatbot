@@ -11,8 +11,6 @@
    "inset": 0.0,
    "rx": 30.491,
    "color": "#777777",
-   "inner_color": "#FFE3EA",
-   "ears": [],
    "gradient": {
     "from": "#777777",
     "to": "#777777"

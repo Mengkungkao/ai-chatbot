@@ -62,7 +62,6 @@ FACE_SLOT_Y = FACE_TOP - FACE_PAD_Y           # where the tile sits
 # Header strip height. Derived from what it has to hold so that resizing the
 # face reflows the layout instead of clipping it.
 HEADER_HEIGHT = FACE_TOP + FACE_HEIGHT + 20
-IDLE_RENDER_INTERVAL = 0.5
 MAX_MAIN_TEXT_CHARS = 2200
 TRUNCATION_PREFIX = "... "
 TOOL_TAG_RE = re.compile(
@@ -185,12 +184,8 @@ camera_capture_image_path = ""
 camera_thread = None
 render_thread = None
 clients = {}
-status_icon_factories = []
 shutdown_requested = False
 
-
-def register_status_icon_factory(factory, priority=100):
-    status_icon_factories.append({"priority": priority, "factory": factory})
 
 class RenderThread(threading.Thread):
     def __init__(self, whisplay, font_path, fps=30):
@@ -839,10 +834,6 @@ class RenderThread(threading.Thread):
         if context.get("auto_talk_enabled") is not None:
             icons.append(AutoTalkStatusIcon(status_font_size, context.get("auto_talk_enabled")))
 
-        for item in sorted(status_icon_factories, key=lambda entry: entry["priority"]):
-            icon_list = item["factory"](context)
-            if icon_list:
-                icons.extend(icon_list)
         return icons
 
     def render_status_icons(self, draw, icons, image_width):
