@@ -44,100 +44,40 @@ EARS = []
 # a superellipse, wider than it is tall. Both the panel and the bezel ring take
 # this silhouette, and the face art is clipped to it, so the three always agree.
 # --- silhouette ----------------------------------------------------------
-# A wide, round cat head. The head is a superellipse and each ear is spliced
-# into the crown in walk order, joined at the exact points the crown arc left,
-# so the outline stays simple. Ear tips are rounded with a true tangent fillet
-# rather than a chopped corner.
-SHAPE_NAME = "cat-wide-round"
-HEAD_RX, HEAD_RY, HEAD_CY, HEAD_POWER = 49.5, 33.0, 63.5, 0.9
-EAR_SPAN = (56.0, 97.0)      # inner base pulled in, outer base kept:
-                             # the gap between the ears narrows while
-                             # their outer reach is unchanged
-EAR_TIP = (84.0, 5.5)        # tips out over the corners, taller
-PARABOLIC_EARS = True        # curved sides rather than a triangle
-EAR_FILLET = 6.0             # the tip
-EAR_BASE_FILLET = 3.2        # where each ear edge meets the head
-TWITCH_DEG = 13.0            # how far one ear swings on a flick
-PERK_DEG = 6.0               # both ears, pricked up
-SHAPE_STEPS = 280
+# The head is the reference cat, authored as cubic Beziers on the 313x292
+# canvas it was measured on and mapped onto this 100x100 one. Keeping the
+# source numbers means this face and the standalone drawing in
+# cat-illustration/ stay the same cat rather than two that merely resemble
+# each other.
+#
+# Only the left ear is authored. The right is its mirror across REF_AXIS, so
+# the pair cannot drift apart the way two independently measured ears did.
+SHAPE_NAME = "cat-reference"
 
+REF_AXIS = 155.0
+REF_EAR_OUTER_BASE = (67.0, 105.0)
+REF_EAR_OUTER_C1 = (78.0, 84.0)
+REF_EAR_OUTER_C2 = (86.0, 62.0)
+REF_EAR_TIP = (96.0, 48.5)
+REF_EAR_INNER_C1 = (108.0, 62.0)
+REF_EAR_INNER_C2 = (120.0, 78.0)
+REF_EAR_INNER_BASE = (133.0, 93.0)
+REF_VALLEY_C = (146.0, 100.0)
 
-def head_top(x, rx=HEAD_RX, ry=HEAD_RY, cy=HEAD_CY, power=HEAD_POWER):
-    """Y of the head outline directly above ``x`` -- where an ear must attach."""
-    u = min(abs(x - 50.0) / rx, 1.0)
-    ct = u ** (1.0 / power)
-    st = math.sqrt(max(0.0, 1.0 - ct * ct))
-    return cy - ry * (st ** power)
+EAR_FILLET = 8.0    # rounds the tips; 0 leaves them sharp
+EAR_LIFT = 2.5      # raises the tips to pay for what the fillet cuts away,
+                    # so rounding them does not shorten the head
+EAR_BOW = 5.0       # bows both edges of each ear outward from its own
+                    # centreline, so they swell rather than run straight
 
+TWITCH_DEG = 13.0   # how far one ear swings on a flick
+PERK_DEG = 6.0      # both ears, pricked up
+SHAPE_STEPS = 26    # samples per Bezier segment
 
-def fillet(a, tip, b, radius, steps=14):
-    """Round the corner at ``tip`` with an arc tangent to both edges."""
-    ax, ay = a[0] - tip[0], a[1] - tip[1]
-    bx, by = b[0] - tip[0], b[1] - tip[1]
-    la = math.hypot(ax, ay) or 1.0
-    lb = math.hypot(bx, by) or 1.0
-    ux, uy = ax / la, ay / la
-    vx, vy = bx / lb, by / lb
-    theta = math.acos(max(-1.0, min(1.0, ux * vx + uy * vy)))
-    if theta < 1e-6 or theta > math.pi - 1e-6:
-        return [list(tip)]
-    half = theta / 2.0
-    d = radius / math.tan(half)
-    if d >= la or d >= lb:                      # corner too tight for this radius
-        return [list(tip)]
-    p1 = (tip[0] + ux * d, tip[1] + uy * d)
-    p2 = (tip[0] + vx * d, tip[1] + vy * d)
-    wx, wy = ux + vx, uy + vy
-    lw = math.hypot(wx, wy) or 1.0
-    c = (tip[0] + wx / lw * (radius / math.sin(half)),
-         tip[1] + wy / lw * (radius / math.sin(half)))
-    a1 = math.atan2(p1[1] - c[1], p1[0] - c[0])
-    a2 = math.atan2(p2[1] - c[1], p2[0] - c[0])
-    d_ang = (a2 - a1 + math.pi) % (2 * math.pi) - math.pi
-    return [[round(c[0] + radius * math.cos(a1 + d_ang * i / steps), 3),
-             round(c[1] + radius * math.sin(a1 + d_ang * i / steps), 3)]
-            for i in range(steps + 1)]
-
-
-def _quad(p0, p1, p2, t):
-    m = 1.0 - t
-    return [m * m * p0[0] + 2 * m * t * p1[0] + t * t * p2[0],
-            m * m * p0[1] + 2 * m * t * p1[1] + t * t * p2[1]]
-
-
-def _parabolic_ear(prev, a, tip, b, nxt, base_r, n=30):
-    """An ear whose sides are a parabola rather than two straight edges.
-
-    A quadratic Bezier is exactly a parabola segment, so the ear is one arch
-    from base to base. The control point is placed so the arch peaks on the
-    tip, which also rounds the tip for free -- no separate fillet there. Only
-    the two junctions with the head still need rounding.
-    """
-    ctrl = [(4.0 * tip[0] - a[0] - b[0]) / 2.0,
-            (4.0 * tip[1] - a[1] - b[1]) / 2.0]
-    curve = [_quad(a, ctrl, b, i / n) for i in range(n + 1)]
-    # step far enough along the arch that the junction fillet has a real edge
-    def far(seq, origin):
-        return next((q for q in seq if _dist(q, origin) > base_r * 2.2), seq[-1])
-    head_a = fillet(prev, a, far(curve, a), base_r)
-    head_b = fillet(far(list(reversed(curve)), b), b, nxt, base_r)
-    # Start the arch exactly where each junction arc ends, or the seam kinks.
-    cut_a = _dist(head_a[-1], a)
-    cut_b = _dist(head_b[0], b)
-    inner = [q for q in curve if _dist(q, a) > cut_a and _dist(q, b) > cut_b]
-    return head_a + inner + head_b
-
-
-def _ear(prev, a, tip, b, nxt, tip_r, base_r):
-    """One ear, rounded at all three corners.
-
-    The tip gets the large fillet; the two junctions where the ear meets the
-    head get a smaller one, so the ear flows out of the skull instead of being
-    stuck on. Each arc is tangent to its own edges, so the joins are smooth.
-    """
-    return (fillet(prev, a, tip, base_r)
-            + fillet(a, tip, b, tip_r)
-            + fillet(tip, b, nxt, base_r))
+FACE_MARGIN = 0.5   # left at each side once the head fills the width
+FACE_CY = 50.0      # where the silhouette is centred vertically
+FACE_STRETCH = 1.0  # 1.0 keeps the reference's proportions; raise it to trade
+                    # them for height in the square tile
 
 
 def _dist(p, q):
@@ -145,85 +85,202 @@ def _dist(p, q):
 
 
 def _rotate(pts, cx, cy, deg):
-    """Swing points about a pivot, used to flick an ear."""
     a = math.radians(deg)
     ca, sa = math.cos(a), math.sin(a)
-    return [[cx + (x - cx) * ca - (y - cy) * sa,
-             cy + (x - cx) * sa + (y - cy) * ca] for x, y in pts]
+    out = []
+    for x, y in pts:
+        dx, dy = x - cx, y - cy
+        out.append((cx + dx * ca - dy * sa, cy + dx * sa + dy * ca))
+    return out
 
 
-def shape_points(n=SHAPE_STEPS, fillet_r=EAR_FILLET, base_r=EAR_BASE_FILLET,
-                 twitch=(0.0, 0.0)):
-    """Head outline with both ears spliced in, rounded at all three corners.
+def _m(p):
+    """Mirror a point across the head's axis."""
+    return (2 * REF_AXIS - p[0], p[1])
 
-    Two things the base fillets need. A reference edge longer than their own
-    radius, so the head direction is taken several samples from the junction
-    rather than from the neighbouring point. And room to exist: a fillet at the
-    junction eats back into the head curve, so the samples it covers are dropped
-    -- leaving them in made the outline double back on itself.
+
+def _ref_curves():
+    """The head in reference units: a start point and 11 cubic segments.
+
+    Each segment carries the ear it belongs to -- 0 left, 1 right, None for
+    the head itself -- so a flick can rotate one ear and leave the rest alone.
     """
-    REF = 12
-    x0, x1 = EAR_SPAN
-    raw = []
-    for i in range(n):
-        t = 2 * math.pi * i / n
-        ct, st = math.cos(t), math.sin(t)
-        raw.append([round(50 + HEAD_RX * math.copysign(abs(ct) ** HEAD_POWER, ct), 3),
-                    round(HEAD_CY + HEAD_RY * math.copysign(abs(st) ** HEAD_POWER, st), 3)])
-
-    a_r = [x0, round(head_top(x0), 3)]
-    b_r = [x1, round(head_top(x1), 3)]
-    zones = [
-        (100.0 - x1, 100.0 - x0,
-         [100.0 - b_r[0], b_r[1]], [100.0 - EAR_TIP[0], EAR_TIP[1]], [100.0 - a_r[0], a_r[1]]),
-        (x0, x1, a_r, list(EAR_TIP), b_r),
+    curves = [
+        ((REF_EAR_INNER_C1, REF_EAR_INNER_C2, REF_EAR_INNER_BASE), 0),
+        ((REF_VALLEY_C, _m(REF_VALLEY_C), _m(REF_EAR_INNER_BASE)), None),
+        ((_m(REF_EAR_INNER_C2), _m(REF_EAR_INNER_C1), _m(REF_EAR_TIP)), 1),
+        ((_m(REF_EAR_OUTER_C2), _m(REF_EAR_OUTER_C1), _m(REF_EAR_OUTER_BASE)), 1),
+        (((252, 119), (258, 129), (263, 141)), None),   # into the right cheek
+        (((269, 163), (268, 187), (250, 206)), None),   # right cheek
+        (((238, 224), (197, 236), (155, 236)), None),   # bottom, shallow U
+        (((113, 236), (72, 224), (60, 206)), None),     # bottom left
+        (((42, 187), (41, 163), (47, 141)), None),      # left cheek
+        (((53, 129), (59, 119), REF_EAR_OUTER_BASE), None),
+        ((REF_EAR_OUTER_C1, REF_EAR_OUTER_C2, REF_EAR_TIP), 0),
     ]
+    start = list(REF_EAR_TIP)
+    pts = [[list(c1), list(c2), list(end)] for (c1, c2, end), _ in curves]
+    tags = [t for _, t in curves]
 
-    def zone_of(p):
-        return next((j for j, z in enumerate(zones)
-                     if z[0] <= p[0] <= z[1] and p[1] < HEAD_CY), None)
+    if EAR_LIFT:
+        start[1] -= EAR_LIFT
+        pts[10][2][1] -= EAR_LIFT           # left tip, the same point as start
+        pts[2][2][1] -= EAR_LIFT            # right tip
+        for seg, idx in ((10, 1), (0, 0), (2, 1), (3, 0)):
+            pts[seg][idx][1] -= EAR_LIFT * 0.5
+    if EAR_BOW:
+        # Offset each ear edge's controls perpendicular to that edge, away from
+        # the ear's own centreline. Perpendicular matters: the inner edges are
+        # steeply diagonal, and a sideways push slides along them instead of
+        # bowing them.
+        ends = {10: (pts[9][2], pts[10][2]), 0: (start, pts[0][2]),
+                2: (pts[1][2], pts[2][2]), 3: (pts[2][2], pts[3][2])}
+        for seg, outward in ((10, -1), (0, +1), (2, -1), (3, +1)):
+            (x0, y0), (x1, y1) = ends[seg]
+            dx, dy = x1 - x0, y1 - y0
+            m = math.hypot(dx, dy) or 1.0
+            nx, ny = -dy / m, dx / m
+            if (nx > 0) != (outward > 0):
+                nx, ny = -nx, -ny
+            for idx in (0, 1):
+                pts[seg][idx][0] += EAR_BOW * nx
+                pts[seg][idx][1] += EAR_BOW * ny
+    return tuple(start), [tuple(tuple(p) for p in c) for c in pts], tags
 
-    member = [zone_of(p) for p in raw]
-    out, done, skip_until = [], set(), None
-    i = 0
-    while i < n:
-        p = raw[i]
-        z = member[i]
-        if skip_until is not None:
-            # still inside the arc the previous ear's base fillet swallowed
-            if _dist(p, skip_until[0]) < skip_until[1]:
-                i += 1
-                continue
-            skip_until = None
-        if z is None or z in done:
-            out.append(p)
-            i += 1
+
+def _cubic(p0, c1, c2, p1, t):
+    m = 1 - t
+    return (m ** 3 * p0[0] + 3 * m * m * t * c1[0] + 3 * m * t * t * c2[0] + t ** 3 * p1[0],
+            m ** 3 * p0[1] + 3 * m * m * t * c1[1] + 3 * m * t * t * c2[1] + t ** 3 * p1[1])
+
+
+def _split(seg, t):
+    """de Casteljau: cut one cubic into two at parameter t."""
+    p0, c1, c2, p1 = seg
+    def lerp(a, b):
+        return (a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t)
+    a, b, c = lerp(p0, c1), lerp(c1, c2), lerp(c2, p1)
+    d, e = lerp(a, b), lerp(b, c)
+    f = lerp(d, e)
+    return (p0, a, d, f), (f, e, c, p1)
+
+
+def _t_at_dist(seg, dist, from_end, n=160):
+    """Parameter t sitting ``dist`` of arc length from one end of ``seg``."""
+    pts = [_cubic(*seg, i / n) for i in range(n + 1)]
+    acc, total = [0.0], 0.0
+    for i in range(1, len(pts)):
+        total += _dist(pts[i - 1], pts[i])
+        acc.append(total)
+    if total <= dist * 1.2:            # too short to give up that much
+        dist = total * 0.45
+    target = total - dist if from_end else dist
+    for i in range(1, len(acc)):
+        if acc[i] >= target:
+            span = acc[i] - acc[i - 1] or 1.0
+            return (i - 1 + (target - acc[i - 1]) / span) / n
+    return 1.0
+
+
+def _arc_blend(a, b):
+    """A cubic joining two trimmed ends, curving like a circular arc."""
+    q1, q2 = a[3], b[0]
+    def unit(v):
+        m = math.hypot(*v) or 1.0
+        return (v[0] / m, v[1] / m)
+    da = unit((q1[0] - a[2][0], q1[1] - a[2][1]))
+    db = unit((b[1][0] - q2[0], b[1][1] - q2[1]))
+    den = da[0] * db[1] - da[1] * db[0]
+    if abs(den) < 1e-9:
+        k, apex = 1 / 3, ((q1[0] + q2[0]) / 2, (q1[1] + q2[1]) / 2)
+    else:
+        s = ((q2[0] - q1[0]) * db[1] - (q2[1] - q1[1]) * db[0]) / den
+        apex = (q1[0] + da[0] * s, q1[1] + da[1] * s)
+        turn = abs(math.atan2(den, da[0] * db[0] + da[1] * db[1]))
+        k = (4 / 3) * math.tan(turn / 4) / math.tan(turn / 2) if turn > 1e-6 else 2 / 3
+    return (q1,
+            (q1[0] + (apex[0] - q1[0]) * k, q1[1] + (apex[1] - q1[1]) * k),
+            (q2[0] + (apex[0] - q2[0]) * k, q2[1] + (apex[1] - q2[1]) * k),
+            q2)
+
+
+def _fillet_at(segs, tags, i, r):
+    """Round the corner where segs[i] meets segs[i + 1]."""
+    a, b = segs[i], segs[i + 1]
+    a2 = _split(a, _t_at_dist(a, r, from_end=True))[0]
+    b2 = _split(b, _t_at_dist(b, r, from_end=False))[1]
+    return (segs[:i] + [a2, _arc_blend(a2, b2), b2] + segs[i + 2:],
+            tags[:i] + [tags[i], tags[i], tags[i + 1]] + tags[i + 2:])
+
+
+def _head_segments():
+    """The head as cubic segments with both ear tips rounded, ears tagged."""
+    start, curves, tags = _ref_curves()
+    segs, cur = [], start
+    for c1, c2, end in curves:
+        segs.append((cur, c1, c2, end))
+        cur = end
+    if EAR_FILLET > 0:
+        # The left tip sits on the seam where the closed path joins itself, so
+        # rotate by one segment and both tips become ordinary corners.
+        segs, tags = segs[1:] + segs[:1], tags[1:] + tags[:1]
+        segs, tags = _fillet_at(segs, tags, 9, EAR_FILLET)   # left tip
+        segs, tags = _fillet_at(segs, tags, 1, EAR_FILLET)   # right tip
+    return segs, tags
+
+
+# Both ears pivot about the midpoint of their own base, so a flick swings the
+# ear while its junctions with the head stay put.
+REF_EAR_PIVOT = ((REF_EAR_OUTER_BASE[0] + REF_EAR_INNER_BASE[0]) / 2.0,
+                 (REF_EAR_OUTER_BASE[1] + REF_EAR_INNER_BASE[1]) / 2.0)
+
+_FIT = None
+
+
+def _fit():
+    """Scale and offset taking the reference canvas onto this one.
+
+    Measured once from the untwitched head: if each variant fitted its own
+    bounding box, an ear flick would silently resize the whole face.
+    """
+    global _FIT
+    if _FIT is None:
+        segs, _ = _head_segments()
+        pts = [_cubic(*s, k / SHAPE_STEPS)
+               for s in segs for k in range(SHAPE_STEPS)]
+        xs = [p[0] for p in pts]
+        ys = [p[1] for p in pts]
+        s = (100.0 - 2 * FACE_MARGIN) / (max(xs) - min(xs))
+        _FIT = (s, (min(ys) + max(ys)) / 2.0)
+    return _FIT
+
+
+def _to_face(p):
+    """A point in reference units, placed on the 100x100 face canvas."""
+    s, mid_y = _fit()
+    return (50.0 + (p[0] - REF_AXIS) * s,
+            FACE_CY + (p[1] - mid_y) * s * FACE_STRETCH)
+
+
+def shape_points(twitch=(0.0, 0.0)):
+    """The head outline as a closed polygon on the 100x100 canvas."""
+    segs, tags = _head_segments()
+    pts = []
+    for seg, tag in zip(segs, tags):
+        for k in range(SHAPE_STEPS):
+            pts.append((_cubic(*seg, k / SHAPE_STEPS), tag))
+
+    for ear in (0, 1):
+        ang = twitch[ear]
+        if not ang:
             continue
-        done.add(z)
-        j = i
-        while member[(j + 1) % n] == z:
-            j += 1
-        prev = raw[(i - REF) % n]
-        nxt = raw[(j + 1 + REF) % n]
-        _, _, ea, tip, eb = zones[z]
-        pts = (_parabolic_ear(prev, ea, tip, eb, nxt, base_r) if PARABOLIC_EARS
-               else _ear(prev, ea, tip, eb, nxt, fillet_r, base_r))
-        # A flick pivots the whole ear about the midpoint of its base, so the
-        # junctions stay put and only the ear swings.
-        ang = twitch[z]
-        if ang:
-            pts = _rotate(pts, (ea[0] + eb[0]) / 2.0, (ea[1] + eb[1]) / 2.0, ang)
-        if p[0] < prev[0]:
-            pts = list(reversed(pts))
-        first, last = pts[0], pts[-1]
-        entry = ea if p[0] >= prev[0] else eb
-        exit_ = eb if p[0] >= prev[0] else ea
-        # drop head samples the entry fillet has already covered
-        while out and _dist(out[-1], entry) < _dist(first, entry):
-            out.pop()
-        out.extend([[round(float(q[0]), 3), round(float(q[1]), 3)] for q in pts])
-        skip_until = (exit_, _dist(last, exit_))
-        i = j + 1
+        pivot = REF_EAR_PIVOT if ear == 0 else _m(REF_EAR_PIVOT)
+        idx = [i for i, (_, t) in enumerate(pts) if t == ear]
+        moved = _rotate([pts[i][0] for i in idx], pivot[0], pivot[1], ang)
+        for i, q in zip(idx, moved):
+            pts[i] = (q, ear)
+
+    out = [[round(v, 3) for v in _to_face(p)] for p, _ in pts]
     # Points closer than this are invisible at any size the display uses, and
     # they make corner measurements meaningless by turning one bend into several.
     dedup = [out[0]]
@@ -234,6 +291,12 @@ def shape_points(n=SHAPE_STEPS, fillet_r=EAR_FILLET, base_r=EAR_BASE_FILLET,
         dedup.pop()
     return dedup
 
+
+# The right ear in face coordinates, for the inner-ear triangles and anything
+# else that needs to know where the ears sit.
+EAR_TIP = _to_face(_m(REF_EAR_TIP))
+EAR_SPAN = (_to_face(_m(REF_EAR_INNER_BASE))[0], _to_face(_m(REF_EAR_OUTER_BASE))[0])
+HEAD_HALF_W = 50.0 - FACE_MARGIN
 
 SHAPE = shape_points()
 
@@ -712,8 +775,12 @@ CLOSED_MOUTHS = {"flat", "arc", "zigzag"}
 # The card layout spans roughly y=20 (lashes) to y=84 (huffing's steam). The cat
 # head is shorter, so the face is compressed about its own centre and recentred;
 # translating alone pushed the low decorations out through the chin.
-SRC_CENTRE, FIT_CENTRE, FIT_YSCALE = 52.0, 64.0, 0.42
-FIT_SPREAD, FIT_EYE_GAIN = 1.00, 0.40
+#
+# These four are solved rather than guessed: they are whatever places the eyes
+# and mouth exactly where the reference cat puts its own, once the head has
+# been mapped onto this canvas. Change the head and they need re-solving.
+SRC_CENTRE, FIT_CENTRE, FIT_YSCALE = 52.0, 61.86, 0.387
+FIT_SPREAD, FIT_EYE_GAIN = 1.120, 0.513
 
 # Eyes are not one size. A person's eyes widen when startled and narrow when
 # cross, and the face reads flat if they never change, so each expression scales
@@ -729,7 +796,7 @@ EYE_GAIN_BY_FACE = {
     "angry": 0.88, "rage": 0.88, "cool": 0.90, "expressionless": 0.92,
     "sick": 0.88, "nauseated": 0.90, "content": 0.94, "sleepy": 0.94,
 }
-FIT_MAX_DX = HEAD_RX * 0.76
+FIT_MAX_DX = HEAD_HALF_W * 0.76
 
 
 def _muzzle(elems):
@@ -796,16 +863,20 @@ def _refit(elems, eye_gain):
 
 
 def _inner_ears():
-    x0, x1 = EAR_SPAN
-    base_y = head_top((x0 + x1) / 2)
-    h = (base_y - EAR_TIP[1]) * 0.52
+    """A smaller triangle inside each ear, set in from the ear's own outline."""
+    inner = _to_face(_m(REF_EAR_INNER_BASE))
+    outer = _to_face(_m(REF_EAR_OUTER_BASE))
+    tip = _to_face(_m(REF_EAR_TIP))
+    base_cx = (inner[0] + outer[0]) / 2.0
+    base_y = (inner[1] + outer[1]) / 2.0
+    h = (base_y - tip[1]) * 0.52
     out = []
     for side in (1, -1):
-        cx = (x0 + x1) / 2 if side == 1 else 100.0 - (x0 + x1) / 2
-        tx = EAR_TIP[0] if side == 1 else 100.0 - EAR_TIP[0]
+        cx = base_cx if side == 1 else 100.0 - base_cx
+        tx = tip[0] if side == 1 else 100.0 - tip[0]
         out.append({"t": "tri", "cx": round((cx + tx) / 2, 3),
-                    "cy": round(EAR_TIP[1] + EAR_FILLET * 0.55 + h * 0.62, 3),
-                    "w": round((x1 - x0) * 0.42, 3), "h": round(h, 3),
+                    "cy": round(tip[1] + h * 0.62, 3),
+                    "w": round(abs(outer[0] - inner[0]) * 0.42, 3), "h": round(h, 3),
                     "color": INNER_EAR, "down": False, "role": "deco"})
     return out
 
