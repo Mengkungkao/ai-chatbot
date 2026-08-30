@@ -1,4 +1,7 @@
+import fs from "fs";
+import path from "path";
 import { chatWithLLMStream } from "../cloud-api/server";
+import { dataDir } from "../utils/dir";
 import { buildProactiveCue } from "../config/llm-config";
 import { getCurrentTimeTag } from "../utils";
 
@@ -13,8 +16,34 @@ export interface ProactiveHost {
   transitionTo: (flowName: any) => void;
 }
 
-const isEnabled = (): boolean =>
-  (process.env.PROACTIVE_CHAT_ENABLED || "true").toLowerCase() === "true";
+// Where the toggle is remembered. The env var is only the initial default:
+// once auto-talk has been turned off by hand it stays off across restarts,
+// which is the whole point of a toggle.
+const STATE_FILE = path.join(dataDir, "proactive-chat.json");
+
+const readPersisted = (): boolean | null => {
+  try {
+    const raw = JSON.parse(fs.readFileSync(STATE_FILE, "utf8"));
+    return typeof raw?.enabled === "boolean" ? raw.enabled : null;
+  } catch {
+    return null;
+  }
+};
+
+const writePersisted = (enabled: boolean): void => {
+  try {
+    fs.mkdirSync(path.dirname(STATE_FILE), { recursive: true });
+    fs.writeFileSync(STATE_FILE, JSON.stringify({ enabled }), "utf8");
+  } catch (error: any) {
+    console.log(`[Proactive] could not save the toggle: ${error?.message || error}`);
+  }
+};
+
+const isEnabled = (): boolean => {
+  const saved = readPersisted();
+  if (saved !== null) return saved;
+  return (process.env.PROACTIVE_CHAT_ENABLED || "true").toLowerCase() === "true";
+};
 
 const readSeconds = (name: string, fallback: number): number => {
   const parsed = parseInt(process.env[name] || "", 10);
@@ -52,6 +81,7 @@ export class ProactiveChat {
   /** Flip auto-talk at runtime (triple-click). Returns the new state. */
   toggle(): boolean {
     this.enabled = !this.enabled;
+    writePersisted(this.enabled);
     console.log(
       `[${getCurrentTimeTag()}] Proactive chat toggled ${this.enabled ? "ON" : "OFF"}.`,
     );
@@ -88,6 +118,11 @@ export class ProactiveChat {
 
   private scheduleNext(): void {
     if (this.timer) clearTimeout(this.timer);
+    this.timer = undefined;
+    // Never re-arm while off. tick()'s finally called this unconditionally, so
+    // toggling off mid-generation put the timer straight back and auto-talk
+    // resurrected itself.
+    if (!this.enabled) return;
     const spread = this.maxIdleSec - this.minIdleSec;
     const waitSec = this.minIdleSec + Math.floor(Math.random() * (spread + 1));
     this.timer = setTimeout(() => {
@@ -112,7 +147,9 @@ export class ProactiveChat {
     try {
       const line = await this.generateLine(quietForSeconds);
       // Re-check: the person may have started talking while the model ran.
-      if (line && this.host.currentFlowName === "sleep") {
+      // Re-check enabled too: generation can take up to a minute, and a line
+      // asked for before the toggle was still spoken after it.
+      if (line && this.enabled && this.host.currentFlowName === "sleep") {
         console.log(`[${getCurrentTimeTag()}] Proactive: ${line}`);
         this.host.pendingExternalReply = line;
         this.host.pendingExternalEmoji = "";

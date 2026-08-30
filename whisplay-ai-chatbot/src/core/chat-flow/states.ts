@@ -89,8 +89,14 @@ export const flowStates: Record<FlowName, FlowStateHandler> = {
     // click is coming.
     onButtonTripleClick(() => {
       // Only act while idle, so a stray triple-click cannot clobber the screen
-      // mid-answer.
-      if (ctx.currentFlowName !== "sleep") return;
+      // mid-answer. Say so rather than dropping it silently -- this guard is
+      // invisible from the outside and looks exactly like a dead gesture.
+      if (ctx.currentFlowName !== "sleep") {
+        console.log(
+          `[Button] triple-click ignored: flow is "${ctx.currentFlowName}", not idle`,
+        );
+        return;
+      }
       const on = ctx.proactiveChat?.toggle() ?? false;
       display({
         status: "idle",

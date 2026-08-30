@@ -11,7 +11,12 @@ dotEnv.config();
 
 const DOUBLE_CLICK_WINDOW_MS = 800;
 const DOUBLE_CLICK_MAX_PRESS_MS = 350;
-const TRIPLE_CLICK_WINDOW_MS = 1200;
+const TRIPLE_CLICK_WINDOW_MS = 1500;
+// A triple-click gets its own press budget. Sharing the double-click's 350ms
+// made the gesture near-impossible by hand: a click in sleep also bounces the
+// flow through listening, which allows up to 500ms before it counts as a real
+// recording, so anything under that is plainly a click and should count here.
+const TRIPLE_CLICK_MAX_PRESS_MS = 500;
 // Held back long enough to tell a triple-click apart from the daemon's
 // four-click exit gesture.
 const TRIPLE_CLICK_SETTLE_MS = 450;
@@ -80,6 +85,7 @@ export class WhisplayDisplay {
   private buttonDoubleClickCallback: (() => void) | null = null;
   private buttonTripleClickCallback: (() => void) | null = null;
   private tripleClickTimer?: ReturnType<typeof setTimeout>;
+  private doubleClickTimer?: ReturnType<typeof setTimeout>;
   private buttonDown = false;
   private onCameraCaptureCallback: () => void = () => {};
   private textInputCallback: (text: string) => void = () => {};
@@ -156,18 +162,30 @@ export class WhisplayDisplay {
     const allShort = lastPresses.every(
       (press, index) =>
         lastReleases[index] >= press &&
-        lastReleases[index] - press <= DOUBLE_CLICK_MAX_PRESS_MS,
+        lastReleases[index] - press <= TRIPLE_CLICK_MAX_PRESS_MS,
     );
     const withinWindow =
       lastReleases[2] - lastPresses[0] <= TRIPLE_CLICK_WINDOW_MS;
-    if (!allShort || !withinWindow) return;
+    if (!allShort || !withinWindow) {
+      const held = lastPresses.map((p, i) => lastReleases[i] - p).join("/");
+      console.log(
+        `[Button] three clicks seen but not a triple-click: held ${held}ms ` +
+        `(max ${TRIPLE_CLICK_MAX_PRESS_MS}), span ` +
+        `${lastReleases[2] - lastPresses[0]}ms (max ${TRIPLE_CLICK_WINDOW_MS})`,
+      );
+      return;
+    }
 
     const releasesAtArming = this.buttonReleaseTimeArray.length;
     if (this.tripleClickTimer) clearTimeout(this.tripleClickTimer);
     this.tripleClickTimer = setTimeout(() => {
       this.tripleClickTimer = undefined;
       // A fourth click arrived — that is the daemon's exit gesture, not a toggle.
-      if (this.buttonReleaseTimeArray.length !== releasesAtArming) return;
+      if (this.buttonReleaseTimeArray.length !== releasesAtArming) {
+        console.log("[Button] fourth click — treating as the exit gesture, not a toggle");
+        return;
+      }
+      console.log("[Button] triple-click");
       this.buttonPressTimeArray = [];
       this.buttonReleaseTimeArray = [];
       this.buttonTripleClickCallback?.();
@@ -178,27 +196,24 @@ export class WhisplayDisplay {
     if (!this.buttonDoubleClickCallback) return;
 
     const now = Date.now();
-    this.buttonPressTimeArray = this.buttonPressTimeArray.filter(
+    // Read-only. This used to prune the shared arrays with the double-click's
+    // shorter window, which quietly shrank the triple-click's window to match,
+    // and clear them outright on a hit, which left the triple-click detector
+    // running on an empty history a line later.
+    const presses = this.buttonPressTimeArray.filter(
       (time) => now - time <= DOUBLE_CLICK_WINDOW_MS,
     );
-    this.buttonReleaseTimeArray = this.buttonReleaseTimeArray.filter(
+    const releases = this.buttonReleaseTimeArray.filter(
       (time) => now - time <= DOUBLE_CLICK_WINDOW_MS,
     );
-    if (
-      this.buttonPressTimeArray.length < 2 ||
-      this.buttonReleaseTimeArray.length < 2
-    ) {
+    if (presses.length < 2 || releases.length < 2) {
       return;
     }
 
-    const firstPress =
-      this.buttonPressTimeArray[this.buttonPressTimeArray.length - 2];
-    const secondPress =
-      this.buttonPressTimeArray[this.buttonPressTimeArray.length - 1];
-    const firstRelease =
-      this.buttonReleaseTimeArray[this.buttonReleaseTimeArray.length - 2];
-    const secondRelease =
-      this.buttonReleaseTimeArray[this.buttonReleaseTimeArray.length - 1];
+    const firstPress = presses[presses.length - 2];
+    const secondPress = presses[presses.length - 1];
+    const firstRelease = releases[releases.length - 2];
+    const secondRelease = releases[releases.length - 1];
     const firstPressDuration = firstRelease - firstPress;
     const secondPressDuration = secondRelease - secondPress;
     const doubleClickDetected =
@@ -209,11 +224,27 @@ export class WhisplayDisplay {
       firstPressDuration <= DOUBLE_CLICK_MAX_PRESS_MS &&
       secondPressDuration <= DOUBLE_CLICK_MAX_PRESS_MS;
 
-    if (doubleClickDetected) {
+    if (!doubleClickDetected) return;
+    const emit = () => {
       this.buttonPressTimeArray = [];
       this.buttonReleaseTimeArray = [];
-      this.buttonDoubleClickCallback();
+      this.buttonDoubleClickCallback?.();
+    };
+    if (!this.buttonTripleClickCallback) {
+      emit();
+      return;
     }
+    // Both gestures are live, so the second click cannot be answered until it
+    // is clear no third is coming. Firing immediately consumed the history the
+    // triple-click needed, which made the triple unreachable whenever the
+    // double was registered.
+    const releasesAtArming = this.buttonReleaseTimeArray.length;
+    if (this.doubleClickTimer) clearTimeout(this.doubleClickTimer);
+    this.doubleClickTimer = setTimeout(() => {
+      this.doubleClickTimer = undefined;
+      if (this.buttonReleaseTimeArray.length !== releasesAtArming) return;
+      emit();
+    }, TRIPLE_CLICK_SETTLE_MS);
   }
 
   startPythonProcess(): void {
