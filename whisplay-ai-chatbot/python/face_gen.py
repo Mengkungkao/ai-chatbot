@@ -827,6 +827,11 @@ WHISK_ORIGIN_DX, WHISK_LEN = 30.0, 20.0
 WHISK_GAP = 6.0   # vertical gap at the inner ends, so the pair is
                   # two separate strokes rather than a < chevron
 WHISK_ANGLES = (-14.0, 14.0)   # two per cheek, one up one down
+# The reference draws whiskers 6 units wide against a 7-unit outline, so they
+# read as part of the same line work rather than as stray hairs. Taking the
+# width from the same fit as the frame keeps that relationship at any scale.
+WHISK_REF_W = 6.0
+WHISK_W = round(WHISK_REF_W * _fit()[0], 3)
 INNER_EAR = "#FF9DB4"
 CLOSED_MOUTHS = {"flat", "arc", "zigzag"}
 
@@ -889,7 +894,7 @@ def _nose_and_whiskers(elems):
             # read as a < rather than as two whiskers.
             oy_i = oy + (WHISK_GAP / 2.0) * (1 if ang > 0 else -1)
             out.append({"t": "pill", "cx": round(ox + dx / 2, 3),
-                        "cy": round(oy_i + dy / 2, 3), "w": WHISK_LEN, "h": 1.9,
+                        "cy": round(oy_i + dy / 2, 3), "w": WHISK_LEN, "h": WHISK_W,
                         "rot": round(ang * side, 3), "color": WHISKER,
                         # "overlay" survives the silhouette clip and is painted
                         # over the outline, so whiskers cross the head edge the

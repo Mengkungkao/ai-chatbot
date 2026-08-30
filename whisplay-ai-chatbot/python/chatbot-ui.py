@@ -43,7 +43,7 @@ TEXT_ALIGN = (os.environ.get("TEXT_ALIGN") or "center").strip().lower()
 # above and below. FACE_TILE is the cat's painted width in pixels; its height
 # follows from the silhouette itself, and the header is sized to that rather
 # than to the tile, so none of the strip is spent on empty canvas.
-FACE_TILE = 150
+FACE_TILE = 120
 FACE_HEIGHT = int(round(FACE_TILE * face_engine.shape_height_ratio()))
 FACE_PAD_Y = (FACE_TILE - FACE_HEIGHT) // 2   # blank band inside the tile
 FACE_TOP = status_font_size + 8               # where the cat's crown sits
