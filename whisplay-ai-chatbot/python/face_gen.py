@@ -492,6 +492,7 @@ FACES = {}
 
 def emo(name, codepoint, char):
     f = Face()
+    f.name = name
     FACES[name] = {"cp": codepoint, "char": char, "face": f}
     return f
 
@@ -509,7 +510,18 @@ def happy_eyes(f, cy=46, w=22, depth=-11, stroke=4.0):
     f.arc(100 - EYE_X, cy, w, depth, stroke=stroke, role="eye")
 
 
+# The reference cat has no brow line at all -- its eyes and mouth carry the
+# whole expression. Lashes were decoration on 20 faces and at device size they
+# read as heavy brows rather than as lashes, so they are off unless a face
+# names itself here. Brows are different and stay: on the 14 faces that use
+# them the brow angle IS the expression, and angry without its inward slant is
+# just a cat with round eyes.
+LASH_FACES = frozenset()
+
+
 def lashes(f, cy=LASH_Y, w=20, depth=-8, stroke=3.0):
+    if getattr(f, "name", None) not in LASH_FACES:
+        return
     f.arc(EYE_X, cy, w, depth, stroke=stroke, role="brow")
     f.arc(100 - EYE_X, cy, w, depth, stroke=stroke, role="brow")
 
