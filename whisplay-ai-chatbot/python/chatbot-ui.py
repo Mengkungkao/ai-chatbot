@@ -43,10 +43,21 @@ TEXT_ALIGN = (os.environ.get("TEXT_ALIGN") or "center").strip().lower()
 # above and below. FACE_TILE is the cat's painted width in pixels; its height
 # follows from the silhouette itself, and the header is sized to that rather
 # than to the tile, so none of the strip is spent on empty canvas.
-FACE_TILE = 120
+FACE_TILE = 96
 FACE_HEIGHT = int(round(FACE_TILE * face_engine.shape_height_ratio()))
 FACE_PAD_Y = (FACE_TILE - FACE_HEIGHT) // 2   # blank band inside the tile
-FACE_TOP = status_font_size + 8               # where the cat's crown sits
+# The row the status text and icons live in. Nothing the face draws may reach
+# into it.
+STATUS_STRIP = status_font_size + 5
+# Slack above and below the cat for the breathing bob and the blink squash.
+# The idle repaint pastes the whole square tile, so the band has to be at least
+# as tall as the tile or the paste is clamped and the face jumps between a full
+# header render and an idle one.
+FACE_TILE_PAD = max(4, (FACE_TILE - FACE_HEIGHT + 1) // 2)
+# The cat's crown. Far enough down that the repaint band, which starts a pad
+# above it, still clears the status strip: an opaque tile pushed over that row
+# was wiping the icons on every idle frame.
+FACE_TOP = max(status_font_size + 8, STATUS_STRIP + FACE_TILE_PAD)
 FACE_SLOT_Y = FACE_TOP - FACE_PAD_Y           # where the tile sits
 # Header strip height. Derived from what it has to hold so that resizing the
 # face reflows the layout instead of clipping it.
@@ -66,9 +77,6 @@ TOOL_TAG_COUNT_FG = (122, 205, 255, 255)
 # between messages; set WHISPLAY_FACE_IDLE_MOTION=0 to hold a still frame.
 FACE_ANIMATION_FPS = 15
 FACE_IDLE_MOTION = os.environ.get("WHISPLAY_FACE_IDLE_MOTION", "1") != "0"
-# Vertical slack around the face tile for the breathing bob and the squash
-# applied during blinks and emotion transitions.
-FACE_TILE_PAD = 10
 # The face is drawn inside a bezel. By default the ring picks up the current
 # status colour — the same value driving the RGB LED — so the frame reads as
 # state at a glance; set WHISPLAY_FACE_FRAME_TINT=0 to keep the neutral bezel
