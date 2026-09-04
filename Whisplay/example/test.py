@@ -546,8 +546,12 @@ class RunTestFlow:
                     "S16_LE",
                     "-r",
                     "48000",
+                    # The HAT has one microphone and one speaker, and they sit on
+                    # opposite channels: capture lands in the right channel, the
+                    # speaker is driven from the left. Recording stereo therefore
+                    # plays back silence. Record mono so both ends line up.
                     "-c",
-                    "2",
+                    "1",
                     "-t",
                     "wav",
                     "-d",
