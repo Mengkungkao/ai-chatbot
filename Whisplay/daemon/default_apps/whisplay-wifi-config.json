@@ -1,14 +1,15 @@
 {
-  "app_id": "whisplay-wifi-conf",
-  "display_name": "WiFi Conf",
-  "icon": "BC",
-  "launch_command": "python3 wifi_conf_app.py",
+  "app_id": "whisplay-wifi-config",
+  "display_name": "WiFi Config",
+  "icon": "WC",
+  "launch_command": "python3 wifi_config_app.py",
   "cwd": "__EXAMPLE_DIR__",
   "env": {
-    "WHISPLAY_APP_ID": "whisplay-wifi-conf"
+    "WHISPLAY_APP_ID": "whisplay-wifi-config"
   },
   "exit_gesture": "quad_click",
   "priority": 150,
   "use_daemon_default_log": true,
+  "disable_esc_exit_key": true,
   "persist": true
 }

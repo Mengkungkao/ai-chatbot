@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"name": "WalkieTalkie",
+			"path": "../WalkieTalkie"
+		}
+	],
+	"settings": {}
+}
