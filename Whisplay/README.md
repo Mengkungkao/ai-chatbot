@@ -8,8 +8,10 @@ This project provides comprehensive driver support for the **PiSugar Whisplay Ha
 
 **Supported Platforms:**
 - Raspberry Pi (all models with 40-pin header)
-- Radxa ZERO 3W (RK3566)
-- Radxa Cubie A7Z (Allwinner A733)
+- [Orange Pi Zero 2W](http://www.orangepi.org/html/hardWare/computerAndMicrocontrollers/details/Orange-Pi-Zero-2W.html) (H618; official Debian Bookworm 1.0.2 / Linux 6.1.31)
+- [Orange Pi Zero 3W](http://www.orangepi.org/html/hardWare/computerAndMicrocontrollers/details/Orange-Pi-Zero-3W.html) (Allwinner A733; official Debian Bookworm 1.0.0 / Linux 6.6.98)
+- [Radxa ZERO 3W](https://radxa.com/products/zeros/zero3w/) (RK3566)
+- [Radxa Cubie A7Z](https://radxa.com/products/cubie/a7z/) (Allwinner A733)
 
 More Details please refer to [Whisplay HAT Docs](https://docs.pisugar.com/docs/product-wiki/whisplay/intro)
 
@@ -34,9 +36,9 @@ sudo reboot
 
 When Raspberry Pi boots with a programmed PiSugar Whisplay HAT EEPROM, the installer leaves `whisplay-soundcard` overlay loading to the EEPROM and removes any legacy manual `dtoverlay=whisplay-soundcard` config.
 
-> ⚠️ **Important Hardware Warning (A7Z only)**  
-> Due to circuit incompatibility, the physical button on Whisplay HAT is **not safe to use on Radxa Cubie A7Z**.  
-> **Do not press the button**, otherwise the A7Z may shut down / lose power immediately.
+> ⚠️ **Important Hardware Warning (Orange Pi Zero 3W and Radxa Cubie A7Z)**
+> Orange Pi Zero 3W and Radxa Cubie A7Z **must be used with Whisplay V2 hardware**.
+> Do not connect Whisplay V1: its button circuit carries 5 V and pressing the button can immediately cut power to the board.
 
 Test the hardware functions with the demo script:
 
@@ -50,11 +52,12 @@ bash run_test.sh
 
 `whisplay-daemon` is an optional local service that centrally manages LCD, backlight, RGB LED, button events, and app foreground switching. (Single click to switch app, long press to launch/foreground app, and 4 rapid clicks to request exit from foreground app)
 
-The daemon now also ships with three built-in system entries:
+The daemon now also ships with four built-in system entries:
 
 - `Bluetooth`: opens an internal page that scans nearby Bluetooth devices and lets you bind or unbind the selected device
 - `WiFi`: opens an internal page that scans nearby Wi-Fi networks and lets you connect; protected networks enter a single-button password page, and actual password input depends on an attached external keyboard
 - `Volume`: opens an internal page for speaker volume adjustment
+- `Power`: opens the Power Menu to lock the display, reboot, or shut down the device. Lock mode turns off the backlight and uses a blue breathing LED; press the Whisplay button to wake
 
 <p align="center">
   <img src="daemon/img/screenshots/whisplay_desktop.png" width="180" alt="Daemon Desktop" />
@@ -130,7 +133,7 @@ The repo root is organized by responsibility:
   * **Default socket path**: `/tmp/whisplay-daemon.sock`
   * **Commands**: `health.ping`, `app.register`, `app.list`, `app.launch`, `app.focus.acquire`, `app.focus.release`, `app.exit.request`, `framebuffer.acquire`, `backlight.set`, `led.set`, `led.fade`, `button.get_state`, `events.subscribe`
   * **Desktop behavior**: single click cycles registered apps, long press launches/foregrounds the selected app, and 4 rapid clicks request exit from the foreground app unless it registered `exit_gesture: "none"`
-  * **Built-in system pages**: includes `Bluetooth`, `WiFi`, and `Volume` entries rendered by the daemon itself, without spawning an external app process
+  * **Built-in system pages**: includes `Bluetooth`, `WiFi`, `Volume`, and `Power` entries rendered by the daemon itself, without spawning an external app process
   * **Wi-Fi password input**: selecting a protected network enters a password input page; password entry depends on an attached external keyboard (arrow keys / Enter / Backspace / ESC)
   * **PiSugar home integration**: if `pisugar-server` is running, daemon can automatically bind the PiSugar `single`, `double`, or `long` button gesture as a return-to-home trigger according to `~/.whisplay-daemon/settings.json`; set `pisugar_home_button` to `none` to disable it
   * **Install as service**:
@@ -140,13 +143,15 @@ The repo root is organized by responsibility:
   * **Install result**: the installer writes `~/.whisplay-daemon/settings.json` and seeds the default example app JSON files into `~/.whisplay-daemon/app/`
 #### 2. Unified Audio Driver
 
-  * **Source**: Raspberry Pi, Radxa ZERO 3W, and Radxa Cubie A7Z use the bundled unified Whisplay sound card driver in `audio/whisplay-soundcard/`, compatible with WM8960 and ES8389 codec variants.
+  * **Source**: Raspberry Pi, Orange Pi Zero 2W/3W, Radxa ZERO 3W, and Radxa Cubie A7Z use the bundled unified Whisplay sound card driver in `audio/whisplay-soundcard/`, compatible with WM8960 and ES8389 codec variants.
 
   * **Legacy driver**: Older driver support is kept on the `support/wm8960` branch. If you need the legacy driver, check out that branch before installing.
 
   * **Installation**:
     - **Auto-detect**: Run `install_driver.sh`
     - **Raspberry Pi**: Run `script/install_raspberry_pi.sh`
+    - **Orange Pi Zero 2W**: Run `script/install_orangepi_zero2w.sh`
+    - **Orange Pi Zero 3W**: Run `script/install_orangepi_zero3w.sh`
     - **Radxa ZERO 3W**: Run `script/install_radxa_zero3w.sh`
     - **Radxa Cubie A7Z**: Run `script/install_radxa_cubie_a7z.sh`
 
@@ -154,6 +159,10 @@ The repo root is organized by responsibility:
     sudo bash install_driver.sh
     # Or run a platform-specific installer:
     sudo bash script/install_raspberry_pi.sh
+    # For Orange Pi Zero 2W:
+    sudo bash script/install_orangepi_zero2w.sh
+    # For Orange Pi Zero 3W:
+    sudo bash script/install_orangepi_zero3w.sh
     # For Radxa ZERO 3W:
     sudo bash script/install_radxa_zero3w.sh
     # For Radxa Cubie A7Z:
@@ -162,10 +171,15 @@ The repo root is organized by responsibility:
 
 #### 3. Bundled Unified Sound Card Driver
 
-  * `audio/whisplay-soundcard/` - unified driver source, install scripts, ALSA config, and platform DTS overlays. All three platform installers build and install it directly from this repository.
+  * `audio/whisplay-soundcard/` - unified driver source, install scripts, ALSA config, and platform DTS overlays. The platform installers build and install it directly from this repository.
 
-#### 4. Device Tree Overlays (Radxa only)
+#### 4. Device Tree Overlays
 
+  * `audio/whisplay-soundcard/src/dts/whisplay-soundcard-orangepi-zero2w.dts` - unified H618 overlay using I2C1 on pins 3/5 and AHUB/I2S0 on pins 12/35/38/40. The installer also enables the official `pi-i2c1` and `spi1-cs0-spidev` overlays (SPI1 CS0 on header pins 19/21/23/24) and adds the Whisplay user overlay to `/boot/orangepiEnv.txt`.
+  * `audio/whisplay-soundcard/src/dts/whisplay-soundcard-orangepi-zero3w.dts` - unified A733 overlay using TWI0 on pins 3/5 and I2S0 on pins 12/35/38/40. The installer enables SPI3 CS0 for the LCD. I2S0 MCLK/PB4 is intentionally not routed because header pin 7 is reserved for LCD reset.
+  * **Orange Pi OS 1.0.2 headers**: the vendor image does not publish an installable headers package. On exactly `6.1.31-sun50iw9`, the installer downloads a pinned, checksum-verified headers archive so it can build the unified module. Other Orange Pi kernel versions must provide matching headers in `/lib/modules/$(uname -r)/build`.
+  * **Orange Pi Zero 3W headers**: on the official `6.6.98-sun60iw2` image, the installer downloads a pinned, checksum-verified A733 Linux 6.6.98 headers package and adjusts its kernel release for the vendor kernel before building the modules.
+  * **Orange Pi audio constraint**: the H618 AHUB path runs at 48 kHz with two 32-bit slots. The unified driver programs the vendor PLL/TDM sequence and the missing APBIF0 ↔ I2S0 crossbar routes required by the official 6.1.31 BSP.
   * `audio/whisplay-soundcard/src/dts/whisplay-soundcard-radxa-zero3w.dts` - unified DT overlay for WM8960 and ES8389 codec variants on Radxa ZERO 3W (RK3566), configuring I2C3 and I2S3.
   * `audio/whisplay-soundcard/src/dts/whisplay-soundcard-radxa-cubie-a7z.dts` - unified DT overlay for WM8960 and ES8389 codec variants on Radxa Cubie A7Z (Allwinner A733), configuring TWI7 and I2S0.
   * **Cubie A7Z audio constraints**: the vendor I2S0 path is constrained to 48 kHz with two 32-bit slots. The unified machine driver also applies the A733 vendor-specific one-bit I2S TX/RX data delay so signed capture samples remain aligned.
@@ -234,7 +248,7 @@ The `example` directory contains 4 end-user demo programs. If you are using whis
 - **Radxa ZERO 3W**: Debian 12 (bookworm) official image
 - **Radxa Cubie A7Z**: Debian 11 (bullseye) official image
 
-**A7Z Safety Notice:** On Radxa Cubie A7Z, please **do not click the physical button** on Whisplay HAT. Circuit incompatibility may cause immediate power-off.
+**Hardware Safety Notice:** Orange Pi Zero 3W and Radxa Cubie A7Z require **Whisplay V2**. Do not use Whisplay V1 on either board: its button circuit carries 5 V and pressing the button can immediately cut board power.
 
 ## Documentation and Related Projects
 
