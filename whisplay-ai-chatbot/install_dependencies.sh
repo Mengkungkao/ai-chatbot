@@ -34,7 +34,16 @@ sudo raspi-config nonint do_spi 0
 # install python dependencies
 echo "Installing Python dependencies..."
 cd python
-pip install -r requirements.txt --break-system-packages
+# --break-system-packages only exists in pip >= 23. Older pips (Ubuntu 22.04,
+# e.g. Orange Pi images) reject it outright and install nothing, which leaves
+# chatbot-ui.py unable to import cairosvg.
+PIP_FLAGS=""
+if pip install --help 2>/dev/null | grep -q -- "--break-system-packages"; then
+    PIP_FLAGS="--break-system-packages"
+fi
+if ! pip install -r requirements.txt $PIP_FLAGS; then
+    echo "WARNING: Python dependency install failed; chatbot-ui.py will not start until it succeeds."
+fi
 # download fonts and emojis
 if command_exists wget; then
     if [ ! -f "NotoSansSC-Bold.ttf" ]; then
