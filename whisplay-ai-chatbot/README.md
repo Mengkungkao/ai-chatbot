@@ -69,6 +69,7 @@ You need to firstly install the audio drivers for the Whisplay HAT. Follow the i
    ```bash
    bash build.sh
    ```
+   **Do not run `build.sh` (or `install_dependencies.sh`) with `sudo`.** Node.js is installed per-user via nvm (`~/.nvm`), so root can't find it and fails with `npm: command not found`. `build.sh` now detects `sudo` and re-runs itself as the calling user, but plain `bash build.sh` is the intended usage. If it still reports that npm is missing, Node was never installed for your user: re-run `bash install_dependencies.sh`, then `source ~/.bashrc`, and check with `node -v` (should print `v20.x`).
 5. Start the chatbot service:
    ```bash
    bash run_chatbot.sh

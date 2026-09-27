@@ -1,4 +1,14 @@
 #!/bin/bash
+cd "$(dirname "$0")" || exit 1
+
+# Node is installed per-user (nvm in ~/.nvm), so building as root can't find
+# npm and would leave root-owned node_modules/dist. If invoked via sudo, drop
+# back to the calling user.
+if [ "$(id -u)" -eq 0 ] && [ -n "$SUDO_USER" ] && [ "$SUDO_USER" != "root" ]; then
+  echo "build.sh should not be run with sudo; re-running as '$SUDO_USER'..."
+  exec sudo -u "$SUDO_USER" -H env NPM_REGISTRY="$NPM_REGISTRY" bash "$0" "$@"
+fi
+
 NPM_REGISTRY="${NPM_REGISTRY:-https://registry.npmjs.org}"
 
 # if file use_npm exists and is true, use npm
@@ -19,7 +29,19 @@ if [ ! -f .env ]; then
     exit 1
 fi
 
-source ~/.bashrc
+[ -f ~/.bashrc ] && source ~/.bashrc
+
+# ~/.bashrc usually returns early for non-interactive shells, so load Node
+# explicitly: nvm (aarch64/armv7) or the /opt/nodejs binary (armv6l).
+export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+[ -d /opt/nodejs/bin ] && export PATH="/opt/nodejs/bin:$PATH"
+
+if ! command_exists npm; then
+  echo "ERROR: npm not found. Node.js 20 is not installed for user '$(whoami)'."
+  echo "Run 'bash install_dependencies.sh' (without sudo), then 'source ~/.bashrc' and retry."
+  exit 1
+fi
 
 if [ "$use_npm" = true ]; then
   echo "Using npm to build the project."

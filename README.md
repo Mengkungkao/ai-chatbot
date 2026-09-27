@@ -71,6 +71,13 @@ the full install/build/run steps (drivers, `.env` setup, `build.sh`,
   `tsc`. The `build` script in `package.json` now runs TypeScript with
   `NODE_OPTIONS=--max-old-space-size=1024` for exactly this reason — don't
   strip that out when touching the build script.
+- Run `build.sh` as your normal user — **not** with `sudo`. Node 20 lives in
+  the user's `~/.nvm`, so `sudo bash build.sh` fails with
+  `npm: command not found` (and would leave root-owned `node_modules`/`dist`
+  and register the daemon app under `/root`). `build.sh` now re-execs itself
+  as `$SUDO_USER` if run under sudo, and loads nvm / `/opt/nodejs/bin`
+  explicitly instead of relying on `~/.bashrc` (which returns early in
+  non-interactive shells).
 - The app is launched/relaunched through the daemon's Unix socket
   (`app.launch` / `app.list` on `/tmp/whisplay-daemon.sock`), not by running
   `node dist/index.js` directly.

@@ -121,6 +121,10 @@ cd ~/ai-chatbot/whisplay-ai-chatbot
 bash build.sh
 ```
 
+Run it as the normal user, not with `sudo` — Node is in the user's `~/.nvm`,
+so root gets `npm: command not found`. (`build.sh` now re-runs itself as
+`$SUDO_USER` if you do use sudo.)
+
 `build.sh` runs `tsc` (→ `dist/index.js`) and then
 `scripts/register-whisplay-daemon-app.js`, which registers the app with the
 daemon. After this you should see:
