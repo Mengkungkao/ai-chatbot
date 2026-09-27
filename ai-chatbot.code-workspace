@@ -6,6 +6,10 @@
 		{
 			"name": "WalkieTalkie",
 			"path": "../WalkieTalkie"
+		},
+		{
+			"name": "whisplay-crypto-dashboard",
+			"path": "../whisplay-crypto-dashboard"
 		}
 	],
 	"settings": {}
