@@ -13,7 +13,7 @@
     "configure-env": "node -r ts-node/register -r tsconfig-paths/register dist/configure-env.js",
     "upgrade-env": "node -r ts-node/register -r tsconfig-paths/register dist/upgrade-env.js",
     "postinstall": "patch-package",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "tsc && npm run test:interrupt",
     "test:interrupt": "node scripts/test-interrupted-reply.js"
   },
   "author": "",
@@ -33,7 +33,6 @@
     "@picovoice/orca-node": "^2.0.1",
     "@qdrant/js-client-rest": "^1.16.2",
     "axios": "^1.13.5",
-    "crypto": "^1.0.1",
     "dotenv": "^16.5.0",
     "get-audio-duration": "^4.0.1",
     "https-proxy-agent": "^7.0.6",

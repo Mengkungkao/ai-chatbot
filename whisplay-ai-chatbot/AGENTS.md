@@ -336,10 +336,13 @@ State transitions are triggered by button events, wake word detection, or comple
 ## Testing Strategy
 
 ### Unit Testing
-- Currently minimal test coverage (`npm test` returns placeholder)
-- `cd python && python3 -m pytest -q test/test_keyboard_input.py`: the keyboard
+- `npm test`: compile TypeScript and run the interrupted-reply regression with
+  mocked audio. This does not register with the daemon or access hardware. A
+  missing, duplicated, stale, or out-of-order reply fails the command.
+- `cd python && python3 -m pytest -q test/test_keyboard_input.py test/test_image_utils.py`: the keyboard
   (typed questions, Space to talk, Esc, approval prompts, nothing while another app
-  has the screen), through the real MFruit OS input controller
+  has the screen), through the real MFruit OS input controller, plus lazy
+  OpenCV loading and the Pillow camera-frame conversion fallback
 - Test scripts in `python/test/` for hardware validation
 
 ### Integration Testing

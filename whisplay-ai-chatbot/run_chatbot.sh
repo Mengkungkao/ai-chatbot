@@ -1,5 +1,7 @@
 #!/bin/bash
 # Set working directory and environment
+chatbot_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)" || exit 1
+cd -- "$chatbot_dir" || exit 1
 os_name=$(uname -s 2>/dev/null || echo "unknown")
 is_linux=false
 is_darwin=false
@@ -47,7 +49,6 @@ fi
 echo "===== Start time: $(date) =====" 
 echo "Current user: $(whoami)" 
 echo "Working directory: $(pwd)" 
-working_dir=$(pwd)
 echo "PATH: $PATH" 
 if command -v python3 >/dev/null 2>&1; then
   echo "Python version: $(python3 --version)"
@@ -62,7 +63,6 @@ fi
 
 # Start the service
 echo "Starting Node.js application..."
-cd $working_dir
 
 get_env_value() {
   if grep -Eq "^[[:space:]]*$1[[:space:]]*=" .env; then

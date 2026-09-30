@@ -55,8 +55,13 @@ const feed = async (sentences) => {
   console.log("old reply still playing after the press:", leaked.length, leaked.join(", "));
   console.log("sentences played more than once        :", dupes.length, dupes.join(", "));
   const expected = ["B:Alpha.", "B:Beta.", "B:Gamma.", "B:Delta."];
-  const complete = expected.every((e) => after.includes(e));
-  console.log("new reply played in full               :", complete, `(${after.length}/4)`);
-  console.log(leaked.length === 0 && dupes.length === 0 && complete ? "\nPASS" : "\nFAIL");
-  process.exit(0);
-})();
+  const complete = after.length === expected.length &&
+    expected.every((sentence, index) => after[index] === sentence);
+  console.log("new reply played in full and in order  :", complete, `(${after.length}/4)`);
+  const passed = leaked.length === 0 && dupes.length === 0 && complete;
+  console.log(passed ? "\nPASS" : "\nFAIL");
+  process.exitCode = passed ? 0 : 1;
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

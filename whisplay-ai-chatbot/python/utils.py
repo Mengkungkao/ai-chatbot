@@ -1,14 +1,23 @@
 import os
 import unicodedata
+from functools import lru_cache
 from io import BytesIO
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 import cairosvg
 
-try:
-  import cv2 as cv
-except ImportError:
-  cv = None
+@lru_cache(maxsize=1)
+def _camera_cv():
+  """Load optional OpenCV only when a camera frame needs resizing.
+
+  Importing it while starting the display delays the first frame on small
+  boards. Cache a missing installation too, so Pillow remains a cheap fallback.
+  """
+  try:
+    import cv2 as cv
+  except ImportError:
+    return None
+  return cv
 
 class ColorUtils:
   @staticmethod
@@ -89,6 +98,7 @@ class ImageUtils:
   @staticmethod
   def convertCameraFrameToRGB565(frame: np.ndarray, width: int, height: int):
     # Resize frame to fit the display
+    cv = _camera_cv()
     if cv is not None:
       frame = cv.resize(frame, (width, height), interpolation=cv.INTER_NEAREST)
     else:

@@ -108,3 +108,17 @@ defaults, this build relies on:
 
 Both upstream projects are GPL-3.0; see [Whisplay/LICENSE](Whisplay/LICENSE)
 and [whisplay-ai-chatbot's license notice](whisplay-ai-chatbot/README.md#license).
+
+
+## MFruit OS startup
+
+`whisplay-ai-chatbot/run_chatbot.sh` resolves its own application directory, so
+MFruit OS can invoke it from the repository root. It loads the nested `.env`
+and built `dist/index.js`; `python/test/test_startup_wrapper.py` in the app
+covers this launch with a package path containing spaces.
+
+The current chatbot keeps the daemon's four-click exit (`quad_click`). The
+Node controller suppresses its three-click action when a fourth click arrives;
+changing registration to `none` would disable the physical exit. Its keyboard
+continues through the MFruit SDK. A native release package still needs the
+built app and dependency/setup packaging described in MFruit OS's app guide.
