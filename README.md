@@ -108,3 +108,9 @@ defaults, this build relies on:
 
 Both upstream projects are GPL-3.0; see [Whisplay/LICENSE](Whisplay/LICENSE)
 and [whisplay-ai-chatbot's license notice](whisplay-ai-chatbot/README.md#license).
+
+## MFruit OS 1.4.0 keyboard compatibility
+
+Vendored SDK 1.2.0 reads keys from MFruit OS's foreground key hub while the
+launcher holds keyboards exclusively. Standalone use falls back to evdev.
+Deploy this SDK with MFruit OS 1.4.0 so keyboard input continues to work.
