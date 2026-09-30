@@ -266,6 +266,27 @@ whisplay.on_button_release(callback)
 - **Node.js** (TypeScript) ↔ **Python** (UI renderer) via TCP socket on port 12345
 - JSON messages with newline delimiter
 - Key message types: `button_pressed`, `button_released`, `camera_capture`, display updates
+- From a keyboard on the board (`python/keyboard_input.py`): `text_input` (a typed
+  question; the `sleep` state answers it through `onTextInput`) and `approval_answer`
+  (`{"approved": true|false}`, Enter / Esc on an approval prompt, `onApprovalAnswer`).
+  The Python side learns when a typed question can be taken from `text_input_enabled`.
+
+### MFruit OS app
+- This is an MFruit OS app: follow `.claude/rules/mfruit-os-app.md` (at the repository
+  root). The Python UI draws MFruit OS's status bar (the state as the page name, the
+  chatbot's own icons, WiFi and battery), its footer hints while idle, and the typed
+  question in an MFruit OS text field -- from the vendored MFruit App SDK,
+  `python/mfruit_sdk/` (never edit it here; change `MFruitOS/mfruitos/sdk` and run
+  `MFruitOS/scripts/sdk-sync.sh whisplay-ai-chatbot/python`).
+- A USB or Bluetooth keyboard goes through the SDK's `InputController` in
+  `chatbot-ui.py`: Space held talks (sent as `button_pressed` / `button_released`),
+  letters type a question, Enter asks, Esc clears the question or leaves the app. The
+  controller ignores keys while another app has the screen.
+- The button deliberately stays with the Node core (`display.ts`): a press talks at
+  once and the core counts clicks. Its gestures already match MFruit OS's talk screens
+  (hold talks, 4 clicks exit), so it is not routed through the SDK.
+- The app claims the Esc key from the daemon at start-up (`own_escape_key`), so Esc is
+  the app's "back" rather than the daemon's close.
 
 ### Optional Hardware Daemon
 - The optional local-only `whisplay-daemon` service now lives in the separate `Whisplay` driver repository, not in this repo.
@@ -316,6 +337,9 @@ State transitions are triggered by button events, wake word detection, or comple
 
 ### Unit Testing
 - Currently minimal test coverage (`npm test` returns placeholder)
+- `cd python && python3 -m pytest -q test/test_keyboard_input.py`: the keyboard
+  (typed questions, Space to talk, Esc, approval prompts, nothing while another app
+  has the screen), through the real MFruit OS input controller
 - Test scripts in `python/test/` for hardware validation
 
 ### Integration Testing
@@ -426,9 +450,13 @@ WEB_SEARCH_INCLUDE_IMAGES=false
 **Usage:** Once enabled, LLM automatically uses `webSearch` tool when users ask about current events, news, or time-sensitive information.
 
 ### Modifying UI/Display
-1. Python rendering: `python/chatbot-ui.py` (RenderThread class)
-2. Status icons: `python/status-bar-icon/` directory
+1. Python rendering: `python/chatbot-ui.py` (RenderThread class); the status bar,
+   footer and question field are MFruit OS's (`draw_status_bar`, `draw_footer`,
+   `draw_question`)
+2. Status icons: `python/status-bar-icon/` directory (the chatbot's own icons; WiFi and
+   battery come from MFruit OS's status bar)
 3. Node.js controller: `src/device/display.ts`
+4. Keyboard: `python/keyboard_input.py`
 
 ### Troubleshooting
 - **Audio issues**: Check `amixer` output, verify WM8960 driver loaded

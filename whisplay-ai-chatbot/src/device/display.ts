@@ -100,6 +100,7 @@ export class WhisplayDisplay {
   private buttonDown = false;
   private onCameraCaptureCallback: () => void = () => {};
   private textInputCallback: (text: string) => void = () => {};
+  private approvalAnswerCallback: (approved: boolean) => void = () => {};
   private isReady: Promise<void>;
   private pythonProcess: any; // Placeholder for Python process if needed
   private buttonPressTimeArray: number[] = [];
@@ -400,6 +401,17 @@ export class WhisplayDisplay {
             if (json.event === "exit_camera_mode") {
               this.display({ camera_mode: false });
             }
+            // A keyboard on the board (chatbot-ui.py): a typed question,
+            // and Enter / Esc on an approval prompt.
+            if (json.event === "text_input") {
+              const typed = typeof json.text === "string" ? json.text.trim() : "";
+              if (typed) {
+                this.handleTextInputEvent(typed);
+              }
+            }
+            if (json.event === "approval_answer") {
+              this.approvalAnswerCallback(json.approved === true);
+            }
             if (json.event === "app_exit_requested") {
               console.log("[WhisplayApp] Exit requested by daemon");
               cleanup();
@@ -445,6 +457,10 @@ export class WhisplayDisplay {
 
   onTextInput(callback: (text: string) => void): void {
     this.textInputCallback = callback;
+  }
+
+  onApprovalAnswer(callback: (approved: boolean) => void): void {
+    this.approvalAnswerCallback = callback;
   }
 
   private async sendToDisplay(data: string): Promise<void> {
@@ -704,6 +720,8 @@ export const onCameraCapture =
   displayInstance.onCameraCapture.bind(displayInstance);
 export const onTextInput =
   displayInstance.onTextInput.bind(displayInstance);
+export const onApprovalAnswer =
+  displayInstance.onApprovalAnswer.bind(displayInstance);
 export const isButtonDown =
   displayInstance.isButtonDown.bind(displayInstance);
 

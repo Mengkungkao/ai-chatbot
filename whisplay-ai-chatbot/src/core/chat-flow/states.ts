@@ -10,6 +10,7 @@ import {
   getCurrentStatus,
   onCameraCapture,
   onTextInput,
+  onApprovalAnswer,
   isButtonDown,
 } from "../../device/display";
 
@@ -623,6 +624,7 @@ export const flowStates: Record<FlowName, FlowStateHandler> = {
       if (timeout) {
         clearTimeout(timeout);
       }
+      onApprovalAnswer(noop);
       request.respond(approved);
       ctx.pendingApprovalRequest = null;
       display({
@@ -648,6 +650,8 @@ export const flowStates: Record<FlowName, FlowStateHandler> = {
       const pressDuration = Date.now() - pressStartedAt;
       finish(pressDuration < longPressMs);
     });
+    // A keyboard: Enter allows, Esc denies (chatbot-ui.py).
+    onApprovalAnswer(finish);
 
     const lines = compact([
       request.tool ? `[${request.tool}] ${request.title}` : request.title,

@@ -13,13 +13,16 @@ from utils import ColorUtils, ImageUtils, TextUtils
 from whisplay_client import create_whisplay_hardware
 import face_engine
 import boot_animation
+from keyboard_input import KeyboardQuestions
+from mfruit_sdk.input import InputController
+from mfruit_sdk.status import StatusMonitor
+from mfruit_sdk.ui import Canvas, footer, status_bar, text_field
+from mfruit_sdk.ui import theme as mfruit
 
 STATUS_ICON_DIR = os.path.join(os.path.dirname(__file__), "status-bar-icon")
 if STATUS_ICON_DIR not in sys.path:
     sys.path.append(STATUS_ICON_DIR)
 
-from battery_icon import BatteryStatusIcon
-from wifi_icon import WifiStatusIcon
 from rag_icon import RagStatusIcon
 from autotalk_icon import AutoTalkStatusIcon
 from image_icon import ImageStatusIcon
@@ -46,9 +49,16 @@ TEXT_ALIGN = (os.environ.get("TEXT_ALIGN") or "center").strip().lower()
 FACE_TILE = 96
 FACE_HEIGHT = int(round(FACE_TILE * face_engine.shape_height_ratio()))
 FACE_PAD_Y = (FACE_TILE - FACE_HEIGHT) // 2   # blank band inside the tile
-# The row the status text and icons live in. Nothing the face draws may reach
-# into it.
-STATUS_STRIP = status_font_size + 5
+# MFruit OS's status bar (mfruit_sdk): the state as the page name on the
+# left, then the chatbot's own icons, WiFi and battery on the right. Nothing
+# the face draws may reach into it.
+STATUS_STRIP = mfruit.CONTENT_TOP - 6
+# MFruit OS's colours on the chatbot's black panel.
+MFRUIT_THEME = mfruit.DARK._replace(bg=(0, 0, 0))
+# MFruit OS's footer hints, shown while the chatbot is idle, and the line
+# a question is typed on (a keyboard on the board).
+FOOTER_HEIGHT = mfruit.SCREEN_H - 250
+QUESTION_HEIGHT = 42
 # Slack above and below the cat for the breathing bob and the blink squash.
 # The idle repaint pastes the whole square tile, so the band has to be at least
 # as tall as the tile or the paste is clamped and the face jumps between a full
@@ -91,36 +101,38 @@ TERMINAL_FG = (80, 255, 120, 255)
 TERMINAL_MARGIN_X = 8
 TERMINAL_MAX_LINES = 5
 
-# The status word ("idle", "listening", ...) used to eat a whole line of the
-# header. Show a single glyph instead and give the space back to the reply.
-STATUS_GLYPHS = (
-    ("idle", "💤"),
-    ("listening", "🎙"),
-    ("recording", "🎙"),
-    ("recognizing", "👂"),
-    ("thinking", "💭"),
-    ("tool calling", "🔧"),
-    ("tool", "🔧"),
-    ("answering", "💬"),
-    ("speaking", "💬"),
-    ("replying", "💬"),
-    ("music", "🎵"),
-    ("camera", "📷"),
-    ("approval", "❓"),
-    ("error", "⚠"),
+# The status word ("idle", "listening", ...) is the page name in MFruit OS's
+# status bar, where it shares the row with the icons instead of taking a
+# line of its own.
+STATUS_TITLES = (
+    ("idle", "Ready"),
+    ("listening", "Listening"),
+    ("recording", "Listening"),
+    ("recognizing", "Heard you"),
+    ("thinking", "Thinking"),
+    ("tool calling", "Working"),
+    ("tool", "Working"),
+    ("answering", "Answering"),
+    ("speaking", "Answering"),
+    ("replying", "Answering"),
+    ("music", "Music"),
+    ("camera", "Camera"),
+    ("approval", "Confirm"),
+    ("confirm", "Confirm"),
+    ("error", "Error"),
 )
 
 
-def status_glyph(status):
-    """Map a status label to one glyph. Unknown labels keep their text."""
+def status_title(status):
+    """The page name for a status label. Unknown labels keep their text."""
     text = (status or "").strip()
     if not text:
-        return ""
+        return "AI Chatbot"
     lowered = text.lower()
-    for key, glyph in STATUS_GLYPHS:
+    for key, title in STATUS_TITLES:
         if lowered.startswith(key):
-            return glyph
-    return text
+            return title
+    return text[:1].upper() + text[1:]
 
 
 def face_frame_tint(rgb):
@@ -179,6 +191,11 @@ current_image_icon_visible = False
 current_music_progress = None
 current_music_duration_ms = None
 current_approval_mode = False
+current_text_input_enabled = False   # idle: the Node core takes a typed question
+has_screen = True                    # False once another app has the screen
+keyboard = None                      # KeyboardQuestions
+input_controller = None              # mfruit_sdk InputController (keyboard only)
+device_status = None                 # mfruit_sdk StatusMonitor: WiFi and battery
 camera_mode = False
 camera_capture_image_path = ""
 camera_thread = None
@@ -307,11 +324,21 @@ class RenderThread(threading.Thread):
 
             # render main text area
             approval_bar_height = 38 if current_approval_mode else 0
-            text_area_height = self.whisplay.LCD_HEIGHT - header_height - progress_bar_height - approval_bar_height
+            hints = self.footer_hints()
+            footer_height = FOOTER_HEIGHT if hints and not current_approval_mode else 0
+            question = keyboard.text if keyboard is not None else None
+            question_height = QUESTION_HEIGHT if question is not None else 0
+            text_area_height = (self.whisplay.LCD_HEIGHT - header_height - progress_bar_height
+                                - approval_bar_height - footer_height - question_height)
             text_bg_image = Image.new("RGBA", (self.whisplay.LCD_WIDTH, text_area_height), (0, 0, 0, 255))
             text_draw = ImageDraw.Draw(text_bg_image)
             animation_active = self.render_main_text(text_bg_image, text_area_height, text_draw, apply_tool_placeholders(text), current_scroll_speed)
             self.whisplay.draw_image(0, header_height + progress_bar_height, self.whisplay.LCD_WIDTH, text_area_height, ImageUtils.image_to_rgb565(text_bg_image, self.whisplay.LCD_WIDTH, text_area_height))
+            if question is not None:
+                self.draw_question(question, self.whisplay.LCD_HEIGHT - approval_bar_height
+                                   - footer_height - question_height)
+            if footer_height:
+                self.draw_footer(hints)
             if current_approval_mode:
                 approval_image = Image.new("RGBA", (self.whisplay.LCD_WIDTH, approval_bar_height), (0, 0, 0, 255))
                 approval_draw = ImageDraw.Draw(approval_image)
@@ -321,6 +348,52 @@ class RenderThread(threading.Thread):
             return animation_active
 
         
+
+    def footer_hints(self):
+        """MFruit OS footer hints: what the button and keyboard do now, if idle."""
+        if keyboard is None or camera_mode:
+            return []
+        double = "camera" if os.environ.get("ENABLE_CAMERA", "").lower() == "true" else "auto-talk"
+        connected = input_controller is not None and input_controller.keyboard_connected
+        return keyboard.hints(connected, double)
+
+    def draw_footer(self, hints):
+        strip = Canvas(theme=MFRUIT_THEME, size=(self.whisplay.LCD_WIDTH, FOOTER_HEIGHT))
+        footer(strip, hints, y=6)
+        self.whisplay.draw_image(0, self.whisplay.LCD_HEIGHT - FOOTER_HEIGHT,
+                                 self.whisplay.LCD_WIDTH, FOOTER_HEIGHT,
+                                 ImageUtils.image_to_rgb565(strip.image, self.whisplay.LCD_WIDTH,
+                                                            FOOTER_HEIGHT))
+
+    def draw_question(self, question, top):
+        """The question being typed on a keyboard, in an MFruit OS text field."""
+        strip = Canvas(theme=MFRUIT_THEME, size=(self.whisplay.LCD_WIDTH, QUESTION_HEIGHT))
+        text_field(strip, question, 4, placeholder="Ask anything…")
+        self.whisplay.draw_image(0, top, self.whisplay.LCD_WIDTH, QUESTION_HEIGHT,
+                                 ImageUtils.image_to_rgb565(strip.image, self.whisplay.LCD_WIDTH,
+                                                            QUESTION_HEIGHT))
+
+    def draw_status_bar(self, image, draw):
+        """MFruit OS's status bar: the state on the left; the chatbot's own
+        icons (VPN, image, knowledge, auto-talk), WiFi and battery on the right."""
+        icons = self.build_status_icons({
+            "status_font_size": status_font_size,
+            "vpn_connected": current_vpn_connected,
+            "rag_icon_visible": current_rag_icon_visible,
+            "auto_talk_enabled": current_auto_talk_enabled,
+            "image_icon_visible": current_image_icon_visible,
+        })
+        widths = [icon.measure()[0] for icon in icons]
+        reserve = sum(widths) + 8 * (len(widths) - 1) if widths else 0
+        strip = Canvas(theme=MFRUIT_THEME, size=(self.whisplay.LCD_WIDTH, STATUS_STRIP))
+        title = "Ask" if keyboard is not None and keyboard.typing else status_title(current_status)
+        slot = status_bar(strip, title, device_status.sample() if device_status else None,
+                          reserve=reserve)
+        image.paste(strip.image, (0, 0))
+        x = slot
+        for icon, width in zip(icons, widths):
+            icon.render(draw, x, mfruit.STATUS_Y + 3)
+            x += width + 8
 
     def compute_scroll_target_from_char_end(self, lines, line_height, area_height, char_end):
         if char_end is None or char_end <= 0:
@@ -720,7 +793,6 @@ class RenderThread(threading.Thread):
         
         status_font = self.status_font
         emoji_font = self.emoji_font
-        battery_font = self.battery_font
 
         image_width = self.whisplay.LCD_WIDTH
 
@@ -729,11 +801,7 @@ class RenderThread(threading.Thread):
 
         top_height = HEADER_HEIGHT
 
-        # Draw status as a compact glyph rather than a word.
-        status_label = status_glyph(current_status)
-        status_bbox = status_font.getbbox(status_label)
-        status_w = status_bbox[2] - status_bbox[0]
-        TextUtils.draw_mixed_text(draw, image, status_label, status_font, (whisplay.CornerHeight, 0))
+        self.draw_status_bar(image, draw)
 
         # Keep the emoji centered normally. While a command is running, use the
         # XiaoZhi layout: emoji on the left and terminal output beside it.
@@ -763,22 +831,6 @@ class RenderThread(threading.Thread):
                 emoji_y + 1,
                 image_width - terminal_x - TERMINAL_MARGIN_X,
             )
-        
-        # Draw battery icon
-        status_icon_context = {
-            "battery_level": battery_level,
-            "battery_color": battery_color,
-            "battery_font": battery_font,
-            "status_font_size": status_font_size,
-            "network_connected": current_network_connected,
-            "wifi_signal_level": current_wifi_signal_level,
-            "vpn_connected": current_vpn_connected,
-            "rag_icon_visible": current_rag_icon_visible,
-            "auto_talk_enabled": current_auto_talk_enabled,
-            "image_icon_visible": current_image_icon_visible,
-        }
-        status_icons = self.build_status_icons(status_icon_context)
-        self.render_status_icons(draw, status_icons, image_width)
         
         return top_height
 
@@ -815,16 +867,10 @@ class RenderThread(threading.Thread):
         return clipped + ellipsis
 
     def build_status_icons(self, context):
+        """The chatbot's own status icons. WiFi and battery are MFruit OS's."""
         icons = []
-        battery_level = context.get("battery_level")
-        battery_color = context.get("battery_color")
-        battery_font = context.get("battery_font")
         status_font_size = context.get("status_font_size")
 
-        if battery_level is not None:
-            icons.append(BatteryStatusIcon(battery_level, battery_color, battery_font, status_font_size))
-        if context.get("wifi_signal_level"):
-            icons.append(WifiStatusIcon(status_font_size, context.get("wifi_signal_level")))
         if context.get("vpn_connected"):
             icons.append(WireguardStatusIcon(status_font_size))
         if context.get("image_icon_visible"):
@@ -835,24 +881,6 @@ class RenderThread(threading.Thread):
             icons.append(AutoTalkStatusIcon(status_font_size, context.get("auto_talk_enabled")))
 
         return icons
-
-    def render_status_icons(self, draw, icons, image_width):
-        if not icons:
-            return
-        # The panel's corners are rounded, and the icons sit in the top rows
-        # where the curve bites deepest, so a flat 10px margin left the
-        # right-most one clipped. The status text on the other side already
-        # insets by the corner's own height; matching it keeps the strip
-        # symmetric and clear of the curve.
-        right_margin = self.whisplay.CornerHeight
-        icon_gap = 8
-        cursor_x = image_width - right_margin
-        for icon in icons:
-            icon_width, _ = icon.measure()
-            icon_x = cursor_x - icon_width
-            icon_y = icon.get_top_y()
-            icon.render(draw, icon_x, icon_y)
-            cursor_x = icon_x - icon_gap
 
     def render_approval_actions(self, image, draw):
         width, height = image.size
@@ -1045,7 +1073,8 @@ def update_display_data(status=None, emoji=None, text=None,
 def send_to_all_clients(message):
     """Send message to all connected clients"""
     message_json = json.dumps(message).encode("utf-8") + b"\n"
-    for addr, client_socket in clients.items():
+    # A copy: the keyboard and button threads send while clients come and go.
+    for addr, client_socket in list(clients.items()):
         try:
             client_socket.sendall(message_json)
             # Use ellipsis for long messages
@@ -1104,7 +1133,7 @@ def on_app_exit_requested():
 
 def handle_client(client_socket, addr, whisplay):
     global camera_capture_image_path, camera_mode, camera_thread, render_thread
-    global current_status_color
+    global current_status_color, current_text_input_enabled
     print(f"[Socket] Client {addr} connected")
     clients[addr] = client_socket
     try:
@@ -1147,10 +1176,16 @@ def handle_client(client_socket, addr, whisplay):
                     music_progress = content.get("music_progress", None)
                     music_duration_ms = content.get("music_duration_ms", None)
                     approval_mode = content.get("approval_mode", None)
+                    text_input_enabled = content.get("text_input_enabled", None)
                     capture_image_path = content.get("capture_image_path", None)
                     trigger_camera_capture = content.get("camera_capture", None)
                     # boolean to enable camera mode
                     set_camera_mode = content.get("camera_mode", None)
+
+                    if text_input_enabled is not None:
+                        current_text_input_enabled = bool(text_input_enabled)
+                        if render_thread is not None:
+                            render_thread.request_render()
 
                     if rgbled:
                         rgb255_tuple = ColorUtils.get_rgb255_from_any(rgbled)
@@ -1270,11 +1305,58 @@ def start_socket_server(render_thread, host='0.0.0.0', port=12345):
         server_socket.close()
 
 
+def on_focus_revoked(*_args):
+    """Another app has the screen now, and so has the keyboard."""
+    global has_screen
+    has_screen = False
+    if input_controller is not None:
+        input_controller.reset()
+
+
+def leave_app():
+    """Esc with nothing typed: back to MFruit OS, the way a daemon exit goes."""
+    print("[Keyboard] Esc: leaving the app")
+    on_app_exit_requested()
+
+
+def request_render():
+    if render_thread is not None:
+        render_thread.request_render()
+
+
+def start_keyboard():
+    """A USB or Bluetooth keyboard: type questions, hold Space to talk.
+
+    Read through MFruit OS's input controller, so keys count only while the
+    chatbot has the screen. The button stays with the Node core.
+    """
+    global keyboard, input_controller, device_status
+    device_status = StatusMonitor(interval=15.0, on_change=lambda _status: request_render())
+    device_status.start()
+    keyboard = KeyboardQuestions(
+        send=send_to_all_clients,
+        leave=leave_app,
+        changed=request_render,
+        idle=lambda: current_text_input_enabled,
+        approving=lambda: current_approval_mode,
+    )
+    input_controller = InputController(
+        keyboard.on_action,
+        talk=lambda: True,
+        typing=lambda: keyboard.typing,
+        active=lambda: has_screen and not shutdown_requested,
+    )
+    input_controller.start()
+
+
 if __name__ == "__main__":
     whisplay = create_whisplay_hardware()
     print(f"[LCD] Initialization finished: {whisplay.LCD_WIDTH}x{whisplay.LCD_HEIGHT}")
     if hasattr(whisplay, "on_exit_request"):
         whisplay.on_exit_request(on_app_exit_requested)
+    if hasattr(whisplay, "on_focus_revoked"):
+        whisplay.on_focus_revoked(on_focus_revoked)
+    start_keyboard()
     
     # read CUSTOM_FONT_PATH from environment variable
     custom_font_path = os.getenv("CUSTOM_FONT_PATH", None)

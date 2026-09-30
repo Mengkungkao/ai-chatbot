@@ -5,6 +5,8 @@ import socket
 import threading
 import time
 
+from mfruit_sdk.daemon import own_escape_key
+
 try:
     from whisplay import WhisplayBoard
 except Exception:
@@ -263,6 +265,11 @@ def create_whisplay_hardware(
     )
     if daemon.ping():
         daemon.register()
+        # Esc is the app's "back" (MFruit OS controls; the keyboard is read in
+        # chatbot-ui.py). Claimed now, before taking the screen: every
+        # registration makes the daemon redraw its desktop, which would flash
+        # over the chatbot's first frame.
+        own_escape_key(app_id, socket_path)
         daemon.start_event_listener()
         daemon.acquire_foreground()
         return daemon
