@@ -122,3 +122,9 @@ Node controller suppresses its three-click action when a fourth click arrives;
 changing registration to `none` would disable the physical exit. Its keyboard
 continues through the MFruit SDK. A native release package still needs the
 built app and dependency/setup packaging described in MFruit OS's app guide.
+
+## MFruit OS 1.4.0 keyboard compatibility
+
+Vendored SDK 1.2.0 reads keys from MFruit OS's foreground key hub while the
+launcher holds keyboards exclusively. Standalone use falls back to evdev.
+Deploy this SDK with MFruit OS 1.4.0 so keyboard input continues to work.
