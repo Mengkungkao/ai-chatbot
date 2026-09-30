@@ -10,7 +10,7 @@ import re
 
 from camera import CameraThread
 from utils import ColorUtils, ImageUtils, TextUtils
-from whisplay_client import create_whisplay_hardware
+from whisplay_client import DEFAULT_APP_ID, create_whisplay_hardware
 import face_engine
 import boot_animation
 from keyboard_input import KeyboardQuestions
@@ -1345,6 +1345,7 @@ def start_keyboard():
         talk=lambda: True,
         typing=lambda: keyboard.typing,
         active=lambda: has_screen and not shutdown_requested,
+        app_id=DEFAULT_APP_ID,             # MFruit OS hands its keys to this app by id
     )
     input_controller.start()
 
