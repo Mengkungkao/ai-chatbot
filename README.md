@@ -88,6 +88,25 @@ the full install/build/run steps (drivers, `.env` setup, `build.sh`,
   check for and kill orphaned `chatbot-ui.py`/`wakeword.py` processes before
   assuming it's a config problem.
 
+## Development checks
+
+Before changing the app, read its [agent guide](whisplay-ai-chatbot/AGENTS.md).
+`Whisplay/` is a separate upstream driver checkout; do not edit it in this
+repository. The vendored MFruit SDK under `whisplay-ai-chatbot/python/mfruit_sdk/`
+is also not edited here. The app follows the [MFruit OS app
+rules](.claude/rules/mfruit-os-app.md); sync SDK changes from MFruitOS with
+`~/MFruitOS/scripts/sdk-sync.sh whisplay-ai-chatbot/python`.
+
+From the repository root, run the focused app checks:
+
+```bash
+cd whisplay-ai-chatbot
+npm test
+bash build.sh
+cd python
+python3 -m pytest -q test/test_keyboard_input.py test/test_image_utils.py
+```
+
 ## Configuration notes
 
 `.env` (Pi-only, not committed) drives most of the above. Beyond the template's
