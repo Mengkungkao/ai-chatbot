@@ -6,12 +6,14 @@
 # Produces OUT_DIR/whisplay-ai-chatbot-<version>-linux-arm64.tar.gz and its
 # .sha256: the app folder's files (tracked or new, as .gitignore allows), the
 # compiled dist/, production node_modules with only the linux-arm64 native
-# binaries, and the fonts install_dependencies.sh would download. The Fruit
-# Store installs that archive; install.sh on the device adds Node.js if needed.
-# Needs an arm64 machine with Node.js 20 and internet (yarn packages, fonts);
+# binaries, the emoji set with the cat faces drawn in (python/ASSETS.md) and
+# the official Node.js runtime in runtime/. The Fruit Store installs that
+# archive and the device downloads nothing else.
+# Needs an arm64 machine with Node.js 20 and internet (yarn packages and the
+# Node.js runtime, both checked against their lockfile/SHA-256);
 # .github/workflows/release.yml runs it on GitHub's ubuntu-24.04-arm runner.
 #
-# Left out to keep the download small (about 70 MB): the Picovoice ASR/TTS
+# Left out to keep the download small (about 85 MB): the Picovoice ASR/TTS
 # providers (@picovoice/*, loaded only when selected in .env) and the Docker,
 # pi-gen and web-development folders.
 set -euo pipefail
@@ -21,9 +23,10 @@ OUT="$(mkdir -p "${1:-$APP/release}" && cd "${1:-$APP/release}" && pwd)"
 VERSION="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$APP/manifest.json")"
 NAME="whisplay-ai-chatbot-$VERSION-linux-arm64"
 YARN=(npx --yes yarn@1.22.22)
-FONT_URL=https://storage.whisplay.ai/whisplay-ai-chatbot
 FONT_SHA256=a9c048e539c7b8c37573aa0143f4ca33cd5ba85ca186c1e0bc70f94dd75caf93
 EMOJI_SHA256=d82effaeeca5e41ee4db5c7de4c162662670eac3243279478e281c02e460ab98
+NODE_VERSION=20.19.5
+NODE_SHA256=d462267863ae8ee556039ebdf559055a8ec562c633889ef1403f3adb449ba1dd   # linux-arm64.tar.xz
 
 [ "$(uname -m)" = aarch64 ] || { echo "build on arm64: node_modules ships arm64 binaries" >&2; exit 1; }
 node -e 'process.exit(+process.versions.node.split(".")[0] === 20 ? 0 : 1)' \
@@ -57,15 +60,35 @@ find node_modules -type f \( -name '*.d.ts' -o -name '*.d.mts' -o -name '*.d.cts
   -o -name '*.map' -o -name '*.md' -o -name '*.markdown' \) -delete
 find node_modules -xtype l -delete       # .bin links to the removed build tools
 
-echo "==> fonts"
-fetch() {   # url file sha256
-  curl -fsSL -o "$2" "$1"
-  echo "$3  $2" | sha256sum -c --quiet - || { echo "checksum mismatch: $1" >&2; exit 1; }
-}
-fetch "$FONT_URL/NotoSansSC-Bold.ttf" python/NotoSansSC-Bold.ttf "$FONT_SHA256"
-fetch "$FONT_URL/emoji_svg.zip" "$WORK/emoji_svg.zip" "$EMOJI_SHA256"
+echo "==> fonts and emoji (from the repository)"
+printf '%s  %s\n' "$FONT_SHA256" python/NotoSansSC-Bold.ttf "$EMOJI_SHA256" python/emoji_svg.zip \
+  | sha256sum -c --quiet - || { echo "python/NotoSansSC-Bold.ttf or emoji_svg.zip changed" >&2; exit 1; }
 python3 -c 'import sys, zipfile; zipfile.ZipFile(sys.argv[1]).extractall(sys.argv[2])' \
-  "$WORK/emoji_svg.zip" python
+  python/emoji_svg.zip python
+rm python/emoji_svg.zip
+# The zip holds the stock emoji; the cat faces replace them at their
+# codepoints. face_gen.py also rewrites faces.json, which must not change.
+python3 python/face_gen.py --json "$WORK/faces.json"
+cmp -s "$WORK/faces.json" python/faces.json \
+  || { echo "faces.json is out of date: run python3 python/face_gen.py and commit it" >&2; exit 1; }
+
+echo "==> Node.js $NODE_VERSION runtime"
+# Only the node binary and its licence: npm, headers and docs stay out.
+curl -fsSL -o "$WORK/node.tar.xz" \
+  "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-arm64.tar.xz"
+echo "$NODE_SHA256  $WORK/node.tar.xz" | sha256sum -c --quiet - \
+  || { echo "Node.js download does not match its SHA-256" >&2; exit 1; }
+python3 - "$WORK/node.tar.xz" "node-v$NODE_VERSION-linux-arm64" runtime <<'PY'
+import os, shutil, sys, tarfile
+archive, top, dest = sys.argv[1:]
+os.makedirs(os.path.join(dest, "bin"))
+with tarfile.open(archive) as tar:
+    for name, target in ((f"{top}/bin/node", "bin/node"), (f"{top}/LICENSE", "LICENSE")):
+        with tar.extractfile(name) as src, open(os.path.join(dest, target), "wb") as out:
+            shutil.copyfileobj(src, out)
+os.chmod(os.path.join(dest, "bin", "node"), 0o755)
+PY
+runtime/bin/node -e 'process.exit(process.version === "v'"$NODE_VERSION"'" ? 0 : 1)'
 
 echo "==> archive"
 find . -name __pycache__ -prune -exec rm -rf {} +

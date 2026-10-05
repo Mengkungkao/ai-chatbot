@@ -23,9 +23,13 @@ if [ "$is_linux" = true ] &&
   done
 fi
 
-export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+# A Fruit Store package brings its own Node.js (runtime/, put on PATH by
+# run.sh); nvm would put another one in front of it.
+if [ ! -x runtime/bin/node ]; then
+  export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+fi
 
 # Find the unified Whisplay sound card first; keep legacy names as fallback.
 card_index=""

@@ -8,8 +8,8 @@ then emits both consumers of that definition:
   * ``faces.json`` — the same primitives with role tags, read at runtime by
     ``face_engine.py`` to animate blinking, talking and emotion transitions.
 
-The set is drawn in a kawaii style: glossy black eyes with highlight glints,
-thin lashes, pink cheek blush and small coloured mouths on a warm white panel.
+The set is a kawaii cat: an off-white head with pointed ears and whiskers, a
+grey outline, round grey eyes, a small nose and coloured mouths.
 
 Run it after changing any expression:
 

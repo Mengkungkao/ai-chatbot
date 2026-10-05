@@ -44,37 +44,17 @@ fi
 if ! pip install -r requirements.txt $PIP_FLAGS; then
     echo "WARNING: Python dependency install failed; chatbot-ui.py will not start until it succeeds."
 fi
-# download fonts and emojis
-if command_exists wget; then
-    if [ ! -f "NotoSansSC-Bold.ttf" ]; then
-        wget -O NotoSansSC-Bold.ttf https://storage.whisplay.ai/whisplay-ai-chatbot/NotoSansSC-Bold.ttf
-    else
-        echo "NotoSansSC-Bold.ttf already exists, skip download."
-    fi
-
-    if [ ! -f "emoji_svg.zip" ]; then
-        wget -O emoji_svg.zip https://storage.whisplay.ai/whisplay-ai-chatbot/emoji_svg.zip
-    else
-        echo "emoji_svg.zip already exists, skip download."
-    fi
-elif command_exists curl; then
-    if [ ! -f "NotoSansSC-Bold.ttf" ]; then
-        curl -fL -o NotoSansSC-Bold.ttf https://storage.whisplay.ai/whisplay-ai-chatbot/NotoSansSC-Bold.ttf
-    else
-        echo "NotoSansSC-Bold.ttf already exists, skip download."
-    fi
-
-    if [ ! -f "emoji_svg.zip" ]; then
-        curl -fL -o emoji_svg.zip https://storage.whisplay.ai/whisplay-ai-chatbot/emoji_svg.zip
-    else
-        echo "emoji_svg.zip already exists, skip download."
-    fi
-else
-    echo "Neither wget nor curl is installed."
-    exit 1
-fi
+# The font and emoji set are in the repository (python/ASSETS.md): check them,
+# nothing is downloaded.
+sha256sum -c --quiet - <<'SUMS' || { echo "python/NotoSansSC-Bold.ttf or python/emoji_svg.zip is damaged; check them out again."; exit 1; }
+a9c048e539c7b8c37573aa0143f4ca33cd5ba85ca186c1e0bc70f94dd75caf93  NotoSansSC-Bold.ttf
+d82effaeeca5e41ee4db5c7de4c162662670eac3243279478e281c02e460ab98  emoji_svg.zip
+SUMS
 # overwrite if exists
-unzip -o emoji_svg.zip
+unzip -o -q emoji_svg.zip
+# The zip holds the stock emoji; put the cat faces back over their codepoints
+# so a face emoji in the reply text draws as the cat too.
+python3 face_gen.py
 cd ..
 
 

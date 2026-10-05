@@ -1,7 +1,7 @@
 {
   "id": "whisplay-ai-chatbot",
   "name": "AI Chatbot",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Voice assistant; needs your API keys in its .env file",
   "entrypoint": "run.sh",
   "min_os_version": "1.4.0",

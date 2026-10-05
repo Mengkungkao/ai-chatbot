@@ -147,19 +147,25 @@ continues through the MFruit SDK.
 (`whisplay-ai-chatbot`, entry `run.sh`, hooks `install.sh` and `test.sh`).
 
 - **Release:** pushing a tag that matches the manifest version
-  (`git tag v1.0.0 && git push origin v1.0.0`) runs
+  (`git tag v1.0.1 && git push origin v1.0.1`) runs
   `.github/workflows/release.yml` on GitHub's arm64 runner:
   `whisplay-ai-chatbot/tools/build-release.sh` compiles `dist/`, installs the
   production `node_modules` (linux-arm64 binaries only, Picovoice providers
-  left out), adds the fonts, and publishes
-  `whisplay-ai-chatbot-<version>-linux-arm64.tar.gz` with its `.sha256`.
-  MFruit OS's `config/catalog.json` then pins that asset by SHA-256.
+  left out), unpacks the font and emoji set kept in this repository
+  ([python/ASSETS.md](whisplay-ai-chatbot/python/ASSETS.md)) with the cat
+  faces drawn over them, adds the official Node.js 20 binary in `runtime/`,
+  and publishes `whisplay-ai-chatbot-<version>-linux-arm64.tar.gz` (about
+  88 MB) with its `.sha256`. MFruit OS's `config/catalog.json` then pins that
+  asset by SHA-256.
+- **Installing downloads only that archive** from this repository's release:
+  nothing from PiSugar, nodejs.org or npm. `install.sh` checks the system
+  packages and that the bundled Node.js runs; `test.sh` checks that the font,
+  the emoji and the cat faces are in place before MFruit OS activates it.
 - **Device setup:** the system packages (sox, mpg123, cairosvg, …) need sudo,
   so MFruit OS installs them once:
   `bash ~/.whisplay-os/system/current/scripts/setup-app.sh whisplay-ai-chatbot`
   (or `install.sh --app whisplay-ai-chatbot` when installing MFruit OS). The
-  app's `install.sh` checks them and uses the system Node.js 20, or downloads
-  the official build (SHA-256 checked) into `runtime/`.
+  app's `install.sh` checks them; it never installs or downloads anything.
 - **API keys:** copy your `.env` to
   `~/.whisplay-os/apps/whisplay-ai-chatbot/data/.env`. Until it is there the
   app shows "Add your API keys". Chat data and knowledge live in the same
