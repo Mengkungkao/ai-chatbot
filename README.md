@@ -139,8 +139,33 @@ covers this launch with a package path containing spaces.
 The current chatbot keeps the daemon's four-click exit (`quad_click`). The
 Node controller suppresses its three-click action when a fourth click arrives;
 changing registration to `none` would disable the physical exit. Its keyboard
-continues through the MFruit SDK. A native release package still needs the
-built app and dependency/setup packaging described in MFruit OS's app guide.
+continues through the MFruit SDK.
+
+## MFruit OS package (Fruit Store)
+
+`whisplay-ai-chatbot/` is a native MFruit OS package: `manifest.json`
+(`whisplay-ai-chatbot`, entry `run.sh`, hooks `install.sh` and `test.sh`).
+
+- **Release:** pushing a tag that matches the manifest version
+  (`git tag v1.0.0 && git push origin v1.0.0`) runs
+  `.github/workflows/release.yml` on GitHub's arm64 runner:
+  `whisplay-ai-chatbot/tools/build-release.sh` compiles `dist/`, installs the
+  production `node_modules` (linux-arm64 binaries only, Picovoice providers
+  left out), adds the fonts, and publishes
+  `whisplay-ai-chatbot-<version>-linux-arm64.tar.gz` with its `.sha256`.
+  MFruit OS's `config/catalog.json` then pins that asset by SHA-256.
+- **Device setup:** the system packages (sox, mpg123, cairosvg, …) need sudo,
+  so MFruit OS installs them once:
+  `bash ~/.whisplay-os/system/current/scripts/setup-app.sh whisplay-ai-chatbot`
+  (or `install.sh --app whisplay-ai-chatbot` when installing MFruit OS). The
+  app's `install.sh` checks them and uses the system Node.js 20, or downloads
+  the official build (SHA-256 checked) into `runtime/`.
+- **API keys:** copy your `.env` to
+  `~/.whisplay-os/apps/whisplay-ai-chatbot/data/.env`. Until it is there the
+  app shows "Add your API keys". Chat data and knowledge live in the same
+  data folder, so updates and reinstalls keep them.
+- Not in the package: wake word (`openwakeword` is a pip install), Picovoice
+  ASR/TTS.
 
 ## MFruit OS 1.4.0 keyboard compatibility
 

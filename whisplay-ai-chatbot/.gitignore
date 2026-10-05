@@ -19,3 +19,5 @@ docker/volume
 .DS_Store
 __pycache__
 .env.backups
+release
+runtime

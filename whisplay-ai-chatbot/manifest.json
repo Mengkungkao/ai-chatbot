@@ -1,0 +1,15 @@
+{
+  "id": "whisplay-ai-chatbot",
+  "name": "AI Chatbot",
+  "version": "1.0.0",
+  "description": "Voice assistant; needs your API keys in its .env file",
+  "entrypoint": "run.sh",
+  "min_os_version": "1.4.0",
+  "repository": "https://github.com/Mengkungkao/ai-chatbot",
+  "exit_gesture": "quad_click",
+  "priority": 0,
+  "test": "test.sh",
+  "persist": [],
+  "env": {},
+  "disable_esc_exit_key": true
+}
