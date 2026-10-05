@@ -1,6 +1,7 @@
 import fs from "fs";
 import dotenv from "dotenv";
 import { openai } from "./openai"; // Assuming openai is exported from openai.ts
+import { reportServiceError } from "../../utils/setup-problems";
 
 dotenv.config();
 
@@ -38,6 +39,8 @@ export const recognizeAudio = async (
     return transcription.text;
   } catch (error) {
     console.error("Audio recognition failed:", error);
+    reportServiceError("OpenAI speech recognition", `OPENAI_ASR_MODEL=${OpenAiAsrModel}`, error,
+      [401, 403, 404]);
     return "";
   }
 };

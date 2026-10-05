@@ -12,6 +12,17 @@ const piperBinaryPath = process.env.PIPER_BINARY_PATH || "/home/pi/piper/piper";
 const piperModelPath =
   process.env.PIPER_MODEL_PATH || "/home/pi/piper/voices/en_US-amy-medium.onnx";
 
+/** Why Piper cannot speak on this device, or "" when its files are there. */
+export const piperSetupProblem = (): string => {
+  if (!fs.existsSync(piperBinaryPath)) {
+    return `TTS_SERVER=piper, but Piper is not installed (PIPER_BINARY_PATH=${piperBinaryPath}).`;
+  }
+  if (!fs.existsSync(piperModelPath)) {
+    return `TTS_SERVER=piper, but its voice is missing (PIPER_MODEL_PATH=${piperModelPath}).`;
+  }
+  return "";
+};
+
 const piperTTS = async (
   text: string
 ): Promise<TTSResult> => {

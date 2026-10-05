@@ -2,6 +2,7 @@ import mp3Duration from "mp3-duration";
 import { openai } from "./openai"; // Assuming openai is exported from openai.ts
 import dotenv from "dotenv";
 import { TTSResult } from "../../type";
+import { reportServiceError } from "../../utils/setup-problems";
 
 dotenv.config();
 
@@ -39,6 +40,7 @@ const openaiTTS = async (
     ...(ttsSpeed !== undefined ? { speed: ttsSpeed } : {}),
   }).catch((error) => {
     console.log("OpenAI TTS failed:", error);
+    reportServiceError("OpenAI voice", `OPENAI_VOICE_MODEL=${openAiVoiceModel}`, error);
     return null;
   });
   if (!mp3) {

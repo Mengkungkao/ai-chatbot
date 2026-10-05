@@ -7,6 +7,7 @@ import {
   SummaryTextWithLLMFunction,
 } from "./interface";
 import { pluginRegistry, LLMProvider } from "../plugin";
+import { addSetupProblem } from "../utils/setup-problems";
 
 dotenv.config();
 
@@ -63,6 +64,7 @@ try {
   }
 } catch (e: any) {
   console.warn(e.message);
+  addSetupProblem(`LLM_SERVER=${llmServer} is not a chat service.`);
 }
 
 const isImMode = llmServer === LLMServer.whisplayim;

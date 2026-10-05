@@ -36,6 +36,7 @@ import {
   getDynamicVoiceDetectLevel,
 } from "../../device/audio";
 import { chatWithLLMStream } from "../../cloud-api/server";
+import { setupProblemText } from "../../utils/setup-problems";
 import { isImMode, summaryTextWithLLM } from "../../cloud-api/llm";
 import { getSystemPromptWithKnowledge } from "../Knowledge";
 import { enableRAG } from "../../cloud-api/knowledge";
@@ -115,13 +116,16 @@ export const flowStates: Record<FlowName, FlowStateHandler> = {
       onButtonDoubleClick(toggleAutoTalk);
       onButtonTripleClick(null);
     }
+    const problems = setupProblemText();
     display({
       status: "idle",
       emoji: IDLE_EMOJI,
       RGB: "#000055",
       rag_icon_visible: false,
       auto_talk_enabled: ctx.proactiveChat?.isOn() ?? false,
-      ...(getCurrentStatus().text.endsWith("Listening...") || !getCurrentStatus().text
+      ...(problems
+        ? { text: problems }
+        : getCurrentStatus().text.endsWith("Listening...") || !getCurrentStatus().text
         ? {
           text: `Long Press the button to say something${ctx.enableCamera ? ",\ndouble click to launch camera" : ""
             }.`,

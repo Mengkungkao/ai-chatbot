@@ -13,8 +13,10 @@
     "configure-env": "node -r ts-node/register -r tsconfig-paths/register dist/configure-env.js",
     "upgrade-env": "node -r ts-node/register -r tsconfig-paths/register dist/upgrade-env.js",
     "postinstall": "patch-package",
-    "test": "tsc && npm run test:interrupt",
-    "test:interrupt": "node scripts/test-interrupted-reply.js"
+    "test": "tsc && npm run test:interrupt && npm run test:recorder && npm run test:setup",
+    "test:interrupt": "node scripts/test-interrupted-reply.js",
+    "test:recorder": "node scripts/test-recorder-stop.js",
+    "test:setup": "node scripts/test-setup-problems.js"
   },
   "author": "",
   "license": "GPL-3.0-only",

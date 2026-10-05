@@ -17,6 +17,8 @@ import {
   TTSProcessorFunction,
 } from "./interface";
 import { vectorDB, embedText } from "./knowledge";
+import { addSetupProblem } from "../utils/setup-problems";
+import { piperSetupProblem } from "./local/piper-tts";
 
 dotenv.config();
 
@@ -53,6 +55,7 @@ try {
   recognizeAudio = asrProvider.recognizeAudio;
 } catch (e: any) {
   console.warn(e.message);
+  addSetupProblem(`ASR_SERVER=${asrServer} is not a speech-recognition service.`);
 }
 
 // Activate TTS plugin
@@ -61,6 +64,11 @@ try {
   ttsProcessor = ttsProvider.ttsProcessor;
 } catch (e: any) {
   console.warn(e.message);
+  addSetupProblem(`TTS_SERVER=${ttsServer} is not a voice service.`);
+}
+if (ttsServer === TTSServer.piper) {
+  const problem = piperSetupProblem();
+  if (problem) addSetupProblem(problem);
 }
 
 export {

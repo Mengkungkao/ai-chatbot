@@ -87,12 +87,59 @@ const removeRecordingProcess = (child: ChildProcess): void => {
   recordingProcessList = recordingProcessList.filter((item) => item !== child);
 };
 
+// Recorders asked to stop that have not exited yet. Until they do they hold
+// the capture device, which is exclusive ("hw:..."), so the next recording
+// waits for them (see whenRecorderFree).
+const stoppingRecorders = new Map<ChildProcess, Promise<void>>();
+
+// sox ignores a SIGINT that lands while it is still opening the device (from
+// about 50 ms to 1 s after it starts, measured on an Orange Pi Zero 2W) and
+// then records until killed, holding the microphone: a quick button release
+// did exactly that. Escalate until it is observed to exit.
+const STOP_ESCALATION: Array<[NodeJS.Signals, number]> = [
+  ["SIGTERM", 1000],
+  ["SIGKILL", 1000],
+];
+
 const killRecordingProcess = (child: ChildProcess): void => {
   console.log("Killing recording process", child.pid);
-  try {
-    child.kill("SIGINT");
-  } catch (e) { }
   removeRecordingProcess(child);
+  if (child.exitCode !== null || child.signalCode !== null || stoppingRecorders.has(child)) {
+    return;
+  }
+  const exited = new Promise<void>((resolve) => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const done = () => {
+      if (timer) clearTimeout(timer);
+      stoppingRecorders.delete(child);
+      resolve();
+    };
+    child.once("exit", done);
+    child.once("error", done);
+    const escalate = (step: number) => {
+      if (step >= STOP_ESCALATION.length) return;
+      const [signal, afterMs] = STOP_ESCALATION[step];
+      timer = setTimeout(() => {
+        console.log(`Recording process ${child.pid} still running, sending ${signal}`);
+        try {
+          child.kill(signal);
+        } catch (e) { }
+        escalate(step + 1);
+      }, afterMs);
+    };
+    escalate(0);
+  });
+  stoppingRecorders.set(child, exited);
+  try {
+    child.kill("SIGINT");   // lets sox finish the file it is writing
+  } catch (e) { }
+};
+
+/** Resolves once every recorder asked to stop has exited. */
+const whenRecorderFree = async (): Promise<void> => {
+  while (stoppingRecorders.size > 0) {
+    await Promise.all(stoppingRecorders.values());
+  }
 };
 
 const killAllRecordingProcesses = (): void => {
@@ -167,8 +214,10 @@ const recordAudio = async (
     return webAudioBridge.startRecording(outputPath, duration);
   }
 
+  await whenRecorderFree();
   return new Promise((resolve, reject) => {
     const args = [
+      "-q",   // no progress lines: they flood the app log
       "-t",
       "alsa",
       alsaInputDevice,
@@ -285,42 +334,53 @@ const recordAudioManually = (
     return webAudioBridge.startManualRecording(outputPath);
   }
 
-  let stopFunc: () => void = noop;
+  // stop() can come before the previous recorder has let go of the device
+  // and this one has started; then it never starts.
+  let stopped = false;
+  let recordingProcess: ChildProcess | undefined;
   const result = new Promise<string>((resolve, reject) => {
     currentRecordingReject = reject;
-    const recordingProcess = spawn("sox", [
-      "-t",
-      "alsa",
-      alsaInputDevice,
-      "-t",
-      recordFileFormat,
-      "-c",
-      "1",
-      "-r",
-      "16000",
-      outputPath,
-    ]);
+    whenRecorderFree().then(() => {
+      if (stopped) {
+        resolve(outputPath);
+        return;
+      }
+      const child = spawn("sox", [
+        "-q",   // no progress lines: they flood the app log
+        "-t",
+        "alsa",
+        alsaInputDevice,
+        "-t",
+        recordFileFormat,
+        "-c",
+        "1",
+        "-r",
+        "16000",
+        outputPath,
+      ]);
+      recordingProcess = child;
 
-    recordingProcess.on("error", (err) => {
-      removeRecordingProcess(recordingProcess);
-      reject(err);
-    });
+      child.on("error", (err) => {
+        removeRecordingProcess(child);
+        reject(err);
+      });
 
-    recordingProcess.stderr?.on("data", (data) => {
-      console.error(data.toString());
-    });
-    recordingProcessList.push(recordingProcess);
-    stopFunc = () => {
-      killRecordingProcess(recordingProcess);
-    };
-    recordingProcess.on("exit", () => {
-      removeRecordingProcess(recordingProcess);
-      resolve(outputPath);
+      child.stderr?.on("data", (data) => {
+        console.error(data.toString());
+      });
+      recordingProcessList.push(child);
+      child.on("exit", () => {
+        removeRecordingProcess(child);
+        resolve(outputPath);
+      });
     });
   });
   return {
     result,
-    stop: stopFunc,
+    stop: () => {
+      stopped = true;
+      if (recordingProcess) killRecordingProcess(recordingProcess);
+    },
   };
 };
 
