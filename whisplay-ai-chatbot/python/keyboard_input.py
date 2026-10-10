@@ -3,12 +3,12 @@
     letters, Backspace   type a question (shown above the footer)
     Enter                ask it, once the chatbot is idle; on a prompt: allow
     Esc                  clear what was typed; on a prompt: deny;
-                         otherwise leave the app, back to MFruit OS
+                         otherwise leave the app, back to mFruit OS
     Space, held          talk, exactly like holding the button
                          (a space, once a question is being typed)
 
-The keys come through MFruit OS's input controller (mfruit_sdk.input), the
-same one every MFruit app uses: it reads every keyboard on the board and
+The keys come through mFruit OS's input controller (mfruit_sdk.input), the
+same one every mFruit app uses: it reads every keyboard on the board and
 ignores keys while another app has the screen. The button itself stays
 with the Node core (src/device/display.ts), which already treats a press
 as "talk" and counts clicks; the keyboard only speaks the same events to

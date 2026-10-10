@@ -92,8 +92,8 @@ the full install/build/run steps (drivers, `.env` setup, `build.sh`,
 
 Before changing the app, read its [agent guide](whisplay-ai-chatbot/AGENTS.md).
 `Whisplay/` is a separate upstream driver checkout; do not edit it in this
-repository. The vendored MFruit SDK under `whisplay-ai-chatbot/python/mfruit_sdk/`
-is also not edited here. The app follows the [MFruit OS app
+repository. The vendored mFruit SDK under `whisplay-ai-chatbot/python/mfruit_sdk/`
+is also not edited here. The app follows the [mFruit OS app
 rules](.claude/rules/mfruit-os-app.md); sync SDK changes from MFruitOS with
 `~/MFruitOS/scripts/sdk-sync.sh whisplay-ai-chatbot/python`.
 
@@ -129,21 +129,21 @@ Both upstream projects are GPL-3.0; see [Whisplay/LICENSE](Whisplay/LICENSE)
 and [whisplay-ai-chatbot's license notice](whisplay-ai-chatbot/README.md#license).
 
 
-## MFruit OS startup
+## mFruit OS startup
 
 `whisplay-ai-chatbot/run_chatbot.sh` resolves its own application directory, so
-MFruit OS can invoke it from the repository root. It loads the nested `.env`
+mFruit OS can invoke it from the repository root. It loads the nested `.env`
 and built `dist/index.js`; `python/test/test_startup_wrapper.py` in the app
 covers this launch with a package path containing spaces.
 
 The current chatbot keeps the daemon's four-click exit (`quad_click`). The
 Node controller suppresses its three-click action when a fourth click arrives;
 changing registration to `none` would disable the physical exit. Its keyboard
-continues through the MFruit SDK.
+continues through the mFruit SDK.
 
-## MFruit OS package (Fruit Store)
+## mFruit OS package (Fruit Store)
 
-`whisplay-ai-chatbot/` is a native MFruit OS package: `manifest.json`
+`whisplay-ai-chatbot/` is a native mFruit OS package: `manifest.json`
 (`whisplay-ai-chatbot`, entry `run.sh`, hooks `install.sh` and `test.sh`).
 
 - **Release:** pushing a tag that matches the manifest version
@@ -155,16 +155,16 @@ continues through the MFruit SDK.
   ([python/ASSETS.md](whisplay-ai-chatbot/python/ASSETS.md)) with the cat
   faces drawn over them, adds the official Node.js 20 binary in `runtime/`,
   and publishes `whisplay-ai-chatbot-<version>-linux-arm64.tar.gz` (about
-  88 MB) with its `.sha256`. MFruit OS's `config/catalog.json` then pins that
+  88 MB) with its `.sha256`. mFruit OS's `config/catalog.json` then pins that
   asset by SHA-256.
 - **Installing downloads only that archive** from this repository's release:
   nothing from PiSugar, nodejs.org or npm. `install.sh` checks the system
   packages and that the bundled Node.js runs; `test.sh` checks that the font,
-  the emoji and the cat faces are in place before MFruit OS activates it.
+  the emoji and the cat faces are in place before mFruit OS activates it.
 - **Device setup:** the system packages (sox, mpg123, cairosvg, …) need sudo,
-  so MFruit OS installs them once:
+  so mFruit OS installs them once:
   `bash ~/.whisplay-os/system/current/scripts/setup-app.sh whisplay-ai-chatbot`
-  (or `install.sh --app whisplay-ai-chatbot` when installing MFruit OS). The
+  (or `install.sh --app whisplay-ai-chatbot` when installing mFruit OS). The
   app's `install.sh` checks them; it never installs or downloads anything.
 - **API keys:** copy your `.env` to
   `~/.whisplay-os/apps/whisplay-ai-chatbot/data/.env`. Until it is there the
@@ -173,8 +173,8 @@ continues through the MFruit SDK.
 - Not in the package: wake word (`openwakeword` is a pip install), Picovoice
   ASR/TTS.
 
-## MFruit OS 1.4.0 keyboard compatibility
+## mFruit OS 1.4.0 keyboard compatibility
 
-Vendored SDK 1.2.0 reads keys from MFruit OS's foreground key hub while the
+Vendored SDK 1.2.0 reads keys from mFruit OS's foreground key hub while the
 launcher holds keyboards exclusively. Standalone use falls back to evdev.
-Deploy this SDK with MFruit OS 1.4.0 so keyboard input continues to work.
+Deploy this SDK with mFruit OS 1.4.0 so keyboard input continues to work.

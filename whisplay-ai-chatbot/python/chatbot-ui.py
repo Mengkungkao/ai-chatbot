@@ -49,13 +49,13 @@ TEXT_ALIGN = (os.environ.get("TEXT_ALIGN") or "center").strip().lower()
 FACE_TILE = 96
 FACE_HEIGHT = int(round(FACE_TILE * face_engine.shape_height_ratio()))
 FACE_PAD_Y = (FACE_TILE - FACE_HEIGHT) // 2   # blank band inside the tile
-# MFruit OS's status bar (mfruit_sdk): the state as the page name on the
+# mFruit OS's status bar (mfruit_sdk): the state as the page name on the
 # left, then the chatbot's own icons, WiFi and battery on the right. Nothing
 # the face draws may reach into it.
 STATUS_STRIP = mfruit.CONTENT_TOP - 6
-# MFruit OS's colours on the chatbot's black panel.
+# mFruit OS's colours on the chatbot's black panel.
 MFRUIT_THEME = mfruit.DARK._replace(bg=(0, 0, 0))
-# MFruit OS's footer hints, shown while the chatbot is idle, and the line
+# mFruit OS's footer hints, shown while the chatbot is idle, and the line
 # a question is typed on (a keyboard on the board).
 FOOTER_HEIGHT = mfruit.SCREEN_H - 250
 QUESTION_HEIGHT = 42
@@ -101,7 +101,7 @@ TERMINAL_FG = (80, 255, 120, 255)
 TERMINAL_MARGIN_X = 8
 TERMINAL_MAX_LINES = 5
 
-# The status word ("idle", "listening", ...) is the page name in MFruit OS's
+# The status word ("idle", "listening", ...) is the page name in mFruit OS's
 # status bar, where it shares the row with the icons instead of taking a
 # line of its own.
 STATUS_TITLES = (
@@ -350,7 +350,7 @@ class RenderThread(threading.Thread):
         
 
     def footer_hints(self):
-        """MFruit OS footer hints: what the button and keyboard do now, if idle."""
+        """mFruit OS footer hints: what the button and keyboard do now, if idle."""
         if keyboard is None or camera_mode:
             return []
         double = "camera" if os.environ.get("ENABLE_CAMERA", "").lower() == "true" else "auto-talk"
@@ -366,7 +366,7 @@ class RenderThread(threading.Thread):
                                                             FOOTER_HEIGHT))
 
     def draw_question(self, question, top):
-        """The question being typed on a keyboard, in an MFruit OS text field."""
+        """The question being typed on a keyboard, in an mFruit OS text field."""
         strip = Canvas(theme=MFRUIT_THEME, size=(self.whisplay.LCD_WIDTH, QUESTION_HEIGHT))
         text_field(strip, question, 4, placeholder="Ask anything…")
         self.whisplay.draw_image(0, top, self.whisplay.LCD_WIDTH, QUESTION_HEIGHT,
@@ -374,7 +374,7 @@ class RenderThread(threading.Thread):
                                                             QUESTION_HEIGHT))
 
     def draw_status_bar(self, image, draw):
-        """MFruit OS's status bar: the state on the left; the chatbot's own
+        """mFruit OS's status bar: the state on the left; the chatbot's own
         icons (VPN, image, knowledge, auto-talk), WiFi and battery on the right."""
         icons = self.build_status_icons({
             "status_font_size": status_font_size,
@@ -867,7 +867,7 @@ class RenderThread(threading.Thread):
         return clipped + ellipsis
 
     def build_status_icons(self, context):
-        """The chatbot's own status icons. WiFi and battery are MFruit OS's."""
+        """The chatbot's own status icons. WiFi and battery are mFruit OS's."""
         icons = []
         status_font_size = context.get("status_font_size")
 
@@ -1314,7 +1314,7 @@ def on_focus_revoked(*_args):
 
 
 def leave_app():
-    """Esc with nothing typed: back to MFruit OS, the way a daemon exit goes."""
+    """Esc with nothing typed: back to mFruit OS, the way a daemon exit goes."""
     print("[Keyboard] Esc: leaving the app")
     on_app_exit_requested()
 
@@ -1327,7 +1327,7 @@ def request_render():
 def start_keyboard():
     """A USB or Bluetooth keyboard: type questions, hold Space to talk.
 
-    Read through MFruit OS's input controller, so keys count only while the
+    Read through mFruit OS's input controller, so keys count only while the
     chatbot has the screen. The button stays with the Node core.
     """
     global keyboard, input_controller, device_status
@@ -1345,7 +1345,7 @@ def start_keyboard():
         talk=lambda: True,
         typing=lambda: keyboard.typing,
         active=lambda: has_screen and not shutdown_requested,
-        app_id=DEFAULT_APP_ID,             # MFruit OS hands its keys to this app by id
+        app_id=DEFAULT_APP_ID,             # mFruit OS hands its keys to this app by id
     )
     input_controller.start()
 

@@ -2,7 +2,7 @@
 
     cd python && python3 -m pytest -q test/test_keyboard_input.py
 
-Keys go through MFruit OS's real input controller (mfruit_sdk), fed key
+Keys go through mFruit OS's real input controller (mfruit_sdk), fed key
 events directly, so ownership and the Space-while-typing rule are the
 ones the device uses.
 """

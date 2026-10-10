@@ -1,7 +1,7 @@
-# Builds AI Chatbot's MFruit OS package when a version tag is pushed
+# Builds AI Chatbot's mFruit OS package when a version tag is pushed
 # (git tag v1.0.0 && git push origin v1.0.0; the tag must match
 # whisplay-ai-chatbot/manifest.json) and publishes it as a GitHub release.
-# MFruit OS's Fruit Store list then pins the asset by its SHA-256.
+# mFruit OS's Fruit Store list then pins the asset by its SHA-256.
 name: Release
 
 on:
@@ -32,4 +32,4 @@ jobs:
         run: |
           gh release create "$GITHUB_REF_NAME" "$RUNNER_TEMP"/out/* \
             --title "AI Chatbot ${GITHUB_REF_NAME#v}" \
-            --notes "MFruit OS package for 64-bit ARM boards (Fruit Store). Copy your .env to ~/.whisplay-os/apps/whisplay-ai-chatbot/data/.env on the device."
+            --notes "mFruit OS package for 64-bit ARM boards (Fruit Store). Copy your .env to ~/.whisplay-os/apps/whisplay-ai-chatbot/data/.env on the device."

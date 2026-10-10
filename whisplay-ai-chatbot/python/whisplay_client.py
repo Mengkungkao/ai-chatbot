@@ -265,7 +265,7 @@ def create_whisplay_hardware(
     )
     if daemon.ping():
         daemon.register()
-        # Esc is the app's "back" (MFruit OS controls; the keyboard is read in
+        # Esc is the app's "back" (mFruit OS controls; the keyboard is read in
         # chatbot-ui.py). Claimed now, before taking the screen: every
         # registration makes the daemon redraw its desktop, which would flash
         # over the chatbot's first frame.

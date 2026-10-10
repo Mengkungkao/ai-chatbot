@@ -1,5 +1,5 @@
 #!/bin/sh
-# MFruit OS entry point (manifest.json). MFruit OS runs it in the active
+# mFruit OS entry point (manifest.json). mFruit OS runs it in the active
 # version folder with WHISPLAY_OS_APP_DATA set: the API keys (.env), chat data
 # and knowledge live there, so updates and reinstalls keep them. Without
 # WHISPLAY_OS_APP_DATA (started by hand) it behaves like run_chatbot.sh.

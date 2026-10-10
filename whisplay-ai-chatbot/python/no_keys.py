@@ -1,8 +1,8 @@
 """Shown by run.sh instead of the chatbot while its API keys are missing.
 
-MFruit OS keeps the app's .env in its data folder (WHISPLAY_OS_APP_DATA), so
+mFruit OS keeps the app's .env in its data folder (WHISPLAY_OS_APP_DATA), so
 the keys survive updates; the Fruit Store cannot ask for them on this screen.
-Any press, or MFruit OS asking the app to leave, exits.
+Any press, or mFruit OS asking the app to leave, exits.
 """
 
 import os

@@ -6,7 +6,7 @@
 
 This is a pocket-sized AI chatbot device built using a Raspberry Pi Zero 2w / 5. Just press the button, speak, and it talks back—like a futuristic walkie-talkie with a mind of its own.
 
-It is also an **MFruit OS app**: MFruit OS's status bar (what the chatbot is doing, WiFi, battery) and footer hints, and a **USB or Bluetooth keyboard** works too:
+It is also an **mFruit OS app**: mFruit OS's status bar (what the chatbot is doing, WiFi, battery) and footer hints, and a **USB or Bluetooth keyboard** works too:
 
 | Button | Keyboard | |
 |---|---|---|
@@ -16,7 +16,7 @@ It is also an **MFruit OS app**: MFruit OS's status bar (what the chatbot is doi
 | 4 clicks | **Esc** | leave the app (Esc first clears a question being typed) |
 | tap / hold | **Enter** / **Esc** | allow / deny, on an approval prompt |
 
-Keys count only while the chatbot has the screen. The rules MFruit OS apps follow are in [`.claude/rules/mfruit-os-app.md`](../.claude/rules/mfruit-os-app.md).
+Keys count only while the chatbot has the screen. The rules mFruit OS apps follow are in [`.claude/rules/mfruit-os-app.md`](../.claude/rules/mfruit-os-app.md).
 
 Test Video Playlist:
 [https://www.youtube.com/watch?v=lOVA0Gui-4Q](https://www.youtube.com/playlist?list=PLpTS9YM-tG_mW5H7Xs2EO0qvlAI-Jm1e_)

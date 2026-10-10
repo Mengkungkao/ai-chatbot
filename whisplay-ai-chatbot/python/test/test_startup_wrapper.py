@@ -1,4 +1,4 @@
-"""The nested entrypoint must work from an MFruit package's root directory."""
+"""The nested entrypoint must work from an mFruit package's root directory."""
 
 import os
 from pathlib import Path

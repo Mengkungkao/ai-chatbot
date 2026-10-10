@@ -1,9 +1,9 @@
 #!/bin/bash
-# MFruit OS install hook: runs on install, update and reinstall, as the user,
+# mFruit OS install hook: runs on install, update and reinstall, as the user,
 # without sudo or questions. It downloads nothing: the release archive from
 # github.com/Mengkungkao/ai-chatbot carries the app, its node_modules, the
 # fonts and emoji, and Node.js in runtime/. It checks the system packages
-# (installed once by MFruit OS: scripts/setup-app.sh whisplay-ai-chatbot) and
+# (installed once by mFruit OS: scripts/setup-app.sh whisplay-ai-chatbot) and
 # that the bundled Node.js runs on this board. It never registers with
 # whisplay-daemon.
 set -euo pipefail

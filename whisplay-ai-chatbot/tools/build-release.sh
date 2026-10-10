@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build AI Chatbot's MFruit OS package for 64-bit ARM boards.
+# Build AI Chatbot's mFruit OS package for 64-bit ARM boards.
 #
 #   bash tools/build-release.sh [OUT_DIR]     (default: ./release)
 #
@@ -55,7 +55,7 @@ find node_modules/onnxruntime-node/bin -path '*/linux/*' -mindepth 3 -maxdepth 3
   -exec rm -rf {} +
 
 # Type declarations, source maps and docs are not needed to run (about 6,000
-# files; MFruit OS refuses packages with more than 20,000).
+# files; mFruit OS refuses packages with more than 20,000).
 find node_modules -type f \( -name '*.d.ts' -o -name '*.d.mts' -o -name '*.d.cts' \
   -o -name '*.map' -o -name '*.md' -o -name '*.markdown' \) -delete
 find node_modules -xtype l -delete       # .bin links to the removed build tools
