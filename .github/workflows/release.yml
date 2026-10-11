@@ -51,11 +51,11 @@ jobs:
           else
             echo "publish=true" >> "$GITHUB_OUTPUT"
           fi
-      - name: Tests (sox for the speech envelope; Pillow, cairosvg for the UI)
+      - name: Tests (sox for the speech envelope; Pillow, numpy, cairosvg for the UI)
         if: steps.version.outputs.publish == 'true'
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends sox python3-pil python3-pytest python3-cairosvg
+          sudo apt-get install -y --no-install-recommends sox python3-pil python3-numpy python3-pytest python3-cairosvg
           cd whisplay-ai-chatbot
           npx --yes yarn@1.22.22 install --frozen-lockfile --non-interactive
           npm test
