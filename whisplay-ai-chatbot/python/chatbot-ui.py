@@ -1,4 +1,5 @@
 from PIL import Image, ImageDraw, ImageFont
+import math
 import os
 import time
 import socket
@@ -59,11 +60,14 @@ MFRUIT_THEME = mfruit.DARK._replace(bg=(0, 0, 0))
 # a question is typed on (a keyboard on the board).
 FOOTER_HEIGHT = mfruit.SCREEN_H - 250
 QUESTION_HEIGHT = 42
-# Slack above and below the cat for the breathing bob and the blink squash.
-# The idle repaint pastes the whole square tile, so the band has to be at least
-# as tall as the tile or the paste is clamped and the face jumps between a full
-# header render and an idle one.
-FACE_TILE_PAD = max(4, (FACE_TILE - FACE_HEIGHT + 1) // 2)
+# Slack above and below the cat for everything that moves it: a head tilt
+# (~4 px at the tile's corners), the breathing bob, the lift on loud syllables
+# and the dip of an emotion change. The idle repaint pushes only this band, so
+# the face must never leave it or its edge would be clipped.
+FACE_MOTION_PAD = 9
+FACE_TILE_PAD = max(4, (FACE_TILE - FACE_HEIGHT + 1) // 2, FACE_MOTION_PAD)
+# A tilted head is wider than the tile, by this much on each side.
+FACE_SIDE_PAD = int(math.ceil(FACE_TILE * face_engine.TILT_PAD))
 # The cat's crown. Far enough down that the repaint band, which starts a pad
 # above it, still clears the status strip: an opaque tile pushed over that row
 # was wiping the icons on every idle frame.
@@ -93,8 +97,37 @@ FACE_IDLE_MOTION = os.environ.get("WHISPLAY_FACE_IDLE_MOTION", "1") != "0"
 # FACE_FRAME_MIN_LEVEL so the ring stays visible against the black panel.
 FACE_FRAME_TINT = os.environ.get("WHISPLAY_FACE_FRAME_TINT", "1") != "0"
 FACE_FRAME_MIN_LEVEL = 140
-# Statuses that mean the assistant is speaking, which drives the mouth.
-TALKING_STATUS_PREFIXES = ("answering", "speaking", "replying")
+# While she speaks the face is redrawn faster, so the mouth keeps up with the
+# syllables. The mouth itself follows the voice actually playing (``speech``
+# messages from the Node core, with the clip's loudness), never the status.
+FACE_TALK_FPS = 20
+# How far ahead of a clip's start the mouth runs, in ms: what the eye waits
+# for (the jaw's smoothing, the frame cadence, and whisplay-daemon copying the
+# app framebuffer to the LCD, at most 20 times a second with a full-screen SPI
+# push) minus what the ear waits for (sox starting: 22-40 ms on a Pi Zero 2 W).
+# Measured there on 2026-10-11 with 80 ms: the mouth in the app's framebuffer
+# opens 90-120 ms before the voice reaches the microphone. The daemon's copy
+# shows a frame ~45 ms later on average and keeps it up for one more refresh
+# (estimated from its code, not measured on the panel), which leaves the mouth
+# on the LCD slightly early: that reads as natural, late reads as dubbed.
+FACE_SYNC_DEFAULT_MS = 80.0
+try:
+    FACE_SYNC_MS = float(os.environ.get("WHISPLAY_FACE_SYNC_MS") or FACE_SYNC_DEFAULT_MS)
+except ValueError:
+    print(f"[Face] WHISPLAY_FACE_SYNC_MS is not a number; using {FACE_SYNC_DEFAULT_MS:.0f}")
+    FACE_SYNC_MS = FACE_SYNC_DEFAULT_MS
+# What the face does while no clip is playing, by status. Anything unlisted is
+# idle. "answering..." (dots) is the reply being written; plain "answering" is
+# the reply under way, between sentences, which should not look like thinking.
+FACE_MODES = (
+    ("listening", face_engine.LISTENING),
+    ("recording", face_engine.LISTENING),
+    ("detecting", face_engine.LISTENING),
+    ("recognizing", face_engine.THINKING),
+    ("thinking", face_engine.THINKING),
+    ("tool", face_engine.THINKING),
+    ("answering...", face_engine.THINKING),
+)
 TOOL_TAG_MARGIN_Y = 2
 TOOL_PLACEHOLDER_RE = re.compile(r"\{tool:([A-Za-z0-9_-]+)\}")
 TERMINAL_FG = (80, 255, 120, 255)
@@ -133,6 +166,25 @@ def status_title(status):
         if lowered.startswith(key):
             return title
     return text[:1].upper() + text[1:]
+
+
+def paste_clipped(dst, src, x, y):
+    """alpha_composite ``src`` at ``(x, y)``, cropping whatever falls outside."""
+    left, top = max(0, -x), max(0, -y)
+    right = min(src.width, dst.width - x)
+    bottom = min(src.height, dst.height - y)
+    if right <= left or bottom <= top:
+        return
+    dst.alpha_composite(src, (x + left, y + top), (left, top, right, bottom))
+
+
+def face_mode(status):
+    """The face's behaviour for a status label."""
+    lowered = (status or "").strip().lower()
+    for key, mode in FACE_MODES:
+        if lowered.startswith(key):
+            return mode
+    return face_engine.IDLE
 
 
 def face_frame_tint(rgb):
@@ -231,7 +283,8 @@ class RenderThread(threading.Thread):
         # missing or the current emoji has no face defined for it.
         face_renderer = face_engine.load_renderer()
         self.face = (face_engine.FaceAnimator(face_renderer, size=FACE_TILE,
-                                              idle_motion=FACE_IDLE_MOTION)
+                                              idle_motion=FACE_IDLE_MOTION,
+                                              speech_sync=FACE_SYNC_MS / 1000.0)
                      if face_renderer else None)
         self.face_active = False
         self.needs_full_render = True
@@ -729,8 +782,8 @@ class RenderThread(threading.Thread):
         Converting the whole 240x138 header to RGB565 costs ~14ms on a Pi Zero
         2 W, which is far too much to spend on an idle blink. The face occupies
         a small fraction of that area, so idle animation pushes just its tile
-        (plus padding for the breathing bob and transition squash), cutting the
-        frame from ~15ms to ~4ms.
+        (plus padding for the head tilt, the breathing bob and the transition
+        squash), cutting the frame from ~15ms to ~4ms.
         """
         img, offset = self.update_face()
         if img is None:
@@ -742,25 +795,35 @@ class RenderThread(threading.Thread):
         # cost that scales with making the face bigger.
         y = max(0, slot_y + FACE_PAD_Y - FACE_TILE_PAD)
         h = min(HEADER_HEIGHT - y, FACE_HEIGHT + FACE_TILE_PAD * 2)
-        paste_y = (slot_y - y) + int(round(offset)) + (size - img.height) // 2
+        x = max(0, slot_x - FACE_SIDE_PAD)
+        w = min(self.whisplay.LCD_WIDTH, slot_x + size + FACE_SIDE_PAD) - x
+        paste_x, paste_y = self.face_paste_xy(img, offset, slot_x, slot_y)
 
         # The breathing bob is under two pixels and lands on the same rounded
         # offset for most of its cycle, and the animator hands back the very
-        # same cached frame whenever blink and mouth are unchanged. Those frames
-        # are byte-identical, so composing and pushing them over SPI again is
-        # pure waste — skip straight out and leave the panel as it is.
-        # The frame colour rides along because a colour change drops the frame
-        # cache, and a freshly allocated image can land on a recycled id().
-        signature = (id(img), self.face.frame_color, paste_y, slot_x, y, size, h)
+        # same cached frame whenever nothing visible changed. Those frames are
+        # byte-identical, so composing and pushing them over SPI again is pure
+        # waste — skip straight out and leave the panel as it is. The frame's
+        # cache key names it (an id() can be recycled once the cache evicts).
+        signature = (self.face.last_key, self.face.frame_color, paste_x, paste_y, x, y, w, h)
         if signature == self._last_face_signature:
             return True
         self._last_face_signature = signature
 
-        tile = Image.new("RGBA", (size, h), (0, 0, 0, 255))
-        tile.alpha_composite(img, (0, max(0, min(h - img.height, paste_y))))
-        self.whisplay.draw_image(slot_x, y, size, h,
-                                 ImageUtils.image_to_rgb565(tile, size, h))
+        tile = Image.new("RGBA", (w, h), (0, 0, 0, 255))
+        paste_clipped(tile, img, paste_x - x, paste_y - y)
+        self.whisplay.draw_image(x, y, w, h, ImageUtils.image_to_rgb565(tile, w, h))
         return True
+
+    def face_paste_xy(self, img, offset, slot_x, slot_y):
+        """Top-left corner for a face frame, centred on its tile.
+
+        Frames are not always tile-sized: a tilted head is larger and a
+        squashed one shorter, so they are placed by their centre.
+        """
+        size = self.face.size
+        return (slot_x + (size - img.width) // 2,
+                slot_y + int(round(offset)) + (size - img.height) // 2)
 
     def update_face(self):
         """Advance the face animation and return ``(frame, y_offset)``.
@@ -775,11 +838,30 @@ class RenderThread(threading.Thread):
             self.face_active = False
             return None, 0
         self.face.set_frame_color(face_frame_tint(current_status_color))
-        status = str(current_status or "").lower()
-        self.face.set_talking(status.startswith(TALKING_STATUS_PREFIXES))
+        self.face.set_mode(face_mode(current_status))
         img, offset, active = self.face.render()
         self.face_active = active
         return img, offset
+
+    def on_speech(self, event):
+        """A speech clip started, got its loudness envelope, or ended."""
+        if self.face is None or not isinstance(event, dict):
+            return
+        state = event.get("state")
+        track_id = event.get("id")
+        if state == "start":
+            at = event.get("at")
+            self.face.start_speech(track_id, event.get("duration_ms") or 0,
+                                   event.get("envelope"), event.get("frame_ms") or 20,
+                                   at=at / 1000.0 if isinstance(at, (int, float)) else None)
+        elif state == "envelope":
+            self.face.update_speech(track_id, event.get("envelope"), event.get("frame_ms") or 20)
+        elif state == "end":
+            self.face.end_speech(track_id)
+        # The face loop is normally running; when it is not (idle motion off),
+        # wake the renderer so the mouth starts with the voice.
+        if not self.face_active:
+            self.render_event.set()
 
     def request_render(self):
         self.needs_full_render = True
@@ -816,10 +898,10 @@ class RenderThread(threading.Thread):
             emoji_x = self.whisplay.CornerHeight
         emoji_y = FACE_SLOT_Y if face_img is not None else FACE_TOP
         if face_img is not None:
-            # The frame is squashed during blinks and transitions, so keep it
-            # anchored on its centre line rather than its top edge.
-            y = emoji_y + int(round(face_offset)) + (self.face.size - face_img.height) // 2
-            image.alpha_composite(face_img, (emoji_x, max(0, y)))
+            # The frame is squashed during transitions and larger while the
+            # head is tilted, so it is anchored on its centre, not its corner.
+            paste_clipped(image, face_img,
+                          *self.face_paste_xy(face_img, face_offset, emoji_x, emoji_y))
         else:
             TextUtils.draw_mixed_text(draw, image, current_emoji, emoji_font, (emoji_x, emoji_y))
         if current_terminal_text:
@@ -911,7 +993,6 @@ class RenderThread(threading.Thread):
 
     def run(self):
         frame_interval = 1 / self.fps
-        face_interval = 1 / FACE_ANIMATION_FPS
         while self.running:
             animation_active = self.render_frame(current_status, current_emoji, current_text, current_scroll_top, current_battery_level, current_battery_color)
             self.needs_full_render = False
@@ -922,12 +1003,17 @@ class RenderThread(threading.Thread):
             # The text is settled. If the face is still moving (blinking,
             # talking, mid-transition) keep it going by redrawing only the
             # header strip, which is far cheaper than a full-screen refresh.
+            frame_started = time.time()
             while (self.running and self.face_active
                    and not self.render_event.is_set()
                    and not camera_mode
                    and current_image_path in (None, "")
                    and not self.pending_auto_scroll_after_hold):
-                time.sleep(face_interval)
+                fps = FACE_TALK_FPS if self.face.speaking else FACE_ANIMATION_FPS
+                # Sleep out the rest of the frame, not a whole frame on top of
+                # the time the last one took to draw.
+                time.sleep(max(0.005, 1.0 / fps - (time.time() - frame_started)))
+                frame_started = time.time()
                 self.draw_face_region()
             if self.render_event.is_set():
                 self.render_event.clear()
@@ -1181,6 +1267,11 @@ def handle_client(client_socket, addr, whisplay):
                     trigger_camera_capture = content.get("camera_capture", None)
                     # boolean to enable camera mode
                     set_camera_mode = content.get("camera_mode", None)
+                    # A clip of her voice starting, its loudness, or its end:
+                    # this is what moves the mouth.
+                    speech = content.get("speech", None)
+                    if speech is not None and render_thread is not None:
+                        render_thread.on_speech(speech)
 
                     if text_input_enabled is not None:
                         current_text_input_enabled = bool(text_input_enabled)

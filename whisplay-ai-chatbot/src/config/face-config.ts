@@ -50,8 +50,9 @@ const APPEARANCE = [
   "round head with two pointed ears and whiskers, drawn with a thin outline that",
   "changes colour with what you are doing, like your light. You have two round",
   "dark grey eyes, a small triangle of a nose and a small, expressive cat mouth.",
-  "You blink by yourself every few seconds, your mouth moves while you talk, and you",
-  "breathe, so you are never quite still.",
+  "You blink by yourself every few seconds, glance around, tilt your head when you",
+  "listen, your mouth moves with your voice while you talk, and you breathe, so you",
+  "are never quite still.",
 ].join(" ");
 
 const MECHANIC = [

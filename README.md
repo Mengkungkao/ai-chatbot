@@ -52,6 +52,11 @@ is deployed straight to the Pi over SSH.
   spinning rings and center text, drawn frame-by-frame instead of a static logo
 - Word-aware text wrapping, emoji status glyphs, centered text, and a face-render
   cache that cut idle UI CPU usage substantially
+- A living cat face (`python/face_engine.py`): lip sync driven by the loudness of
+  the voice actually playing (the mouth shuts between words and never moves while
+  listening), glances, a head tilt while listening, eyes up while thinking, quick,
+  double and slow blinks, breathing. How it works: the app's
+  [agent guide](whisplay-ai-chatbot/AGENTS.md#face-animation-and-lip-sync)
 - Daemon home screen retitled "Home"; the "Run Test" demo app removed from the
   launcher
 
@@ -104,8 +109,11 @@ cd whisplay-ai-chatbot
 npm test
 bash build.sh
 cd python
-python3 -m pytest -q test/test_keyboard_input.py test/test_image_utils.py
+python3 -m pytest -q test/test_face_engine.py test/test_keyboard_input.py test/test_image_utils.py
 ```
+
+Lip-sync timing is measured on the board with the scripts in
+[tools/face-sync/](tools/face-sync/README.md).
 
 ## Configuration notes
 
@@ -118,6 +126,7 @@ defaults, this build relies on:
 | `WAKE_WORD_ENABLED`, `WAKE_WORDS`, `WAKE_WORD_THRESHOLD` | Wake-word listener |
 | `PROACTIVE_CHAT_ENABLED`, `PROACTIVE_CHAT_MIN_IDLE_SEC` / `MAX` | Unprompted speech timer |
 | `ALSA_INPUT_DEVICE=default` | Shared (dsnoop) mic device so wake-word + recorder can coexist |
+| `WHISPLAY_FACE_SYNC_MS` | How far (ms, default 80) the mouth runs ahead of a clip's start; raise it if the mouth lags the voice |
 | `VOICE_DETECT_LEVEL`, `VOICE_DETECT_LEVEL_MAX`, `VOICE_DETECT_SMOOTHING` | Voice-onset sensitivity tuning — keep the ceiling capped low or the auto-calibration drifts too high to reliably catch speech |
 | `WAKE_SPEECH_START_SEC` | How long to wait for speech to start after the wake chime before giving up |
 | `OPENAI_ASR_LANGUAGE` | Pins ASR language to avoid misdetection on quiet audio |

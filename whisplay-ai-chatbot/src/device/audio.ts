@@ -7,6 +7,11 @@ import { pluginRegistry } from "../plugin";
 import type { ASRPlugin, TTSPlugin, AudioFormat } from "../plugin";
 import { ASRServer, TTSResult, TTSServer } from "../type";
 import { webAudioBridge } from "./web-audio-bridge";
+import {
+  SPEECH_FRAME_MS,
+  readySpeechEnvelope,
+  speechEnvelope,
+} from "./speech-envelope";
 
 export { getDynamicVoiceDetectLevel } from "./voice-detect";
 
@@ -413,7 +418,79 @@ setTimeout(() => {
   player.process = startPlayerProcess();
 }, 5000);
 
+/**
+ * Her voice, as the face sees it. "start" goes out as a clip is handed to the
+ * player, with the clip's loudness when it is already known; "envelope"
+ * follows if it was not; "end" when the clip has finished or been cut off.
+ * The face moves its mouth from these alone, so it is shut whenever nothing is
+ * being said: between sentences, while thinking, and while listening.
+ */
+export type SpeechEvent =
+  | {
+      state: "start";
+      id: number;
+      duration_ms: number;
+      frame_ms: number;
+      /** When the clip went to the player (epoch ms), so a late message still lines up. */
+      at: number;
+      envelope?: number[];
+    }
+  | { state: "envelope"; id: number; frame_ms: number; envelope: number[] }
+  | { state: "end"; id: number };
+
+const speechListeners: Array<(event: SpeechEvent) => void> = [];
+let speechSeq = 0;
+let activeSpeechId = 0;
+
+export const onSpeech = (listener: (event: SpeechEvent) => void): void => {
+  speechListeners.push(listener);
+};
+
+const emitSpeech = (event: SpeechEvent): void => {
+  for (const listener of speechListeners) {
+    try {
+      listener(event);
+    } catch (error) {
+      console.error("[Speech] listener failed:", error);
+    }
+  }
+};
+
+const isPlayable = (params: TTSResult): boolean =>
+  params.duration > 0 && !!(params.filePath || params.base64 || params.buffer);
+
+/** Start working out a clip's loudness as soon as it is synthesised. */
+export const prepareSpeech = (params: TTSResult): void => {
+  if (params && isPlayable(params)) speechEnvelope(params, ttsAudioFormat);
+};
+
 const playAudioData = (params: TTSResult): Promise<void> => {
+  if (!isPlayable(params)) return playClip(params);
+  const id = ++speechSeq;
+  activeSpeechId = id;
+  const envelope = readySpeechEnvelope(params);
+  emitSpeech({
+    state: "start",
+    id,
+    duration_ms: Math.round(params.duration),
+    frame_ms: SPEECH_FRAME_MS,
+    at: Date.now(),
+    ...(envelope ? { envelope } : {}),
+  });
+  if (envelope === undefined) {
+    speechEnvelope(params, ttsAudioFormat).then((late) => {
+      if (late && activeSpeechId === id) {
+        emitSpeech({ state: "envelope", id, frame_ms: SPEECH_FRAME_MS, envelope: late });
+      }
+    });
+  }
+  return playClip(params).finally(() => {
+    if (activeSpeechId === id) activeSpeechId = 0;
+    emitSpeech({ state: "end", id });
+  });
+};
+
+const playClip = (params: TTSResult): Promise<void> => {
   // Delegate to browser speaker when web audio is enabled and a client is connected.
   if (webAudioBridge.isAvailable()) {
     console.log("[WebAudio] Sending audio to browser for playback.");

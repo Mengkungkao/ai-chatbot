@@ -77,8 +77,8 @@ EAR_BOW = 5.0       # bows both edges of each ear outward from its own
 # Ear motion is off. Rotating an ear resamples its outline, and at the sizes
 # the panel uses that lands the frame's pixels differently from one variant to
 # the next, so the flick showed as the outline breaking up rather than as the
-# ear moving. The runtime skips flicks entirely when no variants are published,
-# so this is the only switch: set EAR_MOTION back to True to restore them.
+# ear moving. EAR_MOTION only publishes the variants; the animator no longer
+# flicks ears (it tilts the whole head instead, see face_engine.FaceAnimator).
 EAR_MOTION = False
 TWITCH_DEG = 13.0   # how far one ear swings on a flick
 PERK_DEG = 6.0      # both ears, pricked up

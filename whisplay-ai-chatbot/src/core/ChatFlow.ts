@@ -4,7 +4,7 @@ import {
   isSilentRecording,
   splitSentences,
 } from "./../utils/index";
-import { display } from "../device/display";
+import { display, displaySpeech } from "../device/display";
 import { recognizeAudio, ttsProcessor } from "../cloud-api/server";
 import { isImMode } from "../cloud-api/llm";
 import { DEFAULT_EMOJI, extractEmojis } from "../utils";
@@ -19,7 +19,7 @@ import {
 import { FlowStateMachine } from "./chat-flow/stateMachine";
 import { flowStates } from "./chat-flow/states";
 import { ChatFlowContext, FlowName } from "./chat-flow/types";
-import { playWakeupChime } from "../device/audio";
+import { onSpeech, playWakeupChime, prepareSpeech } from "../device/audio";
 import { ProactiveChat } from "./proactive-chat";
 import { isPhantomTranscript } from "../utils/asr-filter";
 
@@ -98,8 +98,15 @@ class ChatFlow implements ChatFlowContext {
     console.log(`[${getCurrentTimeTag()}] ChatBot started.`);
     this.recordingsDir = recordingsDir;
     this.stateMachine = new FlowStateMachine(this, flowStates);
+    // The face's mouth follows each clip as it plays. Its loudness is worked
+    // out as soon as the clip is synthesised, while the one before it plays.
+    onSpeech(displaySpeech);
     this.streamResponser = new StreamResponser(
-      ttsProcessor,
+      async (text: string) => {
+        const result = await ttsProcessor(text);
+        prepareSpeech(result);
+        return result;
+      },
       (sentences: string[]) => {
         if (!this.isAnswerFlow()) return;
         const fullText = sentences.join(" ");

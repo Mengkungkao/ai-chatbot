@@ -481,6 +481,15 @@ export class WhisplayDisplay {
     return this.currentStatus;
   }
 
+  /**
+   * Pass a speech clip event (start, loudness envelope, end) straight to the
+   * face. It is not part of the status: it carries no state worth repeating,
+   * and the envelope would only bloat every later diff.
+   */
+  speech(event: object): void {
+    this.sendToDisplay(JSON.stringify({ speech: event }));
+  }
+
   private stopTextCounter(): void {
     if (this.textCounterTimer) {
       clearInterval(this.textCounterTimer);
@@ -708,6 +717,7 @@ const displayInstance = new WhisplayDisplay();
 export const display = displayInstance.display.bind(displayInstance);
 export const getCurrentStatus =
   displayInstance.getCurrentStatus.bind(displayInstance);
+export const displaySpeech = displayInstance.speech.bind(displayInstance);
 export const onButtonPressed =
   displayInstance.onButtonPressed.bind(displayInstance);
 export const onButtonReleased =

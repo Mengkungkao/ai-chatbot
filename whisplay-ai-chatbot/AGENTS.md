@@ -316,6 +316,42 @@ display({
 });
 ```
 
+### Face animation and lip sync
+The face (`python/face_engine.py`, drawn from `python/faces.json`) is animated by
+`FaceAnimator`: blinks (quick, double, and an occasional slow cat blink), glances,
+a sprung head tilt, breathing, emotion transitions and lip sync.
+- **Modes** come from the status (`face_mode` in `chatbot-ui.py`): `listening`
+  (head tilted, eyes on you, a touch wider; the mouth is held shut), `thinking`
+  (recognizing, thinking, tool calls, "answering..." before the reply: eyes up and
+  to the side) and `idle`. Speaking is not a status: it is whenever a clip plays.
+- **The mouth moves only with her voice.** `playAudioData` (`src/device/audio.ts`)
+  announces every clip it plays through `onSpeech`, and `ChatFlow` forwards that as
+  a `speech` message:
+  ```typescript
+  { speech: { state: "start", id, duration_ms, frame_ms: 20, at, envelope?: number[] } }
+  { speech: { state: "envelope", id, frame_ms: 20, envelope } }   // if start had none
+  { speech: { state: "end", id } }        // also when the clip is cut off
+  ```
+  `envelope` is the clip's mouth openness, 0..100 per 20 ms
+  (`src/device/speech-envelope.ts`: loudness plus syllable contrast; WAV read
+  in-process, mp3 decoded by sox). `ChatFlow` starts it as soon as a sentence is
+  synthesised, so it is normally ready when the clip plays. The mouth is drawn shut
+  in the pauses between words, after "end", and always while listening; a clip that
+  never ends is dropped 1.5 s after its length.
+- `at` is when the clip went to the player (epoch ms). The UI times the mouth from
+  it, not from when the message arrives: while the screen is being redrawn for
+  scrolling text the message can be read ~100 ms late.
+- `WHISPLAY_FACE_SYNC_MS` (default 80) runs the mouth that far ahead of `at`, to make
+  up for what the eye waits for (smoothing, frame cadence, whisplay-daemon copying the
+  app framebuffer to the LCD at most 20 times a second) less what the ear waits for
+  (sox: 22-40 ms on a Pi Zero 2 W). Measured there: the mouth in the app framebuffer
+  leads the voice at the microphone by 90-120 ms; the daemon's copy to the LCD
+  (~45 ms on average plus a refresh, estimated) leaves it slightly early.
+  `WHISPLAY_FACE_IDLE_MOTION=0` holds the face still between replies.
+- A tilted head is up to `face_engine.TILT_PAD` wider than its tile; the UI pushes
+  the tile plus `FACE_SIDE_PAD`/`FACE_TILE_PAD` each frame, and
+  `test_face_engine.py` checks the face never leaves that band.
+
 ## State Machine
 
 The chat flow uses a finite state machine (`src/core/chat-flow/stateMachine.ts`):
@@ -339,6 +375,12 @@ State transitions are triggered by button events, wake word detection, or comple
 - `npm test`: compile TypeScript and run the interrupted-reply regression with
   mocked audio. This does not register with the daemon or access hardware. A
   missing, duplicated, stale, or out-of-order reply fails the command.
+- `npm test` also runs `scripts/test-speech-sync.js`: the clip envelope (WAV and
+  sox-decoded) and the start / envelope / end order, including a clip cut off by the
+  button, against a fake player
+- `cd python && python3 -m pytest -q test/test_face_engine.py`: the face's lip sync
+  (mouth shut without a clip, in pauses, after the end and while listening), gaze
+  kept clear of the whiskers, the repaint band and bounded caches
 - `cd python && python3 -m pytest -q test/test_keyboard_input.py test/test_image_utils.py`: the keyboard
   (typed questions, Space to talk, Esc, approval prompts, nothing while another app
   has the screen), through the real mFruit OS input controller, plus lazy
@@ -455,7 +497,8 @@ WEB_SEARCH_INCLUDE_IMAGES=false
 ### Modifying UI/Display
 1. Python rendering: `python/chatbot-ui.py` (RenderThread class); the status bar,
    footer and question field are mFruit OS's (`draw_status_bar`, `draw_footer`,
-   `draw_question`)
+   `draw_question`); the animated face is `python/face_engine.py` (see "Face
+   animation and lip sync")
 2. Status icons: `python/status-bar-icon/` directory (the chatbot's own icons; WiFi and
    battery come from mFruit OS's status bar)
 3. Node.js controller: `src/device/display.ts`
