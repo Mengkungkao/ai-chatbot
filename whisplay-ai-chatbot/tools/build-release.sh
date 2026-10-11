@@ -94,6 +94,14 @@ echo "==> archive"
 find . -name __pycache__ -prune -exec rm -rf {} +
 tar --sort=name --owner=0 --group=0 --numeric-owner -C "$WORK" -czf "$OUT/$NAME.tar.gz" \
   whisplay-ai-chatbot
+# Devices refuse downloads over updater.max_download_mb (100 by default): a
+# bigger archive would be published and then fail to install everywhere.
+LIMIT=$((100 * 1024 * 1024))
+SIZE="$(stat -c %s "$OUT/$NAME.tar.gz")"
+if [ "$SIZE" -gt "$LIMIT" ]; then
+  echo "$NAME.tar.gz is $SIZE bytes, more than devices download ($LIMIT, updater.max_download_mb)" >&2
+  rm -f "$OUT/$NAME.tar.gz"; exit 1
+fi
 (cd "$OUT" && sha256sum "$NAME.tar.gz" > "$NAME.tar.gz.sha256")
 echo "$OUT/$NAME.tar.gz: $(du -h "$OUT/$NAME.tar.gz" | cut -f1), $(find "$PKG" -type f | wc -l) files"
 cat "$OUT/$NAME.tar.gz.sha256"
