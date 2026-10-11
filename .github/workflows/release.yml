@@ -1,35 +1,79 @@
-# Builds AI Chatbot's mFruit OS package when a version tag is pushed
-# (git tag v1.0.0 && git push origin v1.0.0; the tag must match
-# whisplay-ai-chatbot/manifest.json) and publishes it as a GitHub release.
-# mFruit OS's Fruit Store list then pins the asset by its SHA-256.
+# Publishes AI Chatbot's mFruit OS package as a GitHub release whenever
+# whisplay-ai-chatbot/manifest.json carries a version that has no release
+# yet: bump "version", push to main, and the release v<version> appears
+# (tag created here, from the pushed commit). Devices with the app installed
+# are offered it at their next update check, and mFruit OS's hourly catalogue
+# sync moves the Fruit Store's pin to it.
+#
+# A pushed tag v* still works (it must match the manifest), and the workflow
+# can be run by hand (Actions -> Release -> Run workflow) to retry a failed
+# build. Nothing is published unless the app's tests pass.
 name: Release
 
 on:
   push:
+    branches: [main]
+    paths:
+      - whisplay-ai-chatbot/manifest.json
+      - .github/workflows/release.yml
     tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
   package:
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - name: Tag matches the manifest version
-        run: |
-          version=$(python3 -c 'import json; print(json.load(open("whisplay-ai-chatbot/manifest.json"))["version"])')
-          test "v$version" = "$GITHUB_REF_NAME" || { echo "tag $GITHUB_REF_NAME, manifest $version"; exit 1; }
-      - name: Build the package
-        run: bash whisplay-ai-chatbot/tools/build-release.sh "$RUNNER_TEMP/out"
-      - name: Publish the release
+      - name: Version, and whether it is already released
+        id: version
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" "$RUNNER_TEMP"/out/* \
-            --title "AI Chatbot ${GITHUB_REF_NAME#v}" \
-            --notes "mFruit OS package for 64-bit ARM boards (Fruit Store). Copy your .env to ~/.whisplay-os/apps/whisplay-ai-chatbot/data/.env on the device."
+          version=$(python3 -c 'import json; print(json.load(open("whisplay-ai-chatbot/manifest.json"))["version"])')
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [ "$GITHUB_REF_TYPE" = tag ] && [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "tag $GITHUB_REF_NAME, manifest $version"; exit 1
+          fi
+          if gh release view "v$version" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "v$version is already released; nothing to do"
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Tests (sox for the speech envelope; Pillow, cairosvg for the UI)
+        if: steps.version.outputs.publish == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends sox python3-pil python3-pytest python3-cairosvg
+          cd whisplay-ai-chatbot
+          npx --yes yarn@1.22.22 install --frozen-lockfile --non-interactive
+          npm test
+          cd python
+          PYTHONDONTWRITEBYTECODE=1 python3 -m pytest -q -p no:cacheprovider \
+            test/test_face_engine.py test/test_keyboard_input.py test/test_image_utils.py \
+            test/test_startup_wrapper.py
+          rm -rf ../node_modules ../dist
+      - name: Build the package
+        if: steps.version.outputs.publish == 'true'
+        run: bash whisplay-ai-chatbot/tools/build-release.sh "$RUNNER_TEMP/out"
+      - name: Publish the release
+        if: steps.version.outputs.publish == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release create "v$VERSION" "$RUNNER_TEMP"/out/* \
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "AI Chatbot $VERSION" \
+            --notes "mFruit OS package for 64-bit ARM boards (Fruit Store), built from $GITHUB_SHA. Copy your .env to ~/.whisplay-os/apps/whisplay-ai-chatbot/data/.env on the device."
